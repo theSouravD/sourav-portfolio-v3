@@ -1,0 +1,27 @@
+/*
+ * Nova tuning for React Bits' TargetCursor.
+ *
+ * The cursor itself is left stock — white dot, white corner brackets, composited
+ * with mix-blend-mode: difference. Only the things the page owes it are set here.
+ */
+
+/*
+ * The system pointer is hidden while this runs, so a real caret still has to
+ * appear anywhere text can be selected or typed — losing it inside a field makes
+ * the page feel broken rather than styled.
+ */
+input,
+textarea,
+[contenteditable='true'] {
+  cursor: auto !important;
+}
+
+/*
+ * The production report stands down where the hero runs short of room, rather
+ * than shrinking the name to make space for it.
+ */
+@media (max-height: 720px), (max-width: 640px) {
+  .nova-report {
+    display: none;
+  }
+}
