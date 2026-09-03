@@ -34,18 +34,40 @@ function Frame({
   const near = local > -0.6 && local < 1.6;
   if (!near) return <div className="pointer-events-none absolute inset-0" aria-hidden />;
 
+  /*
+   * Continuous drift across the WHOLE chapter.
+   *
+   * This is the fix for "one scroll has no effect". Every shot's own entrance
+   * finishes in the first quarter of its chapter, so past that point scrolling
+   * changed nothing on screen and the page read as frozen. This binds a slow
+   * vertical drift to `local` over its entire 0→1 range, so there is no scroll
+   * position anywhere in the film where input produces no movement.
+   *
+   * 72px over ~8 wheel notches is about 9px a notch — under the threshold where
+   * it reads as the content sliding around, over the threshold where the eye
+   * registers that something answered.
+   */
+  const clamped = Math.max(0, Math.min(1, local));
+  // Anchored at zero, not centred: a chapter opens exactly where it was
+  // designed to sit and lifts away as you scroll through it. Centring the
+  // drift pushed every shot's resting state 36px below its intended position.
+  const drift = -clamped * 72;
+
   return (
     <div
       className="absolute inset-0"
       style={{
         opacity,
         pointerEvents: opacity > 0.55 ? 'auto' : 'none',
-        // A whisper of push/pull so cuts have depth without moving layout.
-        transform: `scale(${1 + (local < 0 ? local * 0.06 : local > 1 ? (local - 1) * -0.05 : 0)})`,
+        // A whisper of push/pull so cuts have depth, plus the drift above.
+        transform:
+          `translate3d(0, ${drift}px, 0) ` +
+          `scale(${1 + (local < 0 ? local * 0.06 : local > 1 ? (local - 1) * -0.05 : 0)})`,
+        willChange: 'transform',
       }}
       aria-hidden={opacity < 0.5}
     >
-      {children(Math.max(0, Math.min(1, local)))}
+      {children(clamped)}
     </div>
   );
 }

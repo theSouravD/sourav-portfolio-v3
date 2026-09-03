@@ -1,4 +1,5 @@
 import { ArrowUpRight } from 'lucide-react';
+import Panned from '../Panned';
 import Magnet from '@/reactbits/Magnet';
 import { useFilm } from '../FilmContext';
 import { contact, profile } from '@/data/content';
@@ -11,7 +12,7 @@ export default function EndShot({ local }: { local: number }) {
   const head = ease(local / 0.24);
 
   return (
-    <div className="flex h-full flex-col justify-center pb-28 pt-24">
+    <Panned local={local} className="pb-28 pt-24">
       <div className="nova-shell">
         <div
           className="mb-8 border-b border-white/12 pb-4"
@@ -105,6 +106,6 @@ export default function EndShot({ local }: { local: number }) {
           </button>
         </div>
       </div>
-    </div>
+    </Panned>
   );
 }

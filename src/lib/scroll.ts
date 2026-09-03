@@ -44,8 +44,14 @@ export function initSmoothScroll() {
   if (lenis) return lenis;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
 
+  /*
+   * 0.68, not 1.05. Lenis eases every wheel event over this duration, so a long
+   * value stacks a second of lag on top of an already small per-notch movement
+   * — you push, nothing appears to happen, you push again. Shorter reads as the
+   * page answering you.
+   */
   lenis = new Lenis({
-    duration: 1.05,
+    duration: 0.68,
     easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     smoothWheel: true,
     wheelMultiplier: 1,

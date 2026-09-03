@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sourav Dey — CV</title>
+<style>
+/*
+ * SOURAV DEY — CV, in the portfolio's design system.
+ *
+ * The old version was teal accents on navy over a light body. The site it
+ * belongs to has no accent colour at all: near-black, white type, hairline
+ * rules, and one typeface (Inter) doing both the display and the tracked-out
+ * micro-label work. So there is no teal here, and no second family — every
+ * distinction is carried by weight, size, tracking and rule weight, exactly
+ * as on the site.
+ *
+ * The header is the site's #0a0a0a with white type; the body stays light.
+ * A fully dark A4 would match the screen more literally, but recruiters print
+ * CVs, and a black page comes back grey and heavy off an office printer.
+ */
+
+/* ---- Fonts: Inter, embedded, so the file is self-contained ---- */
+/* FONTS_PLACEHOLDER */
+
+:root {
+  --ink: #0a0a0a;          /* the site's background, used here as the text */
+  --ink-70: rgba(10,10,10,0.70);
+  --ink-55: rgba(10,10,10,0.55);
+  --ink-42: rgba(10,10,10,0.42);
+  --rule: rgba(10,10,10,0.14);
+  --rule-soft: rgba(10,10,10,0.08);
+  --wash: rgba(10,10,10,0.035);
+  --paper: #ffffff;
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.page {
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  background: var(--paper);
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+}
+.page:last-child { page-break-after: auto; }
+
+/* ------------------------------------------------------------------ *
+ * Header — the one dark block, lifted straight from the site.
+ * ------------------------------------------------------------------ */
+.head {
+  background: var(--ink);
+  color: #fff;
+  padding: 12mm 13mm 9mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10mm;
+}
+
+.name {
+  margin: 0;
+  font-size: 33pt;
+  font-weight: 400;          /* the site sets the name in regular, not bold */
+  letter-spacing: -0.035em;  /* and pulls it tight, the way the hero does */
+  line-height: 0.98;
+  color: #fff;
+}
+
+.role {
+  margin: 3.5mm 0 0;
+  font-size: 8pt;
+  font-weight: 500;
+  text-transform: uppercase;
+  /*
+   * Pulled back from 0.16em. Wide tracking makes a PDF text extractor insert a
+   * space between glyphs, so this line — which carries "Creative Director",
+   * one of the keywords an applicant tracking system looks for — came out of
+   * pdftotext as "C R E AT I V E". 0.08em is the widest setting that still
+   * extracts as words; anything above it and the line stops being searchable.
+   */
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.80);
+}
+
+.intro {
+  margin: 4.2mm 0 0;
+  max-width: 112mm;
+  font-size: 8.2pt;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.66);
+}
+
+.contact {
+  text-align: right;
+  font-size: 8pt;
+  line-height: 2.05;
+  color: rgba(255,255,255,0.72);
+  white-space: nowrap;
+}
+.contact a { color: inherit; text-decoration: none; }
+
+/* A hairline under the header, the site's border-white/12 inverted. */
+.head-rule { height: 0.6pt; background: var(--rule); }
+
+/* ------------------------------------------------------------------ *
+ * Body — sidebar + main, divided by one hairline.
+ * ------------------------------------------------------------------ */
+.body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 55mm 1fr;
+  gap: 0;
+}
+
+.side {
+  background: var(--wash);
+  border-right: 0.6pt solid var(--rule-soft);
+  padding: 10mm 7mm 10mm 13mm;
+}
+
+.main { padding: 10mm 13mm 10mm 8mm; }
+
+/*
+ * The section label.
+ *
+ * This is the site's `.nova-label` — Inter, small, uppercase, tracked wide,
+ * at reduced contrast — with the short underline the old CV used, kept but
+ * turned from teal to a plain hairline.
+ */
+.label {
+  font-size: 7pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-55);
+  display: block;
+  margin: 0 0 5mm;
+}
+/*
+ * The rule is its own element at a fixed width. As a border-bottom on an
+ * inline-block it tracked the text, so a label that wrapped to two lines got
+ * an underline the width of its second line only.
+ */
+.label::after {
+  content: '';
+  display: block;
+  width: 13mm;
+  height: 0.9pt;
+  background: var(--ink);
+  margin-top: 2mm;
+}
+.side .label { font-size: 6.6pt; }
+.side section + section { margin-top: 8.5mm; }
+
+/* Sidebar lists — the site's chips flattened to a printable list. */
+.list { margin: 0; padding: 0; list-style: none; }
+.list li {
+  font-size: 8pt;
+  line-height: 1.85;
+  color: var(--ink-70);
+  padding-left: 3.2mm;
+  position: relative;
+}
+.list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2.7mm;
+  width: 1.4mm;
+  height: 0.6pt;
+  background: var(--ink-42);
+}
+
+/* ------------------------------------------------------------------ *
+ * Experience.
+ *
+ * The old version marked each role with a teal dot on a rule. The site marks
+ * its chapters with a scene number and a hairline, so that is what these use:
+ * a tracked-out index in place of the dot, and the rule stays.
+ * ------------------------------------------------------------------ */
+.role-block { position: relative; padding: 0 0 4.5mm 10mm; }
+.role-block + .role-block { border-top: 0.6pt solid var(--rule-soft); padding-top: 5.5mm; }
+
+.role-index {
+  position: absolute;
+  left: 0;
+  top: 0.6mm;
+  font-size: 6.8pt;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--ink-42);
+  font-variant-numeric: tabular-nums;
+}
+.role-block + .role-block .role-index { top: 6.1mm; }
+
+.role-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 5mm;
+}
+
+.company { font-size: 12pt; font-weight: 600; letter-spacing: -0.015em; }
+.place {
+  font-size: 7.6pt;
+  font-weight: 400;
+  color: var(--ink-55);
+  letter-spacing: 0.01em;
+  margin-left: 2mm;
+}
+
+/*
+ * The date. Was a filled dark pill; now the site's outline chip — hairline
+ * border, no fill — so it reads as a label rather than as a button.
+ */
+.dates {
+  flex: none;
+  font-size: 6.8pt;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--ink-70);
+  border: 0.6pt solid var(--rule);
+  border-radius: 999px;
+  padding: 1.1mm 3mm;
+  white-space: nowrap;
+}
+
+.title { margin: 2.8mm 0 0; font-size: 9.6pt; font-weight: 600; letter-spacing: -0.005em; }
+.period {
+  margin: 1mm 0 0;
+  font-size: 7.4pt;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink-42);
+}
+
+.bullets { margin: 2.2mm 0 0; padding: 0; list-style: none; }
+.bullets li {
+  font-size: 8.3pt;
+  line-height: 1.55;
+  color: var(--ink-70);
+  padding-left: 3.4mm;
+  position: relative;
+  margin-top: 1.2mm;
+}
+.bullets li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2.25mm;
+  width: 1.5mm;
+  height: 0.6pt;
+  background: var(--ink-42);
+}
+.bullets strong { font-weight: 600; color: var(--ink); }
+
+.sub { margin-top: 4.2mm; }
+
+/* Education */
+.edu-school { font-size: 9pt; font-weight: 600; line-height: 1.4; }
+.edu-course { margin-top: 1.2mm; font-size: 7.8pt; color: var(--ink-55); line-height: 1.5; }
+.edu-year {
+  margin-top: 1.8mm;
+  font-size: 7pt;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--ink-70);
+}
+
+/*
+ * `word-break: break-all` split the URL as "…souravde / y2105", which reads as
+ * a typo rather than as a wrap. The handle is set small enough to hold one
+ * line in the 42mm column instead, and never breaks.
+ */
+.link-line {
+  font-size: 6.8pt;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* The footer link, an outline chip rather than a filled teal one. */
+.chip {
+  display: inline-block;
+  border: 0.6pt solid var(--rule);
+  border-radius: 999px;
+  padding: 1.6mm 4mm;
+  font-size: 7.4pt;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--ink-70);
+  text-decoration: none;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================== PAGE 1 ============================== -->
+<div class="page">
+  <header class="head">
+    <div>
+      <h1 class="name">Sourav Dey</h1>
+      <p class="role">Gen AI Production Lead &nbsp;|&nbsp; Creative Director &nbsp;|&nbsp; Motion Graphics</p>
+      <p class="intro">Creative and Gen AI production lead with experience across motion graphics, video editing, AI ad creatives, automation workflows, prompt engineering, RCA, model testing and scaled creative production.</p>
+    </div>
+    <div class="contact">
+      Kolkata 700061, WB<br>
+      +91 79801 49807<br>
+      <a href="mailto:souravdey2105@gmail.com">souravdey2105@gmail.com</a><br>
+      <a href="https://linkedin.com/in/souravdey2105">linkedin.com/in/souravdey2105</a>
+    </div>
+  </header>
+  <div class="head-rule"></div>
+
+  <div class="body">
+    <aside class="side">
+      <section>
+        <span class="label">Core Skills</span>
+        <ul class="list">
+          <li>Gen AI Production Workflows</li>
+          <li>Prompt Engineering</li>
+          <li>AI Creative Automation</li>
+          <li>Model Testing and Validation</li>
+          <li>RCA and Error Identification</li>
+          <li>Creative Direction</li>
+          <li>Motion Graphics</li>
+          <li>Video Editing</li>
+          <li>AI Ad Creatives</li>
+          <li>Production Scaling</li>
+          <li>Workflow Optimization</li>
+          <li>Team Management</li>
+          <li>Creative QC</li>
+          <li>Cross-functional Collaboration</li>
+        </ul>
+      </section>
+
+
+      <section>
+        <span class="label">AI Tools</span>
+        <ul class="list">
+          <li>ChatGPT</li>
+          <li>Codex</li>
+          <li>Claude</li>
+          <li>Claude Code</li>
+          <li>Gemini</li>
+          <li>Seedance 2.5</li>
+          <li>Seedance 2.0</li>
+          <li>Seedream 5.0 Pro</li>
+          <li>Nano Banana 2</li>
+          <li>Nano Banana Pro</li>
+          <li>Minimax H3</li>
+          <li>Grok Imagine</li>
+          <li>Google Omni</li>
+          <li>Magnific AI</li>
+          <li>ElevenLabs</li>
+        </ul>
+      </section>
+    </aside>
+
+    <main class="main">
+      <span class="label">Experience</span>
+
+      <div class="role-block">
+        <span class="role-index">01</span>
+        <div class="role-head">
+          <div><span class="company">Pocket FM Pvt Ltd</span><span class="place">Bengaluru, Karnataka</span></div>
+          <span class="dates">Sep 2025 — Present</span>
+        </div>
+
+        <h3 class="title">Gen AI Production Lead, Experiment &amp; Research (E&amp;R)</h3>
+        <p class="period">Feb 2026 — Present</p>
+        <ul class="bullets">
+          <li>Lead <strong>Gen AI research and production workflows</strong>, including model testing, RCA, error identification, validation and improvements to existing automation tools.</li>
+          <li>Worked on <strong>Script to Image and Script to Motion automation</strong>, handling prompt engineering, creative testing, RCA, output validation and improvements for production use.</li>
+          <li>Worked on <strong>2 Thumbnail Automation workflows</strong>, improving outputs and reducing manual QC and fixes.</li>
+          <li>Created a <strong>Character Canvas (CC) creation tool</strong> and worked on multiple fixes and improvements to existing internal AI tools.</li>
+          <li>Research <strong>new AI models and workflows</strong> to improve output quality, reduce production time and cost, and help scale production.</li>
+          <li>Created <strong>AI skills and workflows for CDs and ACDs</strong> to maintain creative quality and consistency across production.</li>
+          <li>The automation and workflow improvements contributed to increasing overall production throughput by <strong>2x or more</strong>.</li>
+          <li>Created an <strong>AI Dubbing Studio POC</strong>, later developed further by Engineering into a usable English-to-regional-language dubbing tool, including Hindi and LATAM.</li>
+          <li>Worked in a <strong>CD++ role for a brand film project</strong>, managing CDs, giving creative feedback and helping with the overall visual direction.</li>
+        </ul>
+
+        <div class="sub">
+          <h3 class="title">Creative Director, Scaling Romantasy US</h3>
+          <p class="period">Sep 2025 — Feb 2026</p>
+          <ul class="bullets">
+            <li><strong>Managed ACDs</strong> and maintained creative quality and production throughput across Scaling Romantasy US assets.</li>
+            <li>Helped ACDs with <strong>visualization and visual direction</strong> while finding ways to scale assets.</li>
+            <li>Worked with the team on creative and production challenges while maintaining <strong>quality and consistency across high-volume production</strong>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="role-block">
+        <span class="role-index">02</span>
+        <div class="role-head">
+          <div><span class="company">Ginger Monkey LLP</span><span class="place">Gurugram, Haryana</span></div>
+          <span class="dates">Apr 2025 — Sep 2025</span>
+        </div>
+        <h3 class="title">Sr. Motion Graphics Designer</h3>
+        <ul class="bullets">
+          <li>Creating engaging <strong>AI ad creatives</strong> for brands like Durex, Amazon, Atlys, Bangur, Bikaji, Pepsi etc.</li>
+        </ul>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ============================== PAGE 2 ============================== -->
+<div class="page">
+  <header class="head">
+    <div>
+      <h1 class="name">Sourav Dey</h1>
+      <p class="role">Gen AI Production Lead &nbsp;|&nbsp; Creative Director &nbsp;|&nbsp; Motion Graphics</p>
+      <p class="intro">Creative and Gen AI production lead with experience across motion graphics, video editing, AI ad creatives, automation workflows, prompt engineering, RCA, model testing and scaled creative production.</p>
+    </div>
+    <div class="contact">
+      Kolkata 700061, WB<br>
+      +91 79801 49807<br>
+      <a href="mailto:souravdey2105@gmail.com">souravdey2105@gmail.com</a><br>
+      <a href="https://linkedin.com/in/souravdey2105">linkedin.com/in/souravdey2105</a>
+    </div>
+  </header>
+  <div class="head-rule"></div>
+
+  <div class="body">
+    <aside class="side">
+      <section>
+        <span class="label">Education</span>
+        <div class="edu-school">Maya Academy of Advanced Cinematics (MAAC)</div>
+        <div class="edu-course">Advanced Program in Digital Media and Design</div>
+        <div class="edu-year">2020 — 2021</div>
+      </section>
+
+      <section>
+        <span class="label">LinkedIn</span>
+        <div class="link-line">linkedin.com/in/souravdey2105</div>
+      </section>
+
+      <section>
+        <span class="label">Traditional Software</span>
+        <ul class="list">
+          <li>Adobe After Effects</li>
+          <li>Adobe Premiere Pro</li>
+          <li>Adobe Illustrator</li>
+          <li>Adobe Photoshop</li>
+          <li>Blender 3D</li>
+          <li>Adobe Character Animator</li>
+          <li>DaVinci Resolve</li>
+        </ul>
+      </section>
+
+      <section>
+        <span class="label">Focus</span>
+        <ul class="list">
+          <li>Gen AI production</li>
+          <li>Creative automation</li>
+          <li>Scaled asset workflows</li>
+          <li>Motion and video</li>
+        </ul>
+      </section>
+    </aside>
+
+    <main class="main">
+      <span class="label">Experience Continued</span>
+
+      <div class="role-block">
+        <span class="role-index">03</span>
+        <div class="role-head">
+          <div><span class="company">Pocket FM Pvt Ltd</span><span class="place">Bengaluru, Karnataka</span></div>
+          <span class="dates">Oct 2022 — Oct 2024</span>
+        </div>
+        <h3 class="title">Sr. Motion Graphics Designer &amp; GEN-AI Expert, AI Team Lead</h3>
+        <ul class="bullets">
+          <li>Crafted <strong>AI-generated graphics, motion, and edited videos</strong> to enhance marketing campaigns for diverse shows.</li>
+          <li>Introduced <strong>new AI tools</strong>, optimizing editing workflows, enhancing efficiency, and collaboration within the team.</li>
+        </ul>
+      </div>
+
+      <div class="role-block">
+        <span class="role-index">04</span>
+        <div class="role-head">
+          <div><span class="company">Zolute Technology &amp; Consulting</span><span class="place">Indore, MP</span></div>
+          <span class="dates">Aug 2021 — Sep 2022</span>
+        </div>
+        <h3 class="title">Web Designer</h3>
+        <ul class="bullets">
+          <li>Developed <strong>graphic and image assets</strong> for both content and digital marketing efforts.</li>
+          <li>Designed highly engaging <strong>interactive user interfaces</strong> that complied with modern web standards.</li>
+        </ul>
+      </div>
+
+      <div class="role-block">
+        <span class="role-index">05</span>
+        <div class="role-head">
+          <div><span class="company">ProjectPie Technologies Private Limited</span><span class="place">Kolkata, WB</span></div>
+          <span class="dates">Aug 2019 — Jun 2020</span>
+        </div>
+        <h3 class="title">Graphics Designer</h3>
+        <ul class="bullets">
+          <li>Developed unique and <strong>trend-driven T-shirt designs</strong> that resonated with the target audience, boosting overall product appeal.</li>
+          <li>Consistently delivered <strong>high-quality designs under tight deadlines</strong>, contributing to the timely release of new collections.</li>
+          <li>Worked closely with clients to translate their vision into <strong>creative and market-ready T-shirt designs</strong>.</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:9mm">
+        <span class="label">Links</span>
+        <div><a class="chip" href="https://linkedin.com/in/souravdey2105">LinkedIn &nbsp;·&nbsp; linkedin.com/in/souravdey2105</a></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,4 +1,5 @@
 import { experience } from '@/data/content';
+import Panned from '../Panned';
 import type { Chapter } from '../chapters';
 
 const ease = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
@@ -38,12 +39,17 @@ export default function RoleShot({
 
   const head = ease(local / 0.22);
   const body = ease((local - 0.1) / 0.3);
-  const out = Math.max(0, (local - 0.78) / 0.22);
+  /*
+   * The exit waits for the pan. A shot taller than the stage is still being
+   * revealed at 0.78, so fading from there cut off whatever the travel had not
+   * reached yet — on a phone that was the last third of the responsibilities.
+   */
+  const out = Math.max(0, (local - 0.9) / 0.1);
 
   const year = job.period.split(' - ')[0];
 
   return (
-    <div className="flex h-full flex-col justify-center pb-28 pt-24">
+    <Panned local={local} className="pb-28 pt-24">
       <div className="nova-shell">
         {/* Slate strip */}
         <div
@@ -119,6 +125,6 @@ export default function RoleShot({
           </ul>
         </div>
       </div>
-    </div>
+    </Panned>
   );
 }

@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Play, ArrowUpRight, FileText } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useIsMobile } from '@/lib/useViewport';
+import { Play, ArrowUpRight, FileText, ArrowDown, ArrowRight } from 'lucide-react';
 import Lightbox from '@/components/Lightbox';
 import Poster from '@/components/Poster';
 import { automationProjects, portfolioWork } from '@/data/work';
@@ -29,6 +30,28 @@ type Cell = Tile | Marker;
  */
 export default function ReelShot({ local }: { local: number }) {
   const [active, setActive] = useState<MediaItem | null>(null);
+  const isMobile = useIsMobile();
+
+  /*
+   * A sideways gesture here is the wrong one — the strip is driven by vertical
+   * scroll. Rather than ignore it, catch it and light up the line that says so.
+   * Detectable because a trackpad swipe arrives as a wheel event with deltaX.
+   */
+  const [wrongWay, setWrongWay] = useState(false);
+  const wrongTimer = useRef(0);
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || Math.abs(e.deltaX) < 6) return;
+      setWrongWay(true);
+      clearTimeout(wrongTimer.current);
+      wrongTimer.current = window.setTimeout(() => setWrongWay(false), 2400);
+    };
+    window.addEventListener('wheel', onWheel, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', onWheel);
+      clearTimeout(wrongTimer.current);
+    };
+  }, []);
 
   const { cells, tileCount } = useMemo(() => {
     const cases: Tile[] = automationProjects.map((p) => ({
@@ -65,24 +88,35 @@ export default function ReelShot({ local }: { local: number }) {
   const out = Math.max(0, (local - 0.9) / 0.1);
 
   /*
-   * The strip holds before it moves.
+   * The strip moves from the first pixel of the chapter.
    *
-   * It used to start travelling the moment the chapter came on screen, so the
-   * five workflow cards — the first things in the run and the ones that take
-   * the longest to read — were already sliding away before the heading had
-   * finished arriving. Now a quarter of the chapter is spent standing still on
-   * them, and the travel eases in from there rather than starting at full pace.
+   * There used to be a 26% hold here — 11 wheel notches during which scrolling
+   * did nothing at all. It was meant to stop the workflow cards flying past,
+   * but the real problem was that the chapter was too long, not that it started
+   * too early. The chapter is now 2.6vh instead of 4.5, so the cards are
+   * readable without freezing the page to achieve it.
+   *
+   * A small lead-in remains so the heading can land, and the travel is eased at
+   * both ends rather than starting at full pace.
    */
-  const HOLD = 0.26;
-  const raw = Math.max(0, Math.min(1, (local - HOLD) / (0.9 - HOLD)));
-  const run = raw * raw * (3 - 2 * raw); // ease in and out of the travel
+  const raw = Math.max(0, Math.min(1, (local - 0.06) / 0.82));
+  const run = raw * raw * (3 - 2 * raw);
 
-  const TILE = 320;
-  const MARKER = 210;
-  const GAP = 20;
-  const width = (c: Cell) => (c.kind === 'marker' ? MARKER : TILE);
-  const strip = cells.reduce((n, c) => n + width(c) + GAP, 0);
-  const shift = run * Math.max(0, strip - 900);
+  /*
+   * Axis follows the device.
+   *
+   * A 320px tile does not fit a 390px phone, and asking a thumb to drive
+   * horizontal travel with a vertical swipe is the single least intuitive thing
+   * this page did. On a phone the same scroll-driven strip runs on Y with
+   * full-width tiles, so the gesture and the motion finally point the same way.
+   */
+  const TILE = isMobile ? 268 : 320;   // tile extent along the travel axis
+  const MARKER = isMobile ? 150 : 210;
+  const GAP = isMobile ? 14 : 20;
+  const extent = (c: Cell) => (c.kind === 'marker' ? MARKER : TILE);
+  const strip = cells.reduce((n, c) => n + extent(c) + GAP, 0);
+  const viewport = isMobile ? 520 : 900;
+  const shift = run * Math.max(0, strip - viewport);
   const at = Math.min(tileCount, Math.floor(run * tileCount) + 1);
 
   return (
@@ -100,16 +134,59 @@ export default function ReelShot({ local }: { local: number }) {
               Selected Work
             </h2>
           </div>
-          <p className="max-w-sm text-sm leading-relaxed text-white/65 md:text-right">
-            {workScene.intro}
-          </p>
+          <div className="max-w-sm md:text-right">
+            <p className="text-sm leading-relaxed text-white/65">{workScene.intro}</p>
+            {/*
+              The one place the page breaks the vertical convention, so it says
+              so out loud. Set as a hairline-ruled mono line — the same language
+              as the marker boards in the strip — rather than a floating pill,
+              so it reads as part of the scene instead of a notification landing
+              on top of it. It brightens if someone tries the wrong gesture.
+            */}
+            <p
+              className="mt-4 flex items-center gap-2.5 border-l-2 py-1 pl-3 font-mono text-[10px] uppercase leading-[1.5] tracking-[0.18em] transition-colors duration-300 md:ml-auto md:w-fit"
+              style={{
+                borderColor: wrongWay ? '#ffffff' : 'rgba(255,255,255,0.28)',
+                color: wrongWay ? '#ffffff' : 'rgba(255,255,255,0.62)',
+              }}
+            >
+              <ArrowDown size={12} className="nova-scroll-hint shrink-0" />
+              {wrongWay
+                ? 'Scroll down — not sideways'
+                : isMobile
+                  ? 'Keep scrolling — the reel runs down'
+                  : 'Keep scrolling — the strip runs sideways'}
+              {!isMobile && !wrongWay && (
+                <ArrowRight size={12} className="nova-strip-hint shrink-0" />
+              )}
+            </p>
+          </div>
         </div>
 
-        {/* The strip */}
-        <div className="relative" style={{ opacity: 1 - out }}>
+        {/*
+          The strip.
+
+          Height is capped on phones. Stacked vertically the cells are one very
+          tall column, and inside a `justify-center` stage that column shoved the
+          heading clean off the top of the screen. Capping it to the same 520px
+          the travel maths already assumes keeps the header, the strip and the
+          counter all in frame.
+        */}
+        <div
+          className="relative overflow-hidden"
+          style={{ opacity: 1 - out, height: isMobile ? 520 : undefined }}
+        >
           <div
-            className="flex gap-5 pl-[calc((100vw-min(1160px,100vw-3rem))/2)] will-change-transform"
-            style={{ transform: `translate3d(${-shift}px,0,0)` }}
+            className={
+              isMobile
+                ? 'flex flex-col gap-3.5 px-5 will-change-transform'
+                : 'flex gap-5 pl-[calc((100vw-min(1160px,100vw-3rem))/2)] will-change-transform'
+            }
+            style={{
+              transform: isMobile
+                ? `translate3d(0,${-shift}px,0)`
+                : `translate3d(${-shift}px,0,0)`,
+            }}
           >
             {cells.map((cell, i) => {
               const appear = ease((local - 0.04 - i * 0.003) / 0.14);
@@ -119,8 +196,8 @@ export default function ReelShot({ local }: { local: number }) {
                 return (
                   <div
                     key={cell.key}
-                    style={{ width: MARKER, opacity: appear }}
-                    className="flex shrink-0 flex-col justify-end border-l-2 border-white pb-4 pl-4"
+                    style={isMobile ? { opacity: appear } : { width: MARKER, opacity: appear }}
+                    className="flex shrink-0 flex-col justify-end border-l-2 border-white pb-4 pl-4 md:pb-4"
                   >
                     <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/45">
                       {String(cell.count).padStart(2, '0')} pieces
@@ -144,7 +221,7 @@ export default function ReelShot({ local }: { local: number }) {
                     key={cell.key}
                     type="button"
                     onClick={() => setActive(cell.item)}
-                    style={{ width: TILE, opacity: appear }}
+                    style={isMobile ? { opacity: appear } : { width: TILE, opacity: appear }}
                     className="cursor-target group shrink-0 overflow-hidden rounded-xl border border-white/12 bg-white/[0.04] text-left backdrop-blur-xl transition-colors duration-300 hover:border-white/30 hover:bg-white/10"
                   >
                     <span className="relative block aspect-video overflow-hidden bg-black/50">
@@ -180,7 +257,7 @@ export default function ReelShot({ local }: { local: number }) {
                 <a
                   key={cell.key}
                   href={`#case-${cell.slug}`}
-                  style={{ width: TILE, opacity: appear }}
+                  style={isMobile ? { opacity: appear } : { width: TILE, opacity: appear }}
                   className="cursor-target group relative shrink-0 overflow-hidden rounded-xl border-2 border-white bg-white/[0.10] backdrop-blur-xl transition-colors duration-300 hover:bg-white/20"
                 >
                   <span className="relative block aspect-video overflow-hidden bg-black/50">

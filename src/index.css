@@ -93,18 +93,22 @@
     color: #fff;
   }
 
+  /*
+   * No native scrollbar.
+   *
+   * The document reports one long scroll height for what is really nine
+   * cross-fading chapters on a sticky stage, so the right-hand track was a
+   * third progress indicator sitting next to two better ones — the top rail and
+   * the timeline — and the only one of the three that didn't describe the film.
+   * Scrolling still works exactly as before; it just isn't narrated twice.
+   */
+  html {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+  }
   ::-webkit-scrollbar {
-    width: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #0a0a0a;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: rgb(255 255 255 / 0.14);
-    border-radius: 99px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgb(255 255 255 / 0.26);
+    width: 0;
+    height: 0;
   }
 }
 

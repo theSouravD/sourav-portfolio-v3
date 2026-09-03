@@ -4,7 +4,6 @@ import PressureName from '../PressureName';
 import ShinyText from '@/reactbits/ShinyText';
 import Magnet from '@/reactbits/Magnet';
 import Counter from './Counter';
-import TitleGlow from './TitleGlow';
 import { useFilm } from '../FilmContext';
 import { profile, stats } from '@/data/content';
 
@@ -35,9 +34,15 @@ export default function TitleShot({ local }: { local: number }) {
 
   return (
     <div className="relative flex h-full flex-col justify-between pb-28 pt-24">
-      {/* The turning accordion. Sits above the page background and below every
-          piece of type in the shot. */}
-      <TitleGlow opacity={enter * (1 - leave)} />
+      {/*
+        No local backdrop.
+
+        There was a stack of blurred panels here acting as a key light, and
+        before that a turning solid. Both were added on top of the background
+        the visitor actually chose in the picker, and both ended up competing
+        with it — a second light source in a frame that already has one reads
+        as haze, not as depth. The background preset is the background.
+      */}
       <div className="nova-shell flex items-start justify-between gap-8">
         <p
           className="max-w-[24rem] font-mono text-[11px] font-medium uppercase leading-[2.1] tracking-[0.18em] text-white/85 transition-all duration-[900ms] ease-out"
@@ -50,8 +55,6 @@ export default function TitleShot({ local }: { local: number }) {
           style={{ opacity: enter * (1 - leave), transform: `translateY(${(1 - enter) * 22}px)` }}
         >
           A film in nine scenes
-          <br />
-          Scroll or drag the timeline
         </p>
       </div>
 
@@ -83,19 +86,29 @@ export default function TitleShot({ local }: { local: number }) {
           Sized well below the name on purpose: these support the title, they
           don't compete with it.
         */}
-        <dl className="nova-report flex flex-wrap items-start">
+        {/*
+          The columns size from their content here and are overridden for
+          phones in the stylesheet — see `.nova-report` in cursor.css. The two
+          frames have opposite problems (a desktop needs the group to stay tight
+          on the left, a phone needs it to divide the width), and expressing
+          that as responsive flex utilities put a shorthand and a longhand for
+          the same property in two breakpoints, where which one wins depends on
+          the order the utilities happen to be emitted in. One media query is
+          the version that can't quietly stop working.
+        */}
+        <dl className="nova-report flex items-start">
           {stats.map((s, i) => (
             <div
               key={s.label}
-              className={`flex min-w-[8rem] flex-col pr-[clamp(1.25rem,3.4vw,3rem)] ${
-                i ? 'ml-[clamp(1.25rem,3.4vw,3rem)] border-l border-white/15 pl-[clamp(1.25rem,3.4vw,3rem)]' : ''
+              className={`flex min-w-[8rem] flex-col pr-[clamp(0.55rem,3.4vw,3rem)] ${
+                i ? 'ml-[clamp(0.55rem,3.4vw,3rem)] border-l border-white/15 pl-[clamp(0.55rem,3.4vw,3rem)]' : ''
               }`}
             >
-              <dt className="flex items-baseline text-[clamp(1.75rem,3.2vw,2.6rem)] font-light leading-[1] tracking-[-0.04em] text-white tabular-nums">
+              <dt className="flex items-baseline text-[clamp(1.6rem,3.2vw,2.6rem)] font-light leading-[1] tracking-[-0.04em] text-white tabular-nums">
                 <Counter to={s.value} start={rolling} delay={450 + i * 160} />
                 <span className="text-white/55">{s.suffix}</span>
               </dt>
-              <dd className="mt-2.5 max-w-[9rem] font-mono text-[9.5px] uppercase leading-[1.75] tracking-[0.2em] text-white/45">
+              <dd className="mt-2.5 font-mono text-[9px] uppercase leading-[1.75] tracking-[0.16em] text-white/45 sm:max-w-[9rem] sm:text-[9.5px] sm:tracking-[0.2em]">
                 {s.label}
               </dd>
             </div>

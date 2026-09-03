@@ -20,11 +20,26 @@ export interface Chapter {
  * in order — bracketed by a title card, the reel, the toolkit and an end card.
  *
  * `experience` is stored newest-first, so role chapters index it in reverse.
+ *
+ * LENGTHS ARE A UX BUDGET, NOT A FEEL.
+ *
+ * The reel is the exception that proves it. Every other chapter holds one
+ * screen of content, so extra length is dead scrolling; the reel holds 37 cells
+ * of real content, so length there buys legibility rather than wasting a
+ * gesture. At 2.6 it moved most of two tiles per wheel notch — unreadable. At
+ * 5.5 it moves about three quarters of one.
+ *
+ * `length` is in viewport-heights of scrolling. At a 900px viewport, one wheel
+ * notch is ~100px — so a 1.9 chapter took 17 notches to cross while its content
+ * finished animating after 5. Two thirds of the scrolling on this site produced
+ * no visible change, which is why people could not tell the page was responding
+ * at all. These are roughly halved: a chapter is now 8-9 notches, and every shot
+ * animates across the whole of it.
  */
 const roleCount = experience.length;
 
 export const CHAPTERS: Chapter[] = [
-  { id: 'open', label: 'Titles', scene: 'SC 00', kind: 'title', length: 1.6 },
+  { id: 'open', label: 'Titles', scene: 'SC 00', kind: 'title', length: 1.0 },
 
   ...Array.from({ length: roleCount }, (_, i): Chapter => {
     const roleIndex = roleCount - 1 - i; // oldest first
@@ -34,14 +49,14 @@ export const CHAPTERS: Chapter[] = [
       label: job.period.split(' - ')[0].split(' ').pop() ?? job.period,
       scene: `SC ${String(i + 1).padStart(2, '0')}`,
       kind: 'role',
-      length: 1.9,
+      length: 0.9,
       roleIndex,
     };
   }),
 
-  { id: 'reel', label: 'The Reel', scene: 'SC 07', kind: 'reel', length: 4.5 },
-  { id: 'kit', label: 'Toolkit', scene: 'SC 08', kind: 'toolkit', length: 1.8 },
-  { id: 'end', label: 'End', scene: 'SC 09', kind: 'end', length: 1.6 },
+  { id: 'reel', label: 'The Reel', scene: 'SC 07', kind: 'reel', length: 5.5 },
+  { id: 'kit', label: 'Toolkit', scene: 'SC 08', kind: 'toolkit', length: 1.0 },
+  { id: 'end', label: 'End', scene: 'SC 09', kind: 'end', length: 1.0 },
 ];
 
 /**

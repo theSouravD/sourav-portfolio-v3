@@ -26,3 +26,8 @@ dist-ssr
 # Working files from the build sessions — not part of the site
 _shelved/
 _*.tgz
+
+# Transfer bundles and files parked for deletion during the build sessions.
+# Nothing here is part of the site.
+_to_delete/
+*.tgz

@@ -65,6 +65,31 @@ export default function Slate({ onCut }: { onCut: () => void }) {
     return clear;
   }, []);
 
+  /*
+   * The slate opens itself.
+   *
+   * It is a title card, not a door: making a recruiter click before they can
+   * see anything costs more than the gesture is worth. So it plays, holds a
+   * beat, and rolls — about 1.7s end to end. Clicking or pressing a key still
+   * cuts immediately, so nobody impatient is made to wait for it.
+   *
+   * The hold is what got cut, not the fill. The board stamping in is the part
+   * worth watching; the pause after it was only ever there to give a click
+   * somewhere to land, and there is no click any more.
+   *
+   * This has to hang off `armed` rather than off mount. `cut` refuses to fire
+   * until the board is full, and a timer scheduled at mount closes over the
+   * version of `cut` that was created while `armed` was still false — so it
+   * fires on time, hits the guard, and does nothing. Scheduling it the moment
+   * the board arms captures a `cut` that will actually run.
+   */
+  useEffect(() => {
+    if (!armed) return;
+    const t = window.setTimeout(cut, 400);
+    timers.current.push(t);
+    return () => clearTimeout(t);
+  }, [armed, cut]);
+
   // Call it. Only listens once the board is filled and the prompt is up.
   useEffect(() => {
     if (!armed) return;
@@ -143,36 +168,33 @@ export default function Slate({ onCut }: { onCut: () => void }) {
           </div>
 
           <div className="mt-5 flex items-center justify-between gap-4">
-            {/* Now the actual gate rather than a hint, so it arrives with the
-                stick snap and keeps blinking until the visitor calls it. */}
-            <span
-              className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/70 transition-opacity duration-500"
-              style={{
-                opacity: armed && !snapped ? 1 : 0,
-                animation: armed && !snapped ? 'slateWait 1.9s ease-in-out infinite' : undefined,
-              }}
-            >
-              Click or press any key to cut
-            </span>
             <span className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/70">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
               Rec
             </span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/35">
+              Roll A001 · Take 01
+            </span>
           </div>
         </div>
+
+        {/*
+          No enter control.
+
+          There was a bracketed "click to enter" button here, from when the
+          slate held until it was called. Now that it opens itself in about
+          three seconds, an instruction to click is an instruction to do
+          something that is already happening — it invites a visitor to act at
+          the exact moment the board is about to act for them, and whichever
+          they choose the other one looks broken. Any click or keypress still
+          cuts early; it just isn't advertised.
+        */}
       </div>
 
       <style>{`
         @keyframes slateFlash {
           0%   { opacity: 0.95; }
           100% { opacity: 0; }
-        }
-        @keyframes slateWait {
-          0%, 100% { opacity: 1; }
-          50%      { opacity: 0.42; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          [style*="slateWait"] { animation: none !important; }
         }
       `}</style>
     </div>

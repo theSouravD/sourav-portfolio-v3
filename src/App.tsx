@@ -5,6 +5,7 @@ import Cursor from '@/film/Cursor';
 import { FilmProvider } from '@/film/FilmContext';
 import Film from '@/film/Film';
 import Timeline from '@/film/Timeline';
+import ScrollFeedback from '@/film/ScrollFeedback';
 import CaseFiles from '@/sections/CaseFiles';
 import { savedPreset } from '@/film/BackgroundPicker';
 import { Footer } from '@/components/Contact';
@@ -55,6 +56,7 @@ export default function App() {
           <Footer />
         </div>
 
+        <ScrollFeedback />
         {rolling && <Timeline preset={preset} onPreset={setPreset} />}
       </div>
     </FilmProvider>

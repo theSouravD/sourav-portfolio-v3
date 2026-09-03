@@ -73,7 +73,9 @@ export default function Timeline({
       }`}
     >
       <div className="pointer-events-auto border-t border-white/12 bg-[#0a0a0a]/70 backdrop-blur-2xl">
-        <div className="nova-shell flex items-center gap-5 pb-8 pt-3">
+        {/* Tighter gutters on a phone, so the scrubber keeps its width now that
+            the resume control sits in this row too. */}
+        <div className="nova-shell flex items-center gap-3 pb-8 pt-3 sm:gap-5">
           {/* Identity + resume, kept out of the scrub area */}
           <button
             type="button"
@@ -168,7 +170,16 @@ export default function Timeline({
               is what made the playhead sit over one year while the label under
               it read another.
             */}
-            <div className="absolute inset-x-0 top-full flex items-stretch gap-[3px]">
+            {/*
+              Phones get one readable label instead of nine truncated ones. The
+              chip row collapsed to "T… 2… 2.." at this width, which is worse
+              than no labels at all — it read as a rendering fault.
+            */}
+            <span className="absolute inset-x-0 top-full block pt-1.5 text-center font-mono text-[9px] uppercase tracking-[0.2em] text-white/60 md:hidden">
+              {active.scene} · {active.label}
+            </span>
+
+            <div className="absolute inset-x-0 top-full hidden items-stretch gap-[3px] md:flex">
               {TRACKS.map((t, i) => (
                 <button
                   key={t.label + i}
@@ -192,13 +203,24 @@ export default function Timeline({
 
           <BackgroundPicker value={preset} onChange={onPreset} />
 
+          {/*
+            The resume, at every width.
+
+            This used to be `hidden sm:inline-flex` — the one thing a recruiter
+            came for, dropped on exactly the device most of them arrive on. The
+            label is what actually doesn't fit at 390px, not the control, so
+            the label is what goes: a phone gets the download glyph in the same
+            white pill, sized as a proper 36px touch target, and the word comes
+            back as soon as there is room for it.
+          */}
           <a
             href={profile.resumeUrl}
             download
-            className="cursor-target hidden shrink-0 items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-medium text-black transition-colors duration-300 hover:bg-white/85 sm:inline-flex"
+            aria-label={`Download ${profile.name}'s resume`}
+            className="cursor-target inline-flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-white text-xs font-medium text-black transition-colors duration-300 hover:bg-white/85 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
           >
             <Download size={13} />
-            Resume
+            <span className="hidden sm:inline">Resume</span>
           </a>
         </div>
       </div>

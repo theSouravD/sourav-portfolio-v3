@@ -19,9 +19,73 @@ textarea,
 /*
  * The production report stands down where the hero runs short of room, rather
  * than shrinking the name to make space for it.
+ *
+ * Height only. It used to stand down below 640px wide as well, which took the
+ * three figures off every phone in portrait — and those figures are the first
+ * thing a recruiter looks for, so a phone is the last place to drop them. What
+ * actually broke at that width was the columns' 8rem minimum, not the width
+ * itself: three of them plus the rules came to more than a 390px frame holds,
+ * so the row overflowed and hiding it was the quicker fix. The minimum is gone
+ * now and the columns divide whatever they are given, so the only thing that
+ * still hides the report is a genuinely short frame — a phone held sideways,
+ * or a laptop with a small browser window, where the name would have to shrink
+ * to make room.
  */
-@media (max-height: 720px), (max-width: 640px) {
+@media (max-height: 720px) {
   .nova-report {
     display: none;
   }
 }
+
+/*
+ * Phones divide the width; everything else sizes from content.
+ *
+ * The columns carry an 8rem minimum so that on a desktop the three figures stay
+ * a tight group under the tagline, with the right half of the frame left empty
+ * on purpose. That minimum is wider than a third of a 390px screen, so below
+ * `sm` it becomes an overflow — which is why the whole report used to be hidden
+ * on phones. Here they drop the floor and share the row instead.
+ */
+@media (max-width: 639px) {
+  .nova-report > div {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+/*
+ * The narrowest phones.
+ *
+ * At 320px each column gets about 70px, and "THROUGHPUT" set at 9px with 0.16em
+ * of tracking is wider than that — a single word cannot break, so it ran past
+ * the frame. Tracking is the first thing to give: it is the part of the label's
+ * width that carries no information. The trailing gutter goes too, since there
+ * is nothing to its right to be separated from.
+ */
+@media (max-width: 380px) {
+  .nova-report dd {
+    font-size: 8px;
+    letter-spacing: 0.07em;
+  }
+  .nova-report > div:last-child {
+    padding-right: 0;
+  }
+}
+
+/* The reel's sideways hint — nudges in the direction the strip travels. */
+.nova-strip-hint { animation: novaStripHint 1.8s ease-in-out infinite; }
+@keyframes novaStripHint {
+  0%, 100% { transform: translateX(0);   opacity: 0.5; }
+  50%      { transform: translateX(3px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nova-strip-hint { animation: none; }
+}
+
+/* The reel's scroll hint — nudges along the axis the strip actually travels. */
+.nova-scroll-hint { animation: novaScrollHint 1.8s ease-in-out infinite; }
+@keyframes novaScrollHint {
+  0%, 100% { transform: translateY(0);   opacity: 0.55; }
+  50%      { transform: translateY(3px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .nova-scroll-hint { animation: none; } }

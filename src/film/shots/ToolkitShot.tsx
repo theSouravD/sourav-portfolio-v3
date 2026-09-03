@@ -1,13 +1,34 @@
 import LogoLoop from '@/reactbits/LogoLoop';
+import Panned from '../Panned';
 import CardSwap, { Card } from '@/reactbits/CardSwap';
 import { about, coreSkills, tools } from '@/data/content';
+
+/** The three disciplines, shared by the card stack and the mobile list. */
+const DISCIPLINES = [
+  { title: about.aside.title, body: about.aside.body },
+  {
+    title: 'Research \u2192 production',
+    body: 'Model testing, RCA, prompt engineering and validation, turned into workflows a team can run.',
+  },
+  {
+    title: 'Scale without drift',
+    body: 'Creative quality and consistency held steady across high-volume output.',
+  },
+];
 
 const ease = (t: number) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
 
 /** SC 08 — the toolkit. Skills stagger in on scroll; tools run as a strip. */
 export default function ToolkitShot({ local }: { local: number }) {
   const head = ease(local / 0.2);
-  const out = Math.max(0, (local - 0.82) / 0.18);
+  /*
+   * The exit waits for the pan.
+   *
+   * At 0.82 the shot began fading while `Panned` was still travelling, so the
+   * tools strip — the last thing the pan brings on screen — arrived already
+   * half faded out. The fade now starts where the travel finishes.
+   */
+  const out = Math.max(0, (local - 0.9) / 0.1);
 
   const toolItems = tools.map((t) => ({
     node: (
@@ -18,8 +39,14 @@ export default function ToolkitShot({ local }: { local: number }) {
     title: t,
   }));
 
+  /*
+   * This is the tallest shot in the film — a heading, a paragraph, three
+   * disciplines, fourteen skill chips and a tools strip — and on a phone all of
+   * that is roughly one and a half screens. `Panned` lets the overflow ride the
+   * chapter's own scroll rather than being cut off at both ends.
+   */
   return (
-    <div className="flex h-full flex-col justify-center pb-28 pt-24">
+    <Panned local={local} className="pb-28 pt-24">
       <div className="nova-shell" style={{ opacity: 1 - out }}>
         <div
           className="mb-8 border-b border-white/12 pb-4"
@@ -43,7 +70,7 @@ export default function ToolkitShot({ local }: { local: number }) {
 
           {/* Three cards cycling in 3D — the disciplines, dealt like slides */}
           <div
-            className="relative h-[220px]"
+            className="relative hidden h-[220px] md:block"
             style={{ opacity: ease((local - 0.14) / 0.26) }}
           >
             <CardSwap width={320} height={190} cardDistance={44} verticalDistance={52} delay={3200} skewAmount={4} pauseOnHover>
@@ -66,7 +93,32 @@ export default function ToolkitShot({ local }: { local: number }) {
                   Creative quality and consistency held steady across high-volume output.
                 </span>
               </Card>
-            </CardSwap>
+              </CardSwap>
+          </div>
+
+          {/*
+            The same three disciplines as a plain list on phones. CardSwap deals
+            fixed 320px cards in 3D, which ran off a 390px screen — and hiding
+            it outright would have dropped this content on mobile entirely,
+            which is worse than it being less clever.
+          */}
+          <div
+            className="grid gap-3 md:hidden"
+            style={{ opacity: ease((local - 0.14) / 0.26) }}
+          >
+            {DISCIPLINES.map((d, i) => (
+              <div key={d.title} className="border-l-2 border-white/25 py-1 pl-4">
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/45">
+                  Discipline {String(i + 1).padStart(2, '0')}
+                </span>
+                <strong className="mt-1.5 block text-[15px] font-medium text-white">
+                  {d.title}
+                </strong>
+                <span className="mt-1.5 block text-[12px] leading-relaxed text-white/65">
+                  {d.body}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -107,6 +159,6 @@ export default function ToolkitShot({ local }: { local: number }) {
           </div>
         </div>
       </div>
-    </div>
+    </Panned>
   );
 }
