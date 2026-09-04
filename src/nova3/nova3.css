@@ -1,19 +1,34 @@
 /* ==================================================================
- * NOVA III
+ * NOVA III — DAYLIGHT
  *
- * Six rooms, six lights, one boring navigation bar. The invention is all
- * in the atmosphere; the interface is deliberately the most ordinary thing
- * on the page, because that is what "dummy proof" costs.
+ * Six rooms, one wash re-gelled, one boring navigation bar. The invention
+ * is all in the atmosphere; the interface is deliberately the most
+ * ordinary thing on the page, because that is what "dummy proof" costs.
+ *
+ * INVERTING A DARK THEME IS NOT FLIPPING THE COLOURS.
+ * On black, contrast comes free and a hairline at 14% reads clearly. On
+ * paper the same hairline vanishes and the same "premium" glow becomes
+ * grey haze. So the light version is built from different material:
+ * hairlines darker and thinner, elevation from a real shadow instead of a
+ * border, type at a heavier optical weight, and the accent doing far more
+ * work because there is no glow to carry a colour.
  * ================================================================== */
 
 .n3 {
-  --ink: #F3EEE7;
-  --ink-70: rgba(243, 238, 231, 0.70);
-  --ink-45: rgba(243, 238, 231, 0.45);
-  --ink-22: rgba(243, 238, 231, 0.22);
-  --rule: rgba(243, 238, 231, 0.14);
-  --void: #08070B;
-  --accent: #F2C79A;
+  /* Warm off-white, never #ffffff. Pure white with a shadow on it is what a
+     template looks like; paper is what a printed page looks like. */
+  --paper: #F7F3EC;
+  --ink: #17140F;
+  --ink-70: rgba(23, 20, 15, 0.72);
+  --ink-45: rgba(23, 20, 15, 0.50);
+  --ink-22: rgba(23, 20, 15, 0.22);
+  --rule: rgba(23, 20, 15, 0.11);
+  --card: rgba(255, 253, 249, 0.72);
+  --shadow: 0 1px 2px rgba(23,20,15,0.05), 0 12px 28px -10px rgba(23,20,15,0.14);
+  --shadow-lift: 0 2px 4px rgba(23,20,15,0.06), 0 22px 44px -14px rgba(23,20,15,0.22);
+  --void: #17140F;
+  --accent: #A9631B;
+  --wash: #FFD9A6;
 
   /* One easing and three durations for the whole site. Motion that shares a
      curve reads as one hand; motion that doesn't reads as a template. */
@@ -25,7 +40,7 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: var(--void);
+  background: var(--paper);
   color: var(--ink);
   font-family: 'Inter', system-ui, sans-serif;
 }
@@ -33,6 +48,11 @@
 /* ---- the light ---- */
 .n3-lights { position: absolute; inset: 0; z-index: 0; }
 .n3-lights canvas { display: block; width: 100% !important; height: 100% !important; }
+/* The paper stock, multiplied over the wash. See Stage.tsx. */
+.n3-paper {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: var(--paper); mix-blend-mode: multiply;
+}
 
 /*
  * Grain and vignette are on every room, always. They are the two constants
@@ -42,7 +62,7 @@
  */
 .n3-grain {
   position: absolute; inset: -50%; z-index: 3; pointer-events: none;
-  opacity: 0.055; mix-blend-mode: overlay;
+  opacity: 0.32; mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
   animation: n3Grain 700ms steps(1) infinite;
 }
@@ -53,17 +73,13 @@
   75%  { transform: translate(-2%, -2%); }
   100% { transform: translate(3%, 1%); }
 }
+/* On paper the vignette works the other way round: the edges go lighter, back
+   to the ground, so the wash never meets the frame in a hard line. */
 .n3-vig {
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  background: radial-gradient(115% 88% at 50% 42%, transparent 42%, rgba(4,3,6,0.62) 100%);
-}
-
-.n3-scrim {
-  position: absolute; inset: 0; z-index: 2; pointer-events: none;
   background:
-    radial-gradient(120% 90% at 50% 0%, rgba(8,7,11,0) 0%, rgba(8,7,11,0.55) 70%, rgba(8,7,11,0.9) 100%),
-    linear-gradient(180deg, rgba(8,7,11,0.5) 0%, rgba(8,7,11,0.1) 35%, rgba(8,7,11,0.75) 100%);
-  transition: opacity var(--slow) var(--ease);
+    radial-gradient(120% 92% at 50% 38%, transparent 36%, rgba(247,243,236,0.78) 100%),
+    linear-gradient(180deg, rgba(247,243,236,0.55) 0%, transparent 22%, transparent 66%, rgba(247,243,236,0.85) 100%);
 }
 
 /* ==================================================================
@@ -82,7 +98,7 @@
 .n3-brand-dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
   transition: background var(--slow) var(--ease), box-shadow var(--slow) var(--ease);
 }
 /* Everything that carries the room's temperature. One rule, so a new element
@@ -113,7 +129,12 @@
   padding: 7px 15px; color: var(--ink); font-size: 12px; font-weight: 500;
   transition: background 260ms ease, border-color 260ms ease;
 }
-.n3-cv:hover { background: var(--ink); color: var(--void); border-color: var(--ink); }
+.n3-cv {
+  background: var(--card);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+.n3-cv:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
 /*
  * Phones put the bar at the bottom, where the thumb is, and nothing goes
@@ -123,9 +144,10 @@
   .n3-nav {
     inset: auto 0 0 0;
     padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
-    background: rgba(8,7,11,0.78);
+    background: rgba(247,243,236,0.86);
     backdrop-filter: blur(18px);
     border-top: 1px solid var(--rule);
+    box-shadow: 0 -8px 24px -14px rgba(23,20,15,0.22);
     gap: 0;
   }
   .n3-brand, .n3-cv { display: none; }
@@ -159,24 +181,101 @@
 @media (max-width: 860px) { .n3-stage { padding: 26px 18px 86px; } }
 
 .n3-room { width: 100%; max-width: 1080px; }
-.n3-home, .n3-contact { max-width: 900px; }
+.n3-contact { max-width: 900px; }
+
+/* ==================================================================
+ * HOME — two columns
+ *
+ * Billing left, evidence right. Below 980px it stacks in reading order,
+ * which puts the still directly under the buttons rather than above the
+ * name — a phone should get the same content in the same order, not a
+ * different edit of it.
+ * ================================================================== */
+.n3-home {
+  display: grid; gap: clamp(28px, 5vw, 64px);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
+  align-items: center;
+}
+@media (max-width: 980px) { .n3-home { grid-template-columns: 1fr; } }
+
+.n3-home-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+.n3-featured {
+  display: block; width: 100%; text-align: left; cursor: pointer; padding: 0;
+  border: 1px solid var(--rule); border-radius: 16px; overflow: hidden;
+  background: var(--card); color: inherit; font: inherit;
+  box-shadow: var(--shadow); backdrop-filter: blur(10px);
+  transition: transform var(--mid) var(--ease), box-shadow var(--mid) var(--ease),
+              border-color var(--mid) var(--ease);
+}
+.n3-featured:hover {
+  transform: translateY(-4px); box-shadow: var(--shadow-lift);
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+}
+.n3-featured-frame {
+  position: relative; display: block; aspect-ratio: 16/9; overflow: hidden; background: #E7E1D6;
+}
+.n3-featured-frame img { transition: transform 900ms cubic-bezier(.2,.8,.3,1); }
+.n3-featured:hover .n3-featured-frame img { transform: scale(1.06); }
+.n3-featured:hover .n3-play { transform: scale(1.12); background: #fff; color: var(--ink); }
+.n3-featured-foot { display: block; padding: 13px 15px 15px; }
+.n3-featured-kick {
+  display: block; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+}
+.n3-featured-title { display: block; margin-top: 5px; font-size: 14px; font-weight: 600; letter-spacing: -0.015em; }
+.n3-featured-meta {
+  display: block; margin-top: 3px;
+  font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-45);
+}
+
+.n3-now {
+  display: grid; gap: 0; margin: 0;
+  border: 1px solid var(--rule); border-radius: 16px; overflow: hidden;
+  background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(10px);
+}
+.n3-now > div {
+  display: grid; grid-template-columns: 62px 1fr; gap: 12px; align-items: start;
+  padding: 11px 15px;
+}
+.n3-now > div + div { border-top: 1px solid var(--rule); }
+.n3-now dt {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-45);
+  padding-top: 2px;
+}
+.n3-now dd { margin: 0; font-size: 12px; font-weight: 500; line-height: 1.45; letter-spacing: -0.01em; }
+.n3-now dd span { font-weight: 400; color: var(--ink-45); font-size: 11px; }
+/* A dot that actually pulses. "Open to work" is the one line on the page a
+   visitor is scanning for, and a live indicator is how the eye finds it. */
+.n3-now-live i {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 7px;
+  background: var(--accent); vertical-align: middle;
+  animation: n3Pulse 2.4s var(--ease) infinite;
+}
+@keyframes n3Pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+  60%      { box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
 
 .n3-eyebrow {
   margin: 0 0 14px;
   font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--ink-45); line-height: 1.9; max-width: 46ch;
 }
+/* On black a 400 weight at this size reads as elegant; on paper it reads as
+   thin. Everything display-sized gains a step, and the drop shadow goes —
+   there is no darkness for it to fall into. */
 .n3-name {
-  margin: 0; font-size: clamp(2.8rem, 9.5vw, 7.5rem); font-weight: 400;
-  letter-spacing: -0.045em; line-height: 0.92;
-  text-shadow: 0 16px 50px rgba(0,0,0,0.55);
+  /* Sized for the LEFT COLUMN, not the page. The old 9.5vw was set when the
+     headline had the full width to itself. */
+  margin: 0; font-size: clamp(2.6rem, 6.2vw, 5.4rem); font-weight: 500;
+  letter-spacing: -0.045em; line-height: 0.94;
 }
 .n3-role { margin-top: 18px; font-size: 13px; letter-spacing: 0.02em; }
 
 .n3-stats { display: flex; flex-wrap: wrap; gap: clamp(26px, 6vw, 64px); margin: 36px 0 0; }
 .n3-stats dt {
   display: flex; align-items: baseline;
-  font-size: clamp(1.9rem, 4.6vw, 3rem); font-weight: 300;
+  font-size: clamp(1.9rem, 4.6vw, 3rem); font-weight: 500;
   letter-spacing: -0.045em; line-height: 1;
   font-variant-numeric: tabular-nums;
   transition: color var(--slow) var(--ease);
@@ -196,19 +295,27 @@
   font-family: inherit; font-size: 13px; font-weight: 500; text-decoration: none;
   transition: border-color 260ms ease, background 260ms ease;
 }
-.n3-btn:hover { border-color: var(--ink); background: rgba(243,238,231,0.06); }
-.n3-btn-solid { background: var(--ink); color: var(--void); border-color: var(--ink); font-weight: 600; }
-.n3-btn-solid:hover { background: #fff; color: var(--void); }
+.n3-btn {
+  background: var(--card);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+.n3-btn:hover { border-color: var(--ink-22); box-shadow: var(--shadow-lift); transform: translateY(-1px); }
+.n3-btn-solid {
+  background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 600;
+  box-shadow: 0 2px 4px rgba(23,20,15,0.10), 0 16px 32px -12px rgba(23,20,15,0.4);
+}
+.n3-btn-solid:hover { background: #000; color: var(--paper); border-color: #000; }
 .n3-btn-solid span {
   display: grid; place-items: center; width: 22px; height: 22px;
-  border-radius: 50%; background: var(--void); color: var(--ink);
+  border-radius: 50%; background: var(--paper); color: var(--ink);
 }
 
 /* ---- room header ---- */
 .n3-head { margin-bottom: clamp(24px, 4vh, 40px); }
 .n3-title {
-  margin: 0; font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 400;
-  letter-spacing: -0.04em; line-height: 1;
+  margin: 0; font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 500;
+  letter-spacing: -0.042em; line-height: 1;
 }
 .n3-note { margin: 14px 0 0; max-width: 56ch; font-size: 14px; line-height: 1.7; color: var(--ink-70); }
 
@@ -217,38 +324,75 @@
   display: grid; gap: 14px;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
 }
+/* One tile per row on a phone means twelve screens of scrolling to see the
+   work. Two up halves that, and a 16:9 still is still perfectly readable at
+   half a phone's width. */
+@media (max-width: 640px) {
+  .n3-grid { gap: 10px; grid-template-columns: 1fr 1fr; }
+  .n3-tile-foot { padding: 9px 10px 11px; }
+  .n3-tile-title { font-size: 11.5px; }
+  .n3-tile-meta { font-size: 8.5px; }
+  .n3-tile-rule { left: 10px; right: 10px; }
+}
 .n3-tile {
   padding: 0 !important; border-radius: 14px !important; overflow: hidden;
-  border-color: rgba(243,238,231,0.10) !important;
-  transition: transform var(--mid) var(--ease), border-color var(--mid) var(--ease);
+  background: var(--card) !important;
+  border-color: var(--rule) !important;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  transition: transform var(--mid) var(--ease), box-shadow var(--mid) var(--ease),
+              border-color var(--mid) var(--ease);
 }
-.n3-tile:hover { transform: translateY(-4px); border-color: var(--accent) !important; }
+.n3-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lift);
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+}
 .n3-tile button {
   display: block; width: 100%; text-align: left; cursor: pointer;
   background: none; border: 0; padding: 0; color: inherit; font: inherit;
 }
-.n3-thumb { position: relative; display: block; aspect-ratio: 16/9; overflow: hidden; background: #0d0c11; }
+.n3-thumb { position: relative; display: block; aspect-ratio: 16/9; overflow: hidden; background: #E7E1D6; }
 .n3-thumb img { transition: transform 900ms cubic-bezier(.2,.8,.3,1); }
 .n3-tile:hover .n3-thumb img { transform: scale(1.07); }
 /* The index number. An editorial detail that costs nothing and makes a grid
    of thumbnails read as a body of work rather than as a folder. */
+/*
+ * White with a drop shadow works over a still and disappears over the pale
+ * plate a missing still leaves behind — and which of those you get depends on
+ * whether a CDN answered. A number that is only legible on a good day is not
+ * a number you can put on the page, so it rides its own dark chip and is
+ * legible over anything.
+ */
 .n3-idx {
-  position: absolute; top: 10px; left: 12px; z-index: 2;
-  font-size: 10px; letter-spacing: 0.16em; color: rgba(255,255,255,0.55);
-  text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+  position: absolute; top: 9px; left: 9px; z-index: 2;
+  padding: 3px 7px; border-radius: 999px;
+  background: rgba(23,20,15,0.62); backdrop-filter: blur(6px);
+  font-size: 9.5px; letter-spacing: 0.14em; color: rgba(255,255,255,0.92);
   font-variant-numeric: tabular-nums;
-  transition: color var(--mid) var(--ease);
+  transition: background var(--mid) var(--ease), color var(--mid) var(--ease);
 }
-.n3-tile:hover .n3-idx { color: var(--accent); }
+.n3-tile:hover .n3-idx { background: var(--accent); color: #fff; }
+
+/* The missing-still placeholder is built white-on-dark for Nova I. Repaint it
+   for paper — see Poster.tsx. */
+.n3 .poster-empty { position: relative; background: linear-gradient(135deg, #EDE7DB, #E3DCCE); }
+.n3 .poster-empty-ico { display: none; }
+/* Centre of the plate belongs to the play button, so the caption moves to the
+   floor rather than sitting underneath it. */
+.n3 .poster-empty > div {
+  position: absolute; left: 0; right: 0; bottom: 7px;
+}
+.n3 .poster-empty-cap { color: rgba(23,20,15,0.42); }
 
 .n3-play {
   position: absolute; inset: 0; margin: auto; width: 40px; height: 40px;
   display: grid; place-items: center; border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.4); background: rgba(8,7,11,0.42);
+  border: 1px solid rgba(255,255,255,0.55); background: rgba(23,20,15,0.46); color: #fff;
   backdrop-filter: blur(6px);
   transition: transform 300ms ease, background 300ms ease, color 300ms ease;
 }
-.n3-tile:hover .n3-play { transform: scale(1.12); background: #fff; color: #08070B; }
+.n3-tile:hover .n3-play { transform: scale(1.12); background: #fff; color: var(--ink); }
 .n3-tile-foot { position: relative; display: block; padding: 12px 14px 14px; }
 .n3-tile-title { display: block; font-size: 13px; font-weight: 500; letter-spacing: -0.01em; }
 .n3-tile-meta {
@@ -269,16 +413,24 @@
 .n3-cases { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .n3-case {
   padding: 0 !important; border-radius: 14px !important; overflow: hidden;
-  border-color: rgba(243,238,231,0.10) !important;
-  transition: transform var(--mid) var(--ease), border-color var(--mid) var(--ease);
+  background: var(--card) !important;
+  border-color: var(--rule) !important;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  transition: transform var(--mid) var(--ease), box-shadow var(--mid) var(--ease),
+              border-color var(--mid) var(--ease);
 }
-.n3-case:hover { transform: translateY(-3px); border-color: var(--accent) !important; }
+.n3-case:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lift);
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+}
 .n3-case button {
   display: flex; gap: 14px; padding: 12px; width: 100%; text-align: left;
   background: none; border: 0; cursor: pointer; color: inherit; font: inherit;
 }
 .n3-case-thumb {
-  flex: none; width: 96px; aspect-ratio: 16/10; border-radius: 7px; overflow: hidden; background: #0d0c11;
+  flex: none; width: 96px; aspect-ratio: 16/10; border-radius: 7px; overflow: hidden; background: #E7E1D6;
 }
 .n3-case-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .n3-case-tool {
@@ -329,8 +481,17 @@
   font-size: 12.5px; color: var(--ink-70);
   transition: border-color 260ms ease, color 260ms ease, background 260ms ease;
 }
-.n3-skills li:hover { border-color: var(--ink-22); color: var(--ink); background: rgba(243,238,231,0.05); }
-.n3-loop { border: 1px solid var(--rule); border-radius: 16px; padding: 18px; background: rgba(8,7,11,0.3); }
+.n3-skills li {
+  background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(8px);
+}
+.n3-skills li:hover {
+  border-color: color-mix(in srgb, var(--accent) 46%, transparent);
+  color: var(--ink); box-shadow: var(--shadow-lift); transform: translateY(-2px);
+}
+.n3-loop {
+  border: 1px solid var(--rule); border-radius: 16px; padding: 18px;
+  background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(10px);
+}
 .n3-loop-label {
   display: block; margin-bottom: 12px;
   font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-45);
@@ -338,11 +499,12 @@
 .n3-tool {
   white-space: nowrap; border: 1px solid var(--rule); border-radius: 999px;
   padding: 8px 15px; font-size: 11px; color: var(--ink-70);
+  background: rgba(255,253,249,0.6);
 }
 
 /* ---- contact ---- */
 .n3-big {
-  margin: 0; font-size: clamp(2.2rem, 7vw, 5rem); font-weight: 400;
+  margin: 0; font-size: clamp(2.2rem, 7vw, 5rem); font-weight: 500;
   letter-spacing: -0.045em; line-height: 1.02;
 }
 .n3-foot {
@@ -386,7 +548,8 @@
 .n3-case-head .n3-eyebrow { display: inline-flex; align-items: center; gap: 7px; }
 .n3-case-hero {
   border-radius: 16px; overflow: hidden; border: 1px solid var(--rule);
-  aspect-ratio: 16/9; background: #0d0c11; margin-bottom: 34px;
+  aspect-ratio: 16/9; background: #E7E1D6; margin-bottom: 34px;
+  box-shadow: var(--shadow);
 }
 .n3-case-modules { margin-bottom: 44px; }
 .n3-case-next {

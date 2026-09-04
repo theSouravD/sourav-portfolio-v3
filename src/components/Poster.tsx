@@ -50,15 +50,22 @@ export default function Poster({
 
   const src = chain[step];
 
-  // Every source failed — show something composed instead of a broken icon.
+  /*
+   * Every source failed — show something composed instead of a broken icon.
+   *
+   * The marks are white because this was built for a dark room. Nova III is
+   * paper, where white on white is nothing at all, so each one carries a
+   * `poster-empty` hook that the light theme repaints from its own stylesheet.
+   * The utilities stay as the default, which leaves Nova I untouched.
+   */
   if (!src) {
     return (
       <div
-        className={`grid h-full w-full place-items-center bg-gradient-to-br from-white/10 to-white/[0.03] ${className}`}
+        className={`poster-empty grid h-full w-full place-items-center bg-gradient-to-br from-white/10 to-white/[0.03] ${className}`}
       >
         <div className="flex flex-col items-center gap-2 px-4 text-center">
-          <Film size={20} className="text-white/35" />
-          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/40">
+          <Film size={20} className="poster-empty-ico text-white/35" />
+          <span className="poster-empty-cap font-mono text-[9px] uppercase tracking-[0.18em] text-white/40">
             {caption ?? item?.meta ?? 'No preview'}
           </span>
         </div>

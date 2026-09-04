@@ -12,7 +12,22 @@ import Lightbox from '@/components/Lightbox';
 import { profile, stats, about, coreSkills, tools, experience } from '@/data/content';
 import { automationProjects, portfolioWork } from '@/data/work';
 import type { MediaItem } from '@/data/work';
-import type { SectionId } from './scenes';
+import { setupOf, type SectionId } from './scenes';
+
+/**
+ * The room's gel, as an rgba you can put in a spotlight.
+ *
+ * A white spotlight on a dark card is a light being switched on. The same
+ * white on paper is nothing at all — you cannot get brighter than the page.
+ * So on light the hover glow is the room's own colour instead, which reads as
+ * a gel sliding across rather than as a lamp.
+ */
+type Rgba = `rgba(${number}, ${number}, ${number}, ${number})`;
+const glow = (hex: string, a: number): Rgba => {
+  const h = hex.replace('#', '');
+  const n = parseInt(h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+};
 
 /**
  * The six rooms.
@@ -24,7 +39,19 @@ import type { SectionId } from './scenes';
  * are on a timer from mount, so the room is always lit by the time you look.
  */
 
+/**
+ * The entrance.
+ *
+ * `container` is the load-bearing prop and it is easy to leave off. Every room
+ * scrolls inside `.n3-stage`, not the window — and AnimatedContent's trigger
+ * watches the window unless it is told otherwise. Watching a scroller that
+ * never scrolls means anything starting below the fold sits at opacity 0
+ * forever: the Work grid rendered four tiles out of twelve and the other eight
+ * were never coming. A section that can be arrived at and show nothing is the
+ * opposite of dummy-proof, whatever it looks like in a screenshot of the top.
+ */
 const rise = (delay: number) => ({
+  container: '.n3-stage',
   distance: 26,
   direction: 'vertical' as const,
   duration: 0.7,
@@ -38,26 +65,51 @@ const rise = (delay: number) => ({
 /* ================================================================
  * HOME
  * ================================================================ */
+/**
+ * HOME
+ *
+ * The first draft ran as one left-hand column and left the right half of a
+ * wide screen empty, which does not read as restraint — it reads as a page
+ * that has not finished loading. So the opening screen is a two-column setup:
+ * the billing on the left, and on the right the two things a visitor is
+ * actually trying to establish in the first five seconds — what he is doing
+ * now, and whether the work is any good. The still is the top piece and it
+ * opens where the Work grid opens it, so the right column is a door rather
+ * than a decoration.
+ */
 function Home({ onGo }: { onGo: (id: SectionId) => void }) {
+  const accent = setupOf('home').accent;
+  const [active, setActive] = useState<MediaItem | null>(null);
+  const featured = (portfolioWork.direction as MediaItem[])[0];
+  const now = experience[0];
+
   return (
     <div className="n3-room n3-home">
+      <div className="n3-home-bill">
       <AnimatedContent {...rise(0.05)}>
         <p className="n3-eyebrow">{profile.tagline}</p>
       </AnimatedContent>
 
       <AnimatedContent {...rise(0.12)}>
         <h1 className="n3-name">
-          <PressureName text={profile.name} radius={260} />
+          <PressureName text={profile.name} radius={260} baseOpacity={1} baseWeight={500} />
         </h1>
       </AnimatedContent>
 
       <AnimatedContent {...rise(0.2)}>
         <div className="n3-role">
+          {/*
+            On black, a shine is white travelling through grey. On paper both
+            of those are the wrong way round: the base has to be dark enough
+            to read, and the "shine" is the room's accent passing through it —
+            a highlight is whatever differs from the ground, not whatever is
+            brightest.
+          */}
           <ShinyText
             text={profile.role}
             speed={5}
-            color="rgba(255,255,255,0.5)"
-            shineColor="#ffffff"
+            color="rgba(23,20,15,0.58)"
+            shineColor={accent}
             spread={160}
           />
         </div>
@@ -95,6 +147,52 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
           </button>
         </div>
       </AnimatedContent>
+      </div>
+
+      {/* ---- the right column ---- */}
+      <div className="n3-home-side">
+        <AnimatedContent {...rise(0.34)}>
+          <button
+            type="button"
+            className="n3-featured"
+            onClick={() => setActive(featured)}
+            aria-label={`Play ${featured.title}`}
+          >
+            <span className="n3-featured-frame">
+              <Poster item={featured} />
+              <span className="n3-play"><Play size={15} /></span>
+            </span>
+            <span className="n3-featured-foot">
+              <span className="n3-featured-kick n3-accent">Latest piece</span>
+              <span className="n3-featured-title">{featured.title}</span>
+              <span className="n3-featured-meta">{featured.meta}</span>
+            </span>
+          </button>
+        </AnimatedContent>
+
+        {/*
+          "Available" is the one fact a visitor most often came for and the one
+          most portfolios bury on a contact page. It costs a line.
+        */}
+        <AnimatedContent {...rise(0.44)}>
+          <dl className="n3-now">
+            <div>
+              <dt>Now</dt>
+              <dd>{now.title}<br /><span>{now.company}</span></dd>
+            </div>
+            <div>
+              <dt>Based</dt>
+              <dd>Kolkata, WB<br /><span>Remote worldwide</span></dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd className="n3-now-live"><i />Open to work<br /><span>Freelance &amp; full-time</span></dd>
+            </div>
+          </dl>
+        </AnimatedContent>
+      </div>
+
+      <Lightbox item={active} onClose={() => setActive(null)} />
     </div>
   );
 }
@@ -127,7 +225,7 @@ function Work() {
           <AnimatedContent key={m.id} {...rise(0.06 + i * 0.03)}>
             <SpotlightCard
               className="n3-tile"
-              spotlightColor="rgba(255, 255, 255, 0.16)"
+              spotlightColor={glow(setupOf('work').accent, 0.14)}
             >
               <button type="button" onClick={() => setActive(m)} aria-label={`Play ${m.title}`}>
                 <span className="n3-thumb">
@@ -165,7 +263,7 @@ function Systems({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void
       <div className="n3-cases">
         {automationProjects.map((p, i) => (
           <AnimatedContent key={p.slug} {...rise(0.08 + i * 0.06)}>
-            <SpotlightCard className="n3-case" spotlightColor="rgba(79, 214, 196, 0.20)">
+            <SpotlightCard className="n3-case" spotlightColor={glow(setupOf('systems').accent, 0.16)}>
               <button type="button" onClick={() => onGo('systems', p.slug)}>
                 <span className="n3-case-thumb"><Poster src={p.thumbnail} caption={p.tool} /></span>
                 <span className="n3-case-body">
@@ -229,6 +327,12 @@ function Toolkit() {
           {coreSkills.map((s) => <li key={s}>{s}</li>)}
         </ul>
       </AnimatedContent>
+      {/*
+        The belt needs its fade on. Without it the strip is guillotined at both
+        ends and the first and last chips read as broken words — and the fade
+        has to take the CARD's colour rather than the page's, because it sits
+        inside the panel and paper over near-white is a visible seam.
+      */}
       <AnimatedContent {...rise(0.24)}>
         <div className="n3-loop">
           <span className="n3-loop-label">Tools</span>
@@ -240,7 +344,8 @@ function Toolkit() {
             gap={12}
             pauseOnHover
             hoverSpeed={8}
-            fadeOut={false}
+            fadeOut
+            fadeOutColor="#FCFAF6"
             ariaLabel="Tools and platforms"
           />
         </div>

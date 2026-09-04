@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import LightRays from '@/reactbits/LightRays';
+import SoftAurora from '@/reactbits/SoftAurora';
 import GradualBlur from '@/reactbits/GradualBlur';
 import Nav from './Nav';
 import { Room } from './Sections';
 import CaseRoom from './CaseRoom';
-import { SETUPS, setupOf, rayProps, sectionFromHash, type SectionId } from './scenes';
+import { SETUPS, setupOf, washProps, sectionFromHash, type SectionId } from './scenes';
 import './nova3.css';
 
 /**
  * NOVA III — THE STAGE.
  *
- * One room on screen at a time. Changing room re-gels the light rather than
- * swapping it: a single LightRays instance lives for the life of the page and
- * its colour, angle and spread are animated between setups. Same instrument,
- * re-aimed — which keeps six rooms looking like one site, and avoids rebuilding
- * a WebGL context on every click.
+ * One room on screen at a time. Changing room re-gels the wash rather than
+ * swapping it: a single SoftAurora instance lives for the life of the page and
+ * its colour, band height and spread are animated between setups. One
+ * instrument, re-gelled — which keeps six rooms looking like one site, and
+ * avoids rebuilding a WebGL context on every click.
  *
  * The accent travels with the light as a CSS variable, so the nav underline,
  * the statistics, the section kickers, the hover borders and the focus rings
@@ -85,22 +85,29 @@ export default function Stage() {
   }, [id, caseSlug, go]);
 
   return (
-    <div className="n3" style={{ ['--accent' as string]: setup.accent }}>
-      {/* ---- the light: one instance, re-gelled ---- */}
+    <div className="n3" style={{ ['--accent' as string]: setup.accent, ['--wash' as string]: setup.wash }}>
+      {/* ---- the wash: one instance, re-gelled ---- */}
       <div className="n3-lights" aria-hidden>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <LightRays {...(rayProps(setup) as any)} />
-        <div className="n3-scrim" style={{ opacity: setup.scrim }} />
+        <SoftAurora {...(washProps(setup) as any)} />
         {/*
-          Grain and vignette are constant across every room. They are the two
-          things binding the setups into one site — the same reason film looks
-          like film across scenes that share nothing else.
+          The shader's light mode paints down from pure #ffffff, and pure white
+          is what a template looks like. One multiply of the paper stock over
+          it warms the ground and the gel together — the same as printing the
+          image on cream rather than recolouring every pixel of it.
+        */}
+        <div className="n3-paper" />
+        {/*
+          Grain is doing more work in daylight than it was in the dark: there
+          is nothing else hiding the flatness of a large pale field, and it is
+          the difference between a page and a printed page. The falloff at the
+          edges keeps the wash from meeting the frame in a hard line.
         */}
         <div className="n3-grain" />
         <div className="n3-vig" />
       </div>
 
-      <GradualBlur position="bottom" height="6rem" strength={1.3} divCount={5} exponential opacity={0.85} zIndex={4} />
+      <GradualBlur position="bottom" height="5rem" strength={1.1} divCount={5} exponential opacity={0.7} zIndex={4} />
 
       <Nav active={id} onGo={(next) => go(next)} />
 
