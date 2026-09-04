@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ArrowDown, ArrowUpRight, ChevronDown, Download, FileText, Mail, Play } from 'lucide-react';
-import AnimatedContent from '@/reactbits/AnimatedContent';
 import SpotlightCard from '@/reactbits/SpotlightCard';
 import ShinyText from '@/reactbits/ShinyText';
 import Magnet from '@/reactbits/Magnet';
@@ -9,6 +8,8 @@ import PressureName from '@/film/PressureName';
 import Counter from '@/film/shots/Counter';
 import Poster from '@/components/Poster';
 import Lightbox from '@/components/Lightbox';
+import ToolOrbit from './ToolOrbit';
+import ResumeViewer from './ResumeViewer';
 import { profile, stats, about, coreSkills, tools, experience } from '@/data/content';
 import { automationProjects, portfolioWork } from '@/data/work';
 import type { MediaItem } from '@/data/work';
@@ -40,27 +41,54 @@ const glow = (hex: string, a: number): Rgba => {
  */
 
 /**
- * The entrance.
+ * THE ENTRANCE — and why it is no longer a scroll trigger.
  *
- * `container` is the load-bearing prop and it is easy to leave off. Every room
- * scrolls inside `.n3-stage`, not the window — and AnimatedContent's trigger
- * watches the window unless it is told otherwise. Watching a scroller that
- * never scrolls means anything starting below the fold sits at opacity 0
- * forever: the Work grid rendered four tiles out of twelve and the other eight
- * were never coming. A section that can be arrived at and show nothing is the
- * opposite of dummy-proof, whatever it looks like in a screenshot of the top.
+ * Three separate "the content is missing" bugs in this build all had the same
+ * cause: AnimatedContent reveals on a ScrollTrigger, and a trigger measures
+ * where an element sits ONCE, when it is created. That is a promise the layout
+ * cannot keep. Point it at the wrong scroller and everything below the fold
+ * stays at opacity 0 for good. Point it at the right one and it still breaks
+ * the moment the page changes height underneath it — close the open role in
+ * Career and five rows slide up into space the trigger already decided was
+ * off-screen, so they simply never appear. A visitor closes an accordion,
+ * concludes there is nothing else, and leaves.
+ *
+ * No reveal on this site is worth that. An entrance is decoration; being
+ * visible is the product. So the reveal is now a CSS animation on a delay from
+ * mount — it cannot be told a wrong position because it never asks for one,
+ * it costs no observer and no library, and `both` fill holds the start frame
+ * through the delay so nothing flashes before its turn.
+ *
+ * The stagger caps deliberately: with twenty-nine tiles a linear ramp would
+ * leave the last one waiting a second and a half, which stops reading as
+ * choreography and starts reading as lag.
  */
-const rise = (delay: number) => ({
-  container: '.n3-stage',
-  distance: 26,
-  direction: 'vertical' as const,
-  duration: 0.7,
-  ease: 'power3.out',
-  initialOpacity: 0,
-  animateOpacity: true,
-  threshold: 0,
-  delay,
-});
+export function Reveal({
+  delay = 0,
+  className = '',
+  as: Tag = 'div',
+  children,
+}: {
+  delay?: number;
+  className?: string;
+  /**
+   * The element to render as. A wrapper is not free: a <div> between an <ol>
+   * and its <li> is invalid markup, and it silently breaks every `>` selector
+   * written against the list. Lists pass `as="li"` so the reveal IS the row.
+   */
+  as?: 'div' | 'li';
+  children: React.ReactNode;
+}) {
+  return (
+    <Tag className={`n3-rise ${className}`} style={{ animationDelay: `${delay}s` }}>
+      {children}
+    </Tag>
+  );
+}
+
+/** Staggered delay for the nth item in a list, capped so long lists stay brisk. */
+const step = (base: number, i: number, gap = 0.035, cap = 0.42) =>
+  base + Math.min(i * gap, cap);
 
 /* ================================================================
  * HOME
@@ -86,17 +114,28 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
   return (
     <div className="n3-room n3-home">
       <div className="n3-home-bill">
-      <AnimatedContent {...rise(0.05)}>
+      <Reveal delay={0.05}>
         <p className="n3-eyebrow">{profile.tagline}</p>
-      </AnimatedContent>
+      </Reveal>
 
-      <AnimatedContent {...rise(0.12)}>
+      <Reveal delay={0.12}>
         <h1 className="n3-name">
-          <PressureName text={profile.name} radius={260} baseOpacity={1} baseWeight={500} />
+          <span className="n3-name-seq">
+            <PressureName
+              text={profile.name}
+              radius={260}
+              baseOpacity={1}
+              baseWeight={500}
+              intro={52}
+              introDelay={260}
+            />
+            {/* The bar that resolves them. See .n3-name-seq::after. */}
+            <i />
+          </span>
         </h1>
-      </AnimatedContent>
+      </Reveal>
 
-      <AnimatedContent {...rise(0.2)}>
+      <Reveal delay={0.2}>
         <div className="n3-role">
           {/*
             On black, a shine is white travelling through grey. On paper both
@@ -113,14 +152,14 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
             spread={160}
           />
         </div>
-      </AnimatedContent>
+      </Reveal>
 
       {/*
         The three figures a recruiter looks for, counted up rather than stated.
         A number that arrives reads as a measurement; a number that fades in
         reads as decoration.
       */}
-      <AnimatedContent {...rise(0.3)}>
+      <Reveal delay={0.3}>
         <dl className="n3-stats">
           {stats.map((s, i) => (
             <div key={s.label}>
@@ -132,9 +171,9 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
             </div>
           ))}
         </dl>
-      </AnimatedContent>
+      </Reveal>
 
-      <AnimatedContent {...rise(0.4)}>
+      <Reveal delay={0.4}>
         <div className="n3-cta">
           <Magnet padding={80} magnetStrength={5}>
             <button type="button" className="n3-btn n3-btn-solid" onClick={() => onGo('work')}>
@@ -146,12 +185,12 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
             <Mail size={14} /> Get in touch
           </button>
         </div>
-      </AnimatedContent>
+      </Reveal>
       </div>
 
       {/* ---- the right column ---- */}
       <div className="n3-home-side">
-        <AnimatedContent {...rise(0.34)}>
+        <Reveal delay={0.34}>
           <button
             type="button"
             className="n3-featured"
@@ -168,13 +207,13 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
               <span className="n3-featured-meta">{featured.meta}</span>
             </span>
           </button>
-        </AnimatedContent>
+        </Reveal>
 
         {/*
           "Available" is the one fact a visitor most often came for and the one
           most portfolios bury on a contact page. It costs a line.
         */}
-        <AnimatedContent {...rise(0.44)}>
+        <Reveal delay={0.44}>
           <dl className="n3-now">
             <div>
               <dt>Now</dt>
@@ -186,10 +225,10 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
             </div>
             <div>
               <dt>Status</dt>
-              <dd className="n3-now-live"><i />Open to work<br /><span>Freelance &amp; full-time</span></dd>
+              <dd className="n3-now-live"><i />Open to work<br /><span>Available for full-time roles</span></dd>
             </div>
           </dl>
-        </AnimatedContent>
+        </Reveal>
       </div>
 
       <Lightbox item={active} onClose={() => setActive(null)} />
@@ -200,12 +239,17 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
 /* ================================================================
  * WORK
  * ================================================================ */
+const PAGE = 12;
+
 function Work() {
   const [active, setActive] = useState<MediaItem | null>(null);
+  const [shown, setShown] = useState(PAGE);
   const pieces = [
     ...(portfolioWork.direction as MediaItem[]),
     ...(portfolioWork.ai as MediaItem[]),
   ];
+  const visible = pieces.slice(0, shown);
+  const left = pieces.length - shown;
 
   return (
     <div className="n3-room">
@@ -221,8 +265,8 @@ function Work() {
         a grid of thumbnails is what everyone already knows how to read.
       */}
       <div className="n3-grid">
-        {pieces.slice(0, 12).map((m, i) => (
-          <AnimatedContent key={m.id} {...rise(0.06 + i * 0.03)}>
+        {visible.map((m, i) => (
+          <Reveal key={m.id} delay={step(0.06, i)}>
             <SpotlightCard
               className="n3-tile"
               spotlightColor={glow(setupOf('work').accent, 0.14)}
@@ -240,9 +284,27 @@ function Work() {
                 </span>
               </button>
             </SpotlightCard>
-          </AnimatedContent>
+          </Reveal>
         ))}
       </div>
+
+      {/*
+        Seventeen of the twenty-nine pieces were unreachable — the grid was
+        capped at twelve and nothing said so, which for a portfolio means most
+        of the work simply did not exist to a visitor.
+        A button rather than infinite scroll: it states the number that is
+        left, so a visitor knows the size of what they have not seen, and it
+        never fires on its own while somebody is reading. The count only ever
+        goes up, so nothing they have already looked at moves.
+      */}
+      {left > 0 && (
+        <div className="n3-more">
+          <button type="button" className="n3-btn" onClick={() => setShown((n) => n + PAGE)}>
+            Show {Math.min(left, PAGE)} more
+            <em>{shown} of {pieces.length}</em>
+          </button>
+        </div>
+      )}
 
       <Lightbox item={active} onClose={() => setActive(null)} />
     </div>
@@ -262,7 +324,7 @@ function Systems({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void
         />
       <div className="n3-cases">
         {automationProjects.map((p, i) => (
-          <AnimatedContent key={p.slug} {...rise(0.08 + i * 0.06)}>
+          <Reveal key={p.slug} delay={step(0.08, i, 0.06)}>
             <SpotlightCard className="n3-case" spotlightColor={glow(setupOf('systems').accent, 0.16)}>
               <button type="button" onClick={() => onGo('systems', p.slug)}>
                 <span className="n3-case-thumb"><Poster src={p.thumbnail} caption={p.tool} /></span>
@@ -276,7 +338,7 @@ function Systems({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void
                 </span>
               </button>
             </SpotlightCard>
-          </AnimatedContent>
+          </Reveal>
         ))}
       </div>
     </div>
@@ -325,8 +387,12 @@ function Career() {
         />
       <ol className="n3-roles">
         {experience.map((j, i) => (
-          <AnimatedContent key={j.title + j.period} {...rise(0.08 + i * 0.05)}>
-            <li className={open === i ? 'is-open' : ''}>
+          <Reveal
+            key={j.title + j.period}
+            as="li"
+            delay={step(0.08, i, 0.05)}
+            className={open === i ? 'n3-role-item is-open' : 'n3-role-item'}
+          >
               <button
                 type="button"
                 className="n3-role-row"
@@ -350,8 +416,7 @@ function Career() {
                   ))}
                 </ul>
               )}
-            </li>
-          </AnimatedContent>
+          </Reveal>
         ))}
       </ol>
     </div>
@@ -367,36 +432,46 @@ function Toolkit() {
     title: t,
   }));
   return (
-    <div className="n3-room">
-      <Head kicker="How the work gets made" title="Toolkit" note={about.body} />
-      <AnimatedContent {...rise(0.14)}>
-        <ul className="n3-skills">
-          {coreSkills.map((s) => <li key={s}>{s}</li>)}
-        </ul>
-      </AnimatedContent>
-      {/*
-        The belt needs its fade on. Without it the strip is guillotined at both
-        ends and the first and last chips read as broken words — and the fade
-        has to take the CARD's colour rather than the page's, because it sits
-        inside the panel and paper over near-white is a visible seam.
-      */}
-      <AnimatedContent {...rise(0.24)}>
-        <div className="n3-loop">
-          <span className="n3-loop-label">Tools</span>
-          <LogoLoop
-            logos={logos}
-            speed={40}
-            direction="left"
-            logoHeight={34}
-            gap={12}
-            pauseOnHover
-            hoverSpeed={8}
-            fadeOut
-            fadeOutColor="#FCFAF6"
-            ariaLabel="Tools and platforms"
-          />
-        </div>
-      </AnimatedContent>
+    <div className="n3-room n3-toolkit">
+      <div className="n3-toolkit-col">
+        <Head kicker="How the work gets made" title="Toolkit" note={about.body} />
+        <Reveal delay={0.14}>
+          <ul className="n3-skills">
+            {coreSkills.map((s) => <li key={s}>{s}</li>)}
+          </ul>
+        </Reveal>
+        {/*
+          The belt needs its fade on. Without it the strip is guillotined at
+          both ends and the first and last chips read as broken words — and the
+          fade has to take the CARD's colour rather than the page's, because it
+          sits inside the panel and paper over near-white is a visible seam.
+
+          It stays even though the orbit shows the same tools: the belt is
+          readable and hoverable, the orbit is atmosphere. Below 1100px the
+          orbit goes and the belt is the whole answer.
+        */}
+        <Reveal delay={0.24}>
+          <div className="n3-loop" data-noswipe>
+            <span className="n3-loop-label">Tools</span>
+            <LogoLoop
+              logos={logos}
+              speed={40}
+              direction="left"
+              logoHeight={34}
+              gap={12}
+              pauseOnHover
+              hoverSpeed={8}
+              fadeOut
+              fadeOutColor="#FCFAF6"
+              ariaLabel="Tools and platforms"
+            />
+          </div>
+        </Reveal>
+      </div>
+
+      <Reveal delay={0.3} className="n3-toolkit-orbit">
+        <ToolOrbit />
+      </Reveal>
     </div>
   );
 }
@@ -405,15 +480,16 @@ function Toolkit() {
  * CONTACT
  * ================================================================ */
 function Contact() {
+  const [cv, setCv] = useState(false);
   return (
     <div className="n3-room n3-contact">
-      <AnimatedContent {...rise(0.05)}>
+      <Reveal delay={0.05}>
         <p className="n3-eyebrow">Kolkata, WB · Remote</p>
-      </AnimatedContent>
-      <AnimatedContent {...rise(0.12)}>
+      </Reveal>
+      <Reveal delay={0.12}>
         <h2 className="n3-big">Let's make something<br />worth watching.</h2>
-      </AnimatedContent>
-      <AnimatedContent {...rise(0.22)}>
+      </Reveal>
+      <Reveal delay={0.22}>
         <div className="n3-cta">
           <Magnet padding={80} magnetStrength={5}>
             <a className="n3-btn n3-btn-solid" href="mailto:souravdey2105@gmail.com">
@@ -424,14 +500,18 @@ function Contact() {
           <a className="n3-btn" href="https://linkedin.com/in/souravdey2105" target="_blank" rel="noreferrer">
             LinkedIn <ArrowUpRight size={13} />
           </a>
-          <a className="n3-btn" href={profile.resumeUrl} download>
-            <Download size={13} /> Resume
+          <button type="button" className="n3-btn" onClick={() => setCv(true)}>
+            <FileText size={13} /> View resume
+          </button>
+          <a className="n3-btn n3-btn-quiet" href={profile.resumeUrl} download aria-label="Download resume">
+            <Download size={13} />
           </a>
         </div>
-      </AnimatedContent>
-      <AnimatedContent {...rise(0.32)}>
+      </Reveal>
+      <Reveal delay={0.32}>
         <p className="n3-foot">{profile.note}</p>
-      </AnimatedContent>
+      </Reveal>
+      <ResumeViewer open={cv} onClose={() => setCv(false)} />
     </div>
   );
 }
@@ -440,15 +520,15 @@ function Contact() {
 function Head({ kicker, title, note }: { kicker: string; title: string; note: string }) {
   return (
     <header className="n3-head">
-      <AnimatedContent {...rise(0.02)}>
+      <Reveal delay={0.02}>
         <p className="n3-eyebrow n3-accent">{kicker}</p>
-      </AnimatedContent>
-      <AnimatedContent {...rise(0.08)}>
+      </Reveal>
+      <Reveal delay={0.08}>
         <h2 className="n3-title">{title}</h2>
-      </AnimatedContent>
-      <AnimatedContent {...rise(0.14)}>
+      </Reveal>
+      <Reveal delay={0.14}>
         <p className="n3-note">{note}</p>
-      </AnimatedContent>
+      </Reveal>
     </header>
   );
 }

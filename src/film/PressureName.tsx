@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type React from 'react';
 
 /**
  * Per-character proximity type.
@@ -20,6 +21,8 @@ export default function PressureName({
   radius = 220,
   baseOpacity = 0.72,
   baseWeight = 400,
+  intro = 0,
+  introDelay = 0,
 }: {
   text: string;
   className?: string;
@@ -34,6 +37,14 @@ export default function PressureName({
    */
   baseOpacity?: number;
   baseWeight?: number;
+  /**
+   * Per-character stagger, in milliseconds, for the entrance. Zero (the
+   * default) means no entrance and the pressure effect owns the glyphs from
+   * the first frame — which is how Nova I uses this.
+   */
+  intro?: number;
+  /** How long to wait before the first glyph moves. */
+  introDelay?: number;
 }) {
   const rootRef = useRef<HTMLSpanElement>(null);
   const charRefs = useRef<(HTMLSpanElement | null)[]>([]);
@@ -50,7 +61,21 @@ export default function PressureName({
     window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('pointerleave', onLeave);
 
+    /*
+     * The entrance and the pressure effect both want to own opacity and
+     * transform, and the loop wins every frame it runs — so while the intro
+     * is playing the loop simply does not touch the glyphs. Handing over once
+     * rather than blending the two is what keeps the entrance readable: a
+     * cursor near the name mid-sequence would otherwise stamp its own weight
+     * over a letter that has not arrived yet.
+     */
+    const handover = intro ? performance.now() + introDelay + intro * text.length + 900 : 0;
+
     const tick = () => {
+      if (performance.now() < handover) {
+        frame.current = requestAnimationFrame(tick);
+        return;
+      }
       charRefs.current.forEach((el) => {
         if (!el) return;
         const r = el.getBoundingClientRect();
@@ -73,7 +98,7 @@ export default function PressureName({
       window.removeEventListener('pointerleave', onLeave);
       cancelAnimationFrame(frame.current);
     };
-  }, [radius, baseOpacity, baseWeight]);
+  }, [radius, baseOpacity, baseWeight, intro, introDelay, text.length]);
 
   /*
    * Every character is its own inline-block, and to a line-breaking algorithm
@@ -109,8 +134,13 @@ export default function PressureName({
                     charRefs.current[i] = el;
                   }}
                   aria-hidden
-                  className="inline-block origin-bottom will-change-transform"
-                  style={{ transition: 'font-weight 120ms linear' }}
+                  className={`inline-block origin-bottom will-change-transform${intro ? ' n3-glyph' : ''}`}
+                  style={{
+                    transition: 'font-weight 120ms linear',
+                    ...(intro
+                      ? ({ ['--d' as string]: `${introDelay + i * intro}ms` } as React.CSSProperties)
+                      : null),
+                  }}
                 >
                   {ch}
                 </span>

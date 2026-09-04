@@ -44,8 +44,18 @@ export interface Setup {
 }
 
 /*
- * The gels run warm → cool → warm across the nav, so moving left to right is
- * a temperature arc rather than six unrelated colours.
+ * SIX HUES, NOT SIX SHADES OF ORANGE.
+ *
+ * The first pass ran home, career and toolkit as amber, tan and coral, which
+ * to the eye is one colour visited three times — walking the nav felt like
+ * nothing was changing. These sit roughly sixty degrees apart around the
+ * wheel, so every room is unmistakably its own: amber, blue, teal-green,
+ * rose, violet, leaf green.
+ *
+ * They still read as one site because the ground, the grain and the vignette
+ * never change, and because each room's `wash` and `fill` are near
+ * neighbours — the variation is BETWEEN rooms and the coherence is inside
+ * them, which is how a graded film works.
  */
 export const SETUPS: Setup[] = [
   {
@@ -53,7 +63,7 @@ export const SETUPS: Setup[] = [
     label: 'Home',
     note: 'The opening setup',
     wash: '#FFB259',
-    fill: '#FF7A6B',
+    fill: '#FF8A4C',
     accent: '#A9631B',
     brightness: 0.42,
     band: 0.16,
@@ -64,9 +74,9 @@ export const SETUPS: Setup[] = [
     id: 'work',
     label: 'Work',
     note: 'Selected pieces',
-    wash: '#6E9BF0',
-    fill: '#9E7BF2',
-    accent: '#2F4E96',
+    wash: '#5B9BF5',
+    fill: '#7C7CF0',
+    accent: '#25508F',
     brightness: 0.38,
     band: 0.1,
     spread: 2.4,
@@ -76,9 +86,9 @@ export const SETUPS: Setup[] = [
     id: 'systems',
     label: 'Systems',
     note: 'Automation workflows',
-    wash: '#43C9AE',
-    fill: '#5EB6E8',
-    accent: '#0F6E5E',
+    wash: '#2FC7A6',
+    fill: '#5FD08A',
+    accent: '#0B6A57',
     brightness: 0.38,
     band: 0.12,
     spread: 2.5,
@@ -88,9 +98,9 @@ export const SETUPS: Setup[] = [
     id: 'career',
     label: 'Career',
     note: 'Six roles, in order',
-    wash: '#E0A867',
-    fill: '#C98D8D',
-    accent: '#7C4E1E',
+    wash: '#F2789C',
+    fill: '#E86A6A',
+    accent: '#9B2F52',
     brightness: 0.4,
     band: 0.14,
     spread: 2.2,
@@ -100,9 +110,9 @@ export const SETUPS: Setup[] = [
     id: 'toolkit',
     label: 'Toolkit',
     note: 'How the work gets made',
-    wash: '#FF9070',
-    fill: '#FFC06A',
-    accent: '#B24520',
+    wash: '#A886F5',
+    fill: '#C77BEA',
+    accent: '#5B3AA6',
     brightness: 0.42,
     band: 0.09,
     spread: 2.6,
@@ -112,9 +122,9 @@ export const SETUPS: Setup[] = [
     id: 'contact',
     label: 'Contact',
     note: 'Say hello',
-    wash: '#A98BF0',
-    fill: '#7FA6F2',
-    accent: '#5B3FA3',
+    wash: '#8FC63F',
+    fill: '#4FBE86',
+    accent: '#3F6B1E',
     brightness: 0.44,
     band: 0.15,
     spread: 2.0,

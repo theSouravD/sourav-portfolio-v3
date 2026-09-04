@@ -5,6 +5,7 @@ import Nav from './Nav';
 import { Room } from './Sections';
 import CaseRoom from './CaseRoom';
 import { SETUPS, setupOf, washProps, sectionFromHash, type SectionId } from './scenes';
+import { useSwipeRooms } from './useSwipeRooms';
 import './nova3.css';
 
 /**
@@ -69,6 +70,17 @@ export default function Stage() {
     };
   }, []);
 
+  /* Sideways swipe walks the rooms, on a trackpad and on a phone. Like the
+     arrow keys it is a shortcut, never the only way — the nav bar is still
+     six words that do the same thing. Disabled inside a case study, where
+     sideways would mean two different things at once. */
+  const stepRoom = useCallback((dir: 1 | -1) => {
+    const i = SETUPS.findIndex((s) => s.id === id);
+    go(SETUPS[(i + dir + SETUPS.length) % SETUPS.length].id);
+  }, [id, go]);
+
+  useSwipeRooms(() => stepRoom(-1), () => stepRoom(1), !caseSlug);
+
   /* Arrow keys walk the rooms — a shortcut for people who want one, never the
      only way to do anything. */
   useEffect(() => {
@@ -104,6 +116,7 @@ export default function Stage() {
           edges keeps the wash from meeting the frame in a hard line.
         */}
         <div className="n3-grain" />
+        <div className="n3-tooth" />
         <div className="n3-vig" />
       </div>
 
