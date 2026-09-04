@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Backdrop from './Backdrop';
 import BackdropPicker from './BackdropPicker';
 import Nav from './Nav';
@@ -33,6 +33,8 @@ export default function Stage() {
   const [cutting, setCutting] = useState(false);
   const cutTimer = useRef(0);
   const hoverRef = useRef<HTMLElement | null>(null);
+  const stageRef = useRef<HTMLElement | null>(null);
+  const [scrolled, setScrolled] = useState(false);
 
   /* The chosen ground. Read lazily so the stored value is fetched once, on
      the first render, rather than on every one. */
@@ -61,9 +63,36 @@ export default function Stage() {
     setCaseSlug(slug);
     const hash = slug ? `#case/${slug}` : `#${next}`;
     if (window.location.hash !== hash) window.history.pushState(null, '', hash);
-    // A room change starts you at the top of it, the way opening a page does.
-    document.querySelector('.n3-stage')?.scrollTo({ top: 0 });
   }, [caseSlug]);
+
+  /*
+   * A room opens at its top, the way turning to a page does.
+   *
+   * This used to run inside `go`, which is too early: at that moment the
+   * outgoing room is still mounted, so it scrolled the OLD content to zero
+   * and the new one arrived at whatever offset the browser felt like. Doing
+   * it in a layout effect keyed on the room means it runs after the new
+   * content is in the DOM and before the browser paints, so there is no
+   * visible jump.
+   */
+  useLayoutEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    el.scrollTo({ top: 0 });
+    // Reset via the setter's callback form rather than unconditionally: the
+    // flag is almost always already false here, and setting it anyway would
+    // schedule a render on every single room change for nothing.
+    setScrolled((v) => (v ? false : v));
+  }, [id, caseSlug]);
+
+  /* The bar only lifts once something is actually underneath it. */
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const onScroll = () => setScrolled(el.scrollTop > 6);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
 
   /* The back button and shared links both have to work. A site where the
      browser's own controls do nothing is not dummy-proof, whatever the nav
@@ -141,7 +170,7 @@ export default function Stage() {
   }, [id, caseSlug, go]);
 
   return (
-    <div className="n3" style={{ ['--accent' as string]: setup.accent, ['--wash' as string]: setup.wash }}>
+    <div className={`n3 ${scrolled ? 'is-scrolled' : ''}`} style={{ ['--accent' as string]: setup.accent, ['--wash' as string]: setup.wash }}>
       {/* ---- the wash: one instance, re-gelled ---- */}
       <div className="n3-lights" aria-hidden>
         <Backdrop id={backdrop} setup={setup} />
@@ -168,7 +197,7 @@ export default function Stage() {
 
       <Nav active={id} onGo={(next) => go(next)} />
 
-      <main className={`n3-stage ${cutting ? 'is-cutting' : ''}`}>
+      <main ref={stageRef} className={`n3-stage ${cutting ? 'is-cutting' : ''}`}>
         <div key={caseSlug ?? id} className="n3-cut">
           {caseSlug
             ? <CaseRoom slug={caseSlug} onBack={() => go('systems')} />

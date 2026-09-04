@@ -77,7 +77,7 @@ export default function CaseRoom({ slug, onBack }: { slug: string; onBack: () =>
       */}
       <Reveal delay={0.24}>
         <div className="n3-case-hero">
-          <WorkflowPoster project={project} variant="hero" />
+          <WorkflowPoster project={project} />
         </div>
       </Reveal>
 

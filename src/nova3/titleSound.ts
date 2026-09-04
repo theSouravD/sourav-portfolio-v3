@@ -125,16 +125,26 @@ export function cue(kind: Cue) {
   switch (kind) {
     case 'hover':
       // Quietest thing on the site by a wide margin. It fires constantly.
-      noise(c, t, 0.012, 3200, 0.02, 2.2);
+      noise(c, t, 0.009, 6400, 0.009, 3.4);
       break;
     case 'tap':
-      noise(c, t, 0.05, 2100, 0.035, 1.4);
+      /*
+       * The old tap was a 35ms bandpass at 2.1kHz, which has far too much
+       * body — it read as a drum, not a click. What makes a click a click is
+       * that it is almost pure transient: very short, very high, and with no
+       * audible pitch. So it is a third the length, an octave and a half up,
+       * and narrow-Q, with one even shorter, quieter tick above it for the
+       * "snap" — two tiny bursts a few milliseconds apart is the difference
+       * between a tap and a thud.
+       */
+      noise(c, t, 0.03, 5200, 0.012, 3.2);
+      noise(c, t + 0.006, 0.018, 8200, 0.008, 4);
       break;
     case 'move':
       // Changing room: a tick and a low fall, so it reads as travel rather
       // than as another button press.
-      noise(c, t, 0.045, 1500, 0.04, 1.2);
-      blip(c, t, 210, 120, 0.05, 0.2);
+      noise(c, t, 0.03, 4200, 0.014, 2.6);
+      blip(c, t, 260, 150, 0.04, 0.22);
       break;
     case 'open':
       blip(c, t, 320, 520, 0.045, 0.16);

@@ -33,7 +33,7 @@
   /* One easing and three durations for the whole site. Motion that shares a
      curve reads as one hand; motion that doesn't reads as a template. */
   --ease: cubic-bezier(.22,.9,.28,1);
-  --fast: 180ms;
+  --fast: 260ms;
   --mid: 380ms;
   --slow: 700ms;
 
@@ -131,9 +131,23 @@
  * no ramp to notice, and it reads as deliberate chrome rather than as a
  * defect. The same reasoning gives the floor its own bar.
  */
+/*
+ * No line. A rule across the top cuts the page in two and announces "header
+ * component"; the bar is meant to read as part of the same sheet of paper.
+ *
+ * Depth instead of a border, and only when it is doing something: at the top
+ * of a room there is nothing underneath the bar, so it is invisible and the
+ * page is whole. Once content actually passes beneath it, a soft wide shadow
+ * fades in — the bar lifts off the page exactly when it needs to be in front
+ * of something, and settles back when it does not.
+ */
 .n3-nav {
   background: var(--paper);
-  border-bottom: 1px solid var(--rule);
+  box-shadow: 0 10px 30px -22px rgba(23,20,15,0);
+  transition: box-shadow 420ms var(--ease);
+}
+.n3.is-scrolled .n3-nav {
+  box-shadow: 0 12px 34px -20px rgba(23,20,15,0.30);
 }
 .n3-brand {
   display: flex; align-items: center; gap: 9px;
@@ -155,7 +169,7 @@
   position: relative; cursor: pointer; background: none; border: 0;
   padding: 8px 14px; color: var(--ink-45);
   font-family: inherit; font-size: 13px; font-weight: 500; letter-spacing: -0.005em;
-  transition: color 260ms ease;
+  transition: color var(--fast) var(--ease);
 }
 .n3-link:hover { color: var(--ink); }
 .n3-link i {
@@ -172,7 +186,7 @@
   flex: none; text-decoration: none;
   border: 1px solid var(--ink-22); border-radius: 999px;
   padding: 7px 15px; color: var(--ink); font-size: 12px; font-weight: 500;
-  transition: background 260ms ease, border-color 260ms ease;
+  transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease);
 }
 .n3-cv {
   background: var(--card);
@@ -227,9 +241,21 @@
 }
 .n3-stage.is-cutting .n3-cut { opacity: 0; filter: blur(8px); transition: opacity var(--fast), filter var(--fast); }
 
+/*
+ * `place-items: center` is why a long room opened halfway down itself.
+ *
+ * Centring a grid item that is TALLER than its container pushes the overflow
+ * out equally in both directions — and the half above the scroll origin is at
+ * a negative offset, which no scrollbar can reach. So a case study opened in
+ * the middle of its own hero and the top of it did not exist.
+ *
+ * `safe` is the whole fix: it centres while the content fits and falls back to
+ * `start` the moment it would overflow. Short rooms stay optically centred,
+ * long ones begin at their first line.
+ */
 .n3-stage {
   position: absolute; inset: 0; z-index: 10;
-  display: grid; place-items: center;
+  display: grid; justify-items: center; align-content: safe center;
   padding: 92px clamp(18px, 5vw, 56px) 84px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -407,14 +433,23 @@
   border: 1px solid var(--ink-22); border-radius: 999px; background: none;
   padding: 11px 20px; color: var(--ink);
   font-family: inherit; font-size: 13px; font-weight: 500; text-decoration: none;
-  transition: border-color 260ms ease, background 260ms ease;
+  /*
+   * One curve and one duration for every hover on the site. The old mix of
+   * bare `ease` at 260ms and the house curve at 380 meant two controls sitting
+   * next to each other answered the cursor differently, which is what reads as
+   * "not smooth" — it is inconsistency, not speed. Transform is included in
+   * the transition; it was being changed on hover without one, so the lift
+   * snapped while the colour eased.
+   */
+  transition: border-color var(--fast) var(--ease), background var(--fast) var(--ease),
+              box-shadow var(--fast) var(--ease), transform var(--fast) var(--ease);
 }
 .n3-btn {
   background: var(--card);
   box-shadow: var(--shadow);
   backdrop-filter: blur(8px);
 }
-.n3-btn:hover { border-color: var(--ink-22); box-shadow: var(--shadow-lift); transform: translateY(-1px); }
+.n3-btn:hover { border-color: var(--ink-22); box-shadow: var(--shadow-lift); transform: translateY(-2px); }
 .n3-btn-solid {
   background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 600;
   box-shadow: 0 2px 4px rgba(23,20,15,0.10), 0 16px 32px -12px rgba(23,20,15,0.4);
@@ -516,7 +551,8 @@
   display: grid; place-items: center; border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.55); background: rgba(23,20,15,0.46); color: #fff;
   backdrop-filter: blur(6px);
-  transition: transform 300ms ease, background 300ms ease, color 300ms ease;
+  transition: transform var(--fast) var(--ease), background var(--fast) var(--ease),
+              color var(--fast) var(--ease);
 }
 .n3-tile:hover .n3-play { transform: scale(1.12); background: #fff; color: var(--ink); }
 .n3-tile-foot { position: relative; display: block; padding: 12px 14px 14px; }
@@ -581,9 +617,12 @@
   flex: none; width: 124px; aspect-ratio: 16/10; border-radius: 7px; overflow: hidden; background: #E7E1D6;
 }
 .n3-case-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* "Pocket FM · Character Canvas" is the longest of these and was losing its
+   last two letters to the ellipsis. Tighter tracking buys the room without
+   dropping the size to something unreadable. */
 .n3-case-tool {
   display: inline-flex; align-items: center; gap: 5px;
-  font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+  font-size: 8.5px; letter-spacing: 0.09em; text-transform: uppercase;
 }
 .n3-case-body strong { font-size: 14px; font-weight: 600; letter-spacing: -0.015em; }
 .n3-case-sum {
@@ -675,7 +714,9 @@
 .n3-skills li {
   border: 1px solid var(--rule); border-radius: 999px; padding: 8px 14px;
   font-size: 12.5px; color: var(--ink-70);
-  transition: border-color 260ms ease, color 260ms ease, background 260ms ease;
+  transition: border-color var(--fast) var(--ease), color var(--fast) var(--ease),
+              background var(--fast) var(--ease), box-shadow var(--fast) var(--ease),
+              transform var(--fast) var(--ease);
 }
 .n3-skills li {
   background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(8px);
@@ -1048,4 +1089,25 @@
    keep. */
 .n3-case-tool {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+
+/* ==================================================================
+ * THE FLOOR
+ *
+ * The room slug sits bottom-left and the stage scrolls underneath it, so on
+ * a long room body text ran straight through the caption. Same answer as the
+ * bar at the top, and for the same reason it carries no rule: a line here
+ * would draw a footer across a page that is meant to read as one sheet.
+ * ================================================================== */
+.n3-floor {
+  position: absolute; z-index: 12; inset: auto 0 0 0; height: 62px;
+  pointer-events: none;
+  background: var(--paper);
+  box-shadow: 0 -10px 30px -22px rgba(23,20,15,0);
+  transition: box-shadow 420ms var(--ease);
+}
+.n3.is-scrolled .n3-floor { box-shadow: 0 -12px 34px -20px rgba(23,20,15,0.26); }
+@media (max-width: 860px) {
+  /* The phone's bottom bar is already an opaque strip in the same place. */
+  .n3-floor { display: none; }
 }
