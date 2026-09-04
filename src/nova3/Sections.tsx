@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { ArrowDown, ArrowUpRight, ChevronDown, Download, FileText, Mail, Play } from 'lucide-react';
+import {
+  ArrowDown, ArrowUpRight, ChevronDown, Download, ExternalLink, FileText, Mail, Play,
+  Volume2, VolumeX,
+} from 'lucide-react';
 import SpotlightCard from '@/reactbits/SpotlightCard';
 import ShinyText from '@/reactbits/ShinyText';
 import Magnet from '@/reactbits/Magnet';
@@ -9,7 +12,7 @@ import Counter from '@/film/shots/Counter';
 import Poster from '@/components/Poster';
 import Lightbox from '@/components/Lightbox';
 import ToolOrbit from './ToolOrbit';
-import ResumeViewer from './ResumeViewer';
+import { playTitle, readSound, saveSound } from './titleSound';
 import { profile, stats, about, coreSkills, tools, experience } from '@/data/content';
 import { automationProjects, portfolioWork } from '@/data/work';
 import type { MediaItem } from '@/data/work';
@@ -105,11 +108,29 @@ const step = (base: number, i: number, gap = 0.035, cap = 0.42) =>
  * opens where the Work grid opens it, so the right column is a door rather
  * than a decoration.
  */
-function Home({ onGo }: { onGo: (id: SectionId) => void }) {
+function Home({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void }) {
   const accent = setupOf('home').accent;
-  const [active, setActive] = useState<MediaItem | null>(null);
-  const featured = (portfolioWork.direction as MediaItem[])[0];
   const now = experience[0];
+  /*
+     The featured slot used to hold a video. A clip shows that he can cut;
+     the systems are what the job title is actually about, and they are the
+     harder thing to prove — so the newest workflow goes here instead, and
+     the card opens its written case rather than a player.
+  */
+  const featured = automationProjects[0];
+
+  const [sound, setSound] = useState(readSound);
+  const glyphs = profile.name.replace(/\s/g, '').length;
+
+  const replay = () => {
+    /* A click IS the gesture the browser is waiting for, so this is also how
+       sound gets unlocked the first time. Replaying the sequence means
+       remounting it — the animation is CSS and CSS animations do not restart
+       on request, only on a new element. */
+    setRun((n) => n + 1);
+    if (sound) playTitle(glyphs, 52, 260);
+  };
+  const [run, setRun] = useState(0);
 
   return (
     <div className="n3-room n3-home">
@@ -120,8 +141,15 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
 
       <Reveal delay={0.12}>
         <h1 className="n3-name">
-          <span className="n3-name-seq">
+          <button
+            type="button"
+            className="n3-name-seq"
+            onClick={replay}
+            title="Replay"
+            aria-label={`${profile.name} — replay the title`}
+          >
             <PressureName
+              key={run}
               text={profile.name}
               radius={260}
               baseOpacity={1}
@@ -129,9 +157,27 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
               intro={52}
               introDelay={260}
             />
-            {/* The bar that resolves them. See .n3-name-seq::after. */}
+            {/* The bar that resolves them. See .n3-name-seq > i. */}
             <i />
-          </span>
+          </button>
+          <button
+            type="button"
+            className={`n3-sound ${sound ? 'is-on' : ''}`}
+            aria-pressed={sound}
+            aria-label={sound ? 'Sound on' : 'Sound off'}
+            title={sound ? 'Sound on' : 'Sound off'}
+            onClick={() => {
+              const next = !sound;
+              setSound(next);
+              saveSound(next);
+              /* Play immediately on switching on: the click is the gesture
+                 that unlocks audio, and hearing it confirms the switch did
+                 something. */
+              if (next) { setRun((n) => n + 1); playTitle(glyphs, 52, 260); }
+            }}
+          >
+            {sound ? <Volume2 size={13} /> : <VolumeX size={13} />}
+          </button>
         </h1>
       </Reveal>
 
@@ -194,17 +240,18 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
           <button
             type="button"
             className="n3-featured"
-            onClick={() => setActive(featured)}
-            aria-label={`Play ${featured.title}`}
+            onClick={() => onGo('systems', featured.slug)}
+            aria-label={`Read the case study: ${featured.title}`}
           >
             <span className="n3-featured-frame">
-              <Poster item={featured} />
-              <span className="n3-play"><Play size={15} /></span>
+              <Poster src={featured.thumbnail} caption={featured.tool} />
             </span>
             <span className="n3-featured-foot">
-              <span className="n3-featured-kick n3-accent">Latest piece</span>
+              <span className="n3-featured-kick n3-accent">
+                <FileText size={10} /> Latest workflow · {featured.tool}
+              </span>
               <span className="n3-featured-title">{featured.title}</span>
-              <span className="n3-featured-meta">{featured.meta}</span>
+              <span className="n3-featured-meta">Read the case <ArrowUpRight size={11} /></span>
             </span>
           </button>
         </Reveal>
@@ -230,8 +277,6 @@ function Home({ onGo }: { onGo: (id: SectionId) => void }) {
           </dl>
         </Reveal>
       </div>
-
-      <Lightbox item={active} onClose={() => setActive(null)} />
     </div>
   );
 }
@@ -480,7 +525,6 @@ function Toolkit() {
  * CONTACT
  * ================================================================ */
 function Contact() {
-  const [cv, setCv] = useState(false);
   return (
     <div className="n3-room n3-contact">
       <Reveal delay={0.05}>
@@ -500,9 +544,16 @@ function Contact() {
           <a className="n3-btn" href="https://linkedin.com/in/souravdey2105" target="_blank" rel="noreferrer">
             LinkedIn <ArrowUpRight size={13} />
           </a>
-          <button type="button" className="n3-btn" onClick={() => setCv(true)}>
-            <FileText size={13} /> View resume
-          </button>
+          {/*
+            A tab, not a panel. An iframe hands the PDF a few hundred pixels
+            in the middle of the page and the browser's viewer spends most of
+            that on its own toolbar — which is a worse read than the file
+            deserves. A new tab gives it the whole window, with the viewer's
+            real zoom, search and print, and leaves the site where it was.
+          */}
+          <a className="n3-btn" href={profile.resumeUrl} target="_blank" rel="noreferrer">
+            <FileText size={13} /> View resume <ExternalLink size={11} />
+          </a>
           <a className="n3-btn n3-btn-quiet" href={profile.resumeUrl} download aria-label="Download resume">
             <Download size={13} />
           </a>
@@ -511,7 +562,6 @@ function Contact() {
       <Reveal delay={0.32}>
         <p className="n3-foot">{profile.note}</p>
       </Reveal>
-      <ResumeViewer open={cv} onClose={() => setCv(false)} />
     </div>
   );
 }

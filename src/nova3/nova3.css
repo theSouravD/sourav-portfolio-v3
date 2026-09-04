@@ -285,7 +285,7 @@
 }
 .n3-featured-title { display: block; margin-top: 5px; font-size: 14px; font-weight: 600; letter-spacing: -0.015em; }
 .n3-featured-meta {
-  display: block; margin-top: 3px;
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 3px;
   font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-45);
 }
 
@@ -350,7 +350,6 @@
  *   follows the cause. It leaves before the letters settle, so the last
  *   thing on screen is the name and not the effect.
  * ================================================================== */
-.n3-name-seq { position: relative; display: inline-block; perspective: 800px; }
 .n3-glyph {
   animation: n3Glyph 900ms cubic-bezier(.16,1,.3,1) var(--d, 0ms) both;
   transform-origin: 50% 100%;
@@ -709,110 +708,164 @@
  * ================================================================== */
 .n3-toolkit {
   display: grid; gap: clamp(24px, 4vw, 56px);
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr) 486px;
   align-items: center;
 }
 .n3-toolkit-col { min-width: 0; }
 /* Below 1100px the orbit is the first thing to go: it is atmosphere, and the
    belt below the skills already names every tool in a form you can read. */
-@media (max-width: 1100px) {
+/* The orbit needs real width to keep its rings clear of each other, so it is
+   the first thing to go rather than the thing that gets squeezed. The belt
+   below the skills already names every tool in a form you can read. */
+@media (max-width: 1280px) {
   .n3-toolkit { grid-template-columns: 1fr; }
   .n3-toolkit-orbit { display: none; }
 }
 
 .n3-orbit-wrap {
-  position: relative; width: 340px; height: 340px; margin: 0 auto;
+  position: relative; width: 486px; height: 486px; margin: 0 auto;
   display: grid; place-items: center;
 }
-/* Faint circles so the ring reads as an orbit rather than as badges that
-   happen to be arranged in a curve. */
+/* Faint circles so the arrangement reads as orbits rather than as chips that
+   happen to sit on a curve. */
 .n3-orbit-track {
   position: absolute; border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--ink) 7%, transparent);
 }
 .n3-orbit-core {
-  position: absolute; display: grid; place-items: center; gap: 1px;
-  width: 88px; height: 88px; border-radius: 50%;
+  position: absolute; z-index: 2;
+  display: grid; place-items: center; gap: 1px; text-align: center;
+  width: 88px; height: 88px; padding: 0 9px; border-radius: 50%;
   background: var(--card); border: 1px solid var(--rule);
   box-shadow: var(--shadow); backdrop-filter: blur(10px);
+  transition: border-color var(--mid) var(--ease), box-shadow var(--mid) var(--ease);
+}
+.n3-orbit-core.is-on {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: var(--shadow-lift);
 }
 .n3-orbit-core span {
-  font-size: 26px; font-weight: 500; letter-spacing: -0.04em; color: var(--accent);
-  font-variant-numeric: tabular-nums; line-height: 1;
-  transition: color var(--slow) var(--ease);
+  font-size: 24px; font-weight: 500; letter-spacing: -0.03em; color: var(--accent);
+  line-height: 1; transition: color var(--slow) var(--ease);
 }
 .n3-orbit-core em {
   font-style: normal; font-size: 8.5px; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--ink-45);
 }
+/* The selected tool's name. It has to fit a 104px circle at any length, so it
+   wraps and shrinks rather than being clipped. */
+.n3-orbit-core strong {
+  font-size: 11px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em;
+  color: var(--ink);
+}
 
-/* One animated transform per RING, not per badge. */
+/* One animated transform per RING, not per chip. */
 .n3-orbit {
-  position: absolute; display: grid; place-items: center;
+  position: absolute; inset: 0; display: grid; place-items: center;
   animation: n3Spin linear infinite;
 }
 @keyframes n3Spin { to { transform: rotate(360deg); } }
+.n3-orbit-slot { position: absolute; }
 
-.n3-orbit-chip { position: absolute; font-style: normal; }
-/* The badge counter-rotates at the ring's own period, so it rides the circle
-   while staying upright. */
-.n3-orbit-chip b {
-  display: grid; place-items: center;
-  min-width: 34px; height: 26px; padding: 0 8px; border-radius: 999px;
+.n3-orbit-chip {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  padding: 4px 9px 4px 6px; border-radius: 999px; white-space: nowrap;
   background: #FFFDF9; border: 1px solid var(--rule);
-  box-shadow: var(--shadow);
-  color: var(--accent); font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em;
+  box-shadow: var(--shadow); color: var(--ink-70);
+  font: inherit; font-size: 9px; font-weight: 500; letter-spacing: -0.01em;
   animation: n3Spin linear infinite;
-  transition: color var(--slow) var(--ease);
+  transition: border-color var(--fast) var(--ease), color var(--fast) var(--ease),
+              box-shadow var(--fast) var(--ease);
+}
+.n3-orbit-chip:hover { color: var(--ink); box-shadow: var(--shadow-lift); }
+.n3-orbit-chip.is-on {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: var(--shadow-lift);
+}
+.n3-orbit-chip svg { width: 13px; height: 13px; flex: none; }
+/* The stand-in for a tool with no published mark. Same footprint as an icon,
+   so a chip without one is not visibly second class. */
+.n3-orbit-chip i {
+  width: 7px; height: 7px; margin: 0 3px; border-radius: 50%; flex: none;
+  color: var(--accent); opacity: 0.55;
 }
 
 /* ==================================================================
- * RESUME VIEWER
+ * BACKGROUND PICKER
  * ================================================================== */
-/* `place-items: center` would shrink the panel to its content and leave the
-   PDF a few hundred pixels tall in the middle of the screen. Stretch on the
-   block axis, centre on the inline one — the point of reading it here is that
-   it gets the height. */
-.n3-cv-wrap {
-  position: fixed; inset: 0; z-index: 60;
-  display: grid; place-items: stretch center; padding: 4vh 3vw;
+.n3-pick { position: absolute; z-index: 30; right: clamp(14px, 3vw, 28px); bottom: 24px; }
+@media (max-width: 860px) { .n3-pick { bottom: calc(64px + env(safe-area-inset-bottom)); } }
+.n3-pick-btn {
+  display: grid; place-items: center; width: 34px; height: 34px; cursor: pointer;
+  border-radius: 50%; border: 1px solid var(--ink-22); color: var(--ink);
+  background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(8px);
+  transition: box-shadow var(--fast) var(--ease), border-color var(--fast) var(--ease);
 }
-.n3-cv-scrim {
-  position: absolute; inset: 0; border: 0; cursor: zoom-out;
-  background: rgba(23,20,15,0.44); backdrop-filter: blur(6px);
-  animation: n3Fade 220ms var(--ease) both;
+.n3-pick-btn:hover, .n3-pick-btn.is-on {
+  box-shadow: var(--shadow-lift);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
-@keyframes n3Fade { from { opacity: 0; } to { opacity: 1; } }
-.n3-cv-panel {
-  position: relative; z-index: 1; width: min(980px, 100%); height: 100%;
-  display: flex; flex-direction: column; overflow: hidden;
-  border-radius: 16px; border: 1px solid var(--rule);
-  background: #FFFDF9; box-shadow: 0 40px 90px -30px rgba(23,20,15,0.5);
-  animation: n3CvIn 320ms var(--ease) both;
+.n3-pick-panel {
+  position: absolute; right: 0; bottom: 44px; width: 258px;
+  padding: 12px; border-radius: 14px;
+  background: #FFFDF9; border: 1px solid var(--rule);
+  box-shadow: 0 24px 56px -18px rgba(23,20,15,0.34);
+  animation: n3PickIn 220ms var(--ease) both;
 }
-@keyframes n3CvIn {
-  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+@keyframes n3PickIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
   to   { opacity: 1; transform: none; }
 }
-.n3-cv-bar {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  padding: 12px 14px; border-bottom: 1px solid var(--rule); flex: none;
+.n3-pick-head {
+  margin: 2px 0 7px; font-size: 9px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink-45);
 }
-.n3-cv-bar .n3-eyebrow { margin: 0; }
-.n3-cv-acts { display: flex; gap: 8px; }
-.n3-cv-acts .n3-btn { padding: 7px 13px; font-size: 12px; }
-.n3-cv-x { padding: 7px 9px !important; }
-/* The browser's own PDF viewer — zoom, search, print and page navigation, all
-   of it better than anything worth rebuilding here. */
-.n3-cv-frame { flex: 1; width: 100%; border: 0; background: #EDE7DB; }
-@media (max-width: 640px) {
-  .n3-cv-wrap { padding: 0; }
-  .n3-cv-panel { border-radius: 0; border: 0; }
-  .n3-cv-acts .n3-btn span { display: none; }
+.n3-pick-panel ul { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 2px; }
+.n3-pick-panel ul:last-of-type { margin-bottom: 8px; }
+.n3-pick-panel li button {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; padding: 7px 9px; cursor: pointer; text-align: left;
+  border: 0; border-radius: 9px; background: none; color: inherit; font: inherit;
+  transition: background var(--fast) var(--ease);
 }
-/* The download stays, demoted to an icon: the page is the primary way to read
-   it and the file is for the one person who wants the file. */
-.n3-btn-quiet { padding: 11px 13px; }
+.n3-pick-panel li button:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.n3-pick-panel li button.is-on { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.n3-pick-panel li button.is-on svg { color: var(--accent); flex: none; }
+.n3-pick-panel li strong {
+  display: block; font-size: 12px; font-weight: 500; letter-spacing: -0.01em;
+}
+.n3-pick-panel li em {
+  display: block; margin-top: 1px; font-style: normal;
+  font-size: 10px; line-height: 1.35; color: var(--ink-45);
+}
+.n3-pick-foot {
+  margin: 0; padding-top: 9px; border-top: 1px solid var(--rule);
+  font-size: 9.5px; color: var(--ink-45);
+}
+
+/* ==================================================================
+ * THE FLOOR
+ *
+ * The room slug sits bottom-left and the stage scrolls underneath it, so on
+ * a long room body text ran straight through the caption. Same answer as the
+ * navigation bar at the top: fully opaque paper where the collision happens,
+ * ramping out above it.
+ * ================================================================== */
+.n3-floor {
+  position: absolute; z-index: 12; inset: auto 0 -1px 0; height: 128px;
+  pointer-events: none;
+  background: linear-gradient(0deg,
+    var(--paper) 0%,
+    var(--paper) 44%,
+    color-mix(in srgb, var(--paper) 70%, transparent) 70%,
+    color-mix(in srgb, var(--paper) 0%, transparent) 100%);
+}
+/* On a phone the bottom bar is opaque already and sits lower, so the ramp
+   only has to cover the gap above it. */
+@media (max-width: 860px) {
+  .n3-floor { height: calc(56px + env(safe-area-inset-bottom)); }
+}
 
 /* ---- contact ---- */
 .n3-big {
@@ -940,3 +993,66 @@
   .n3-name-seq span { animation-duration: 1ms !important; animation-delay: 0s !important; }
   .n3-orbit, .n3-orbit i { animation: none !important; }
 }
+
+/* ==================================================================
+ * THE NAME — replay control and sound toggle
+ * ================================================================== */
+/* The name is a button now (click replays the sequence), so it has to be
+   stripped back to looking like type rather than like a control. */
+.n3-name-seq {
+  position: relative; display: inline-block; perspective: 800px;
+  padding: 0; border: 0; background: none; color: inherit; font: inherit;
+  text-align: left; cursor: pointer;
+}
+.n3-name { display: flex; align-items: flex-start; gap: 12px; }
+.n3-sound {
+  flex: none; display: grid; place-items: center; cursor: pointer;
+  width: 26px; height: 26px; margin-top: 0.5em; border-radius: 50%;
+  border: 1px solid var(--ink-22); background: var(--card);
+  color: var(--ink-45); box-shadow: var(--shadow);
+  transition: color var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+.n3-sound:hover { color: var(--ink); }
+/*
+ * Sound is off until asked for. Browsers block audio before a gesture anyway,
+ * but the real reason is manners: a portfolio that makes noise at a stranger
+ * unprompted is a portfolio they close.
+ */
+.n3-sound.is-on {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/*
+ * The rings stop when you reach for them.
+ *
+ * Found by an automated click refusing to fire: the test harness would not
+ * click a chip because the element "is not stable", which is exactly the
+ * complaint a person has with a moving target — you chase it, and chasing is
+ * a game, not an interface. Hovering anywhere in the orbit pauses every ring
+ * and every counter-rotation, so the thing you are aiming at holds still.
+ * Motion is the idle state; stillness is the state you can act in.
+ */
+.n3-orbit-wrap:hover .n3-orbit,
+.n3-orbit-wrap:hover .n3-orbit-chip,
+.n3-orbit-wrap:focus-within .n3-orbit,
+.n3-orbit-wrap:focus-within .n3-orbit-chip {
+  animation-play-state: paused;
+}
+/* A selected chip keeps everything paused after the pointer leaves, so the
+   selection can actually be read. */
+.n3-orbit-wrap:has(.n3-orbit-chip.is-on) .n3-orbit,
+.n3-orbit-wrap:has(.n3-orbit-chip.is-on) .n3-orbit-chip {
+  animation-play-state: paused;
+}
+
+/*
+ * Only the chips are clickable.
+ *
+ * Each ring is an `inset: 0` layer covering the whole orbit, so the topmost
+ * ring was swallowing every click meant for a chip on a ring beneath it — the
+ * chips were reachable by the keyboard and dead to the mouse. The rings and
+ * the guide circles are decoration and say so; the chips opt back in.
+ */
+.n3-orbit, .n3-orbit-slot, .n3-orbit-track { pointer-events: none; }
+.n3-orbit-chip { pointer-events: auto; }

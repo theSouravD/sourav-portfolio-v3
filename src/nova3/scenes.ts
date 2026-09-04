@@ -98,11 +98,18 @@ export const SETUPS: Setup[] = [
     id: 'career',
     label: 'Career',
     note: 'Six roles, in order',
-    wash: '#F2789C',
-    fill: '#E86A6A',
-    accent: '#9B2F52',
-    brightness: 0.4,
-    band: 0.14,
+    /*
+     * Career is the most text-heavy room on the site — six roles, and up to
+     * nine bullets under an open one — so its gel is the quietest of the six.
+     * A saturated rose at the strength the other rooms run at fought the copy
+     * for attention and lost the copy. Muted plum, a third of the brightness,
+     * and the band pushed almost off the bottom of the frame.
+     */
+    wash: '#C6A6D8',
+    fill: '#E2A9B4',
+    accent: '#7A4368',
+    brightness: 0.26,
+    band: 0.05,
     spread: 2.2,
     speed: 0.24,
   },
