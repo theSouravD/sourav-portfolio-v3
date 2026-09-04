@@ -47,7 +47,14 @@ export interface Setup {
   wash: string;
   fill: string;
   accent: string;
-  /** How much of the wash to let through. Warmer hues carry further. */
+  /**
+   * How much of the wash to let through.
+   *
+   * Trimmed across the board when the vignette was lightened: that vignette
+   * had been quietly damping the top and bottom of every room, so removing
+   * most of it made every gel read hotter without a single value changing.
+   * A number tuned against one set of layers is not tuned against another.
+   */
   brightness: number;
   /** Where the bands sit and how far they spread. */
   band: number;
@@ -77,7 +84,7 @@ export const SETUPS: Setup[] = [
     wash: '#FFB259',
     fill: '#FF8A4C',
     accent: '#A9631B',
-    brightness: 0.42,
+    brightness: 0.344,
     band: 0.16,
     spread: 2.1,
     speed: 0.42,
@@ -89,7 +96,7 @@ export const SETUPS: Setup[] = [
     wash: '#5B9BF5',
     fill: '#7C7CF0',
     accent: '#25508F',
-    brightness: 0.38,
+    brightness: 0.312,
     band: 0.1,
     spread: 2.4,
     speed: 0.3,
@@ -101,7 +108,7 @@ export const SETUPS: Setup[] = [
     wash: '#2FC7A6',
     fill: '#5FD08A',
     accent: '#0B6A57',
-    brightness: 0.38,
+    brightness: 0.312,
     band: 0.12,
     spread: 2.5,
     speed: 0.26,
@@ -120,7 +127,7 @@ export const SETUPS: Setup[] = [
     wash: '#C6A6D8',
     fill: '#E2A9B4',
     accent: '#7A4368',
-    brightness: 0.26,
+    brightness: 0.213,
     band: 0.05,
     spread: 2.2,
     speed: 0.24,
@@ -132,7 +139,7 @@ export const SETUPS: Setup[] = [
     wash: '#A886F5',
     fill: '#C77BEA',
     accent: '#5B3AA6',
-    brightness: 0.42,
+    brightness: 0.344,
     band: 0.09,
     spread: 2.6,
     speed: 0.22,
@@ -144,7 +151,7 @@ export const SETUPS: Setup[] = [
     wash: '#8FC63F',
     fill: '#4FBE86',
     accent: '#3F6B1E',
-    brightness: 0.44,
+    brightness: 0.361,
     band: 0.15,
     spread: 2.0,
     speed: 0.4,

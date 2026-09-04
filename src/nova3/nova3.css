@@ -32,6 +32,11 @@
 
   /* One easing and three durations for the whole site. Motion that shares a
      curve reads as one hand; motion that doesn't reads as a template. */
+  /* The two strips the content is not allowed into. Declared once because
+     three rules have to agree on them exactly. */
+  --bar: 66px;
+  --floor: 56px;
+
   --ease: cubic-bezier(.22,.9,.28,1);
   --fast: 260ms;
   --mid: 380ms;
@@ -101,11 +106,16 @@
 }
 /* On paper the vignette works the other way round: the edges go lighter, back
    to the ground, so the wash never meets the frame in a hard line. */
+/*
+ * Much lighter than it was. The vignette existed to stop the wash meeting the
+ * frame in a hard line, but at the old strength it also bleached the top and
+ * bottom of every room — which, combined with the painted bars, is what made
+ * the background look like it stopped short of the edges. Now it only takes
+ * the very corners down.
+ */
 .n3-vig {
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  background:
-    radial-gradient(120% 92% at 50% 38%, transparent 36%, rgba(247,243,236,0.78) 100%),
-    linear-gradient(180deg, rgba(247,243,236,0.55) 0%, transparent 22%, transparent 66%, rgba(247,243,236,0.85) 100%);
+  background: radial-gradient(130% 105% at 50% 45%, transparent 62%, rgba(247,243,236,0.5) 100%);
 }
 
 /* ==================================================================
@@ -132,23 +142,21 @@
  * defect. The same reasoning gives the floor its own bar.
  */
 /*
- * No line. A rule across the top cuts the page in two and announces "header
- * component"; the bar is meant to read as part of the same sheet of paper.
+ * THE BAR PAINTS NOTHING.
  *
- * Depth instead of a border, and only when it is doing something: at the top
- * of a room there is nothing underneath the bar, so it is invisible and the
- * page is whole. Once content actually passes beneath it, a soft wide shadow
- * fades in — the bar lifts off the page exactly when it needs to be in front
- * of something, and settles back when it does not.
+ * Filling it with paper did stop the collision, and it also cut the chosen
+ * background into a band with two hard edges — on a coloured ground the strips
+ * read as borders around the page, which is the opposite of a full-bleed
+ * theme. Painting over a background to protect content is fixing the wrong
+ * half of the problem.
+ *
+ * So nothing is painted here at all. The content is confined instead: the
+ * scrolling area is inset by exactly this strip (see `.n3-stage`), so text
+ * physically cannot enter it and there is nothing to hide. The backdrop runs
+ * edge to edge behind everything, the bar is just type sitting on it, and the
+ * page has no seams.
  */
-.n3-nav {
-  background: var(--paper);
-  box-shadow: 0 10px 30px -22px rgba(23,20,15,0);
-  transition: box-shadow 420ms var(--ease);
-}
-.n3.is-scrolled .n3-nav {
-  box-shadow: 0 12px 34px -20px rgba(23,20,15,0.30);
-}
+.n3-nav { height: var(--bar); padding-top: 0; padding-bottom: 0; }
 .n3-brand {
   display: flex; align-items: center; gap: 9px;
   background: none; border: 0; cursor: pointer; padding: 0;
@@ -253,14 +261,24 @@
  * `start` the moment it would overflow. Short rooms stay optically centred,
  * long ones begin at their first line.
  */
+/*
+ * The scrolling area is inset by the two reserved strips rather than running
+ * the full height with padding. That one change is what lets the background go
+ * full-bleed: content is clipped by the container's own bounds, so it can
+ * never appear under the navigation and nothing has to be painted over it.
+ */
 .n3-stage {
-  position: absolute; inset: 0; z-index: 10;
+  position: absolute; inset: var(--bar) 0 var(--floor) 0; z-index: 10;
   display: grid; justify-items: center; align-content: safe center;
-  padding: 92px clamp(18px, 5vw, 56px) 84px;
+  padding: 26px clamp(18px, 5vw, 56px) 30px;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-@media (max-width: 860px) { .n3-stage { padding: 26px 18px 86px; } }
+@media (max-width: 860px) {
+  /* No bar at the top on a phone; the strip is at the bottom instead. */
+  .n3 { --bar: 0px; --floor: calc(52px + env(safe-area-inset-bottom)); }
+  .n3-stage { padding: 26px 18px 24px; }
+}
 
 .n3-room { width: 100%; max-width: 1080px; }
 .n3-contact { max-width: 900px; }
@@ -1099,15 +1117,9 @@
  * bar at the top, and for the same reason it carries no rule: a line here
  * would draw a footer across a page that is meant to read as one sheet.
  * ================================================================== */
-.n3-floor {
-  position: absolute; z-index: 12; inset: auto 0 0 0; height: 62px;
-  pointer-events: none;
-  background: var(--paper);
-  box-shadow: 0 -10px 30px -22px rgba(23,20,15,0);
-  transition: box-shadow 420ms var(--ease);
-}
-.n3.is-scrolled .n3-floor { box-shadow: 0 -12px 34px -20px rgba(23,20,15,0.26); }
-@media (max-width: 860px) {
-  /* The phone's bottom bar is already an opaque strip in the same place. */
-  .n3-floor { display: none; }
-}
+/*
+ * The floor is now only a reserved strip, not a painted one — same reasoning
+ * as the bar above. It has no element at all; `.n3-stage`'s bottom inset is
+ * what keeps content out of it, and the room slug simply sits on the
+ * backdrop like everything else.
+ */

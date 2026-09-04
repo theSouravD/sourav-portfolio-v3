@@ -186,15 +186,6 @@ export default function Stage() {
         <div className="n3-vig" />
       </div>
 
-      {/*
-        The floor. The room slug sits bottom-left and the stage scrolls
-        underneath it, so on a long room — Career especially — body text ran
-        straight through the caption. Same problem as the navigation bar at the
-        top and it needs the same answer: hold paper fully opaque where the
-        collision happens, then ramp out above it.
-      */}
-      <div className="n3-floor" aria-hidden />
-
       <Nav active={id} onGo={(next) => go(next)} />
 
       <main ref={stageRef} className={`n3-stage ${cutting ? 'is-cutting' : ''}`}>
