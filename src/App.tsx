@@ -1,18 +1,16 @@
-import Handheld from '@/nova/Handheld';
-import '@/nova/handheld.css';
+import Stage from '@/nova3/Stage';
 
 /**
- * NOVA II.
+ * NOVA III.
  *
- * One object on one screen. Nova I — the film, the nine chapters, the edit
- * timeline — is preserved on the `v1-reel` tag; this branch replaces the shell
- * entirely rather than adding to it, because the two are opposite shapes: a
- * corridor you travel through, and a room you return to.
+ * Six rooms, each lit by its own live scene, and one ordinary navigation bar.
+ * Nova I put the navigation inside the experience and made you learn it; Nova
+ * II replaced the whole site with a game. This keeps the cinematic register of
+ * Nova I and spends the invention on atmosphere instead of on wayfinding.
+ *
+ * Both earlier versions are preserved: `git checkout v1-reel` for the film,
+ * `git checkout nova-ii` for the handheld.
  */
 export default function App() {
-  return (
-    <main className="nova2-page">
-      <Handheld />
-    </main>
-  );
+  return <Stage />;
 }
