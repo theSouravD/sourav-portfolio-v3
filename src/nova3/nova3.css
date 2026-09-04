@@ -117,29 +117,24 @@
   padding: 20px clamp(18px, 4vw, 44px);
 }
 /*
- * The bar floats over a scrolling stage, so without this a headline riding
- * up underneath it collided with the links — two sets of type in the same
- * pixels, which is the one thing a navigation bar must never do. The mask
- * is a soft ramp to paper rather than a hard band: content dissolves as it
- * reaches the bar instead of being chopped off by an edge.
+ * A REAL BAR, NOT A FADE.
+ *
+ * Two attempts at masking the collision with a gradient both failed for the
+ * same reason: a ramp from paper to transparent is a strip of WHITE laid over
+ * whatever the ground happens to be, and the moment the ground is green or
+ * violet that strip is plainly visible as a white smear across the top of the
+ * page. It looked like a rendering fault.
+ *
+ * A gradient is the wrong tool for "content must not reach this area". The
+ * right one is an opaque element that occupies the area. So the navigation is
+ * a solid bar with a hairline under it: nothing can show through it, there is
+ * no ramp to notice, and it reads as deliberate chrome rather than as a
+ * defect. The same reasoning gives the floor its own bar.
  */
-/*
- * The first attempt ramped straight from paper to transparent, which meant
- * the band was already half see-through at the height the links actually sit
- * at — so type still ghosted through them. The fix is to hold it FULLY opaque
- * past the bottom of the links and only start the ramp below that. A mask that
- * is 90% opaque where the collision happens is not a mask.
- */
-.n3-nav::before {
-  content: ''; position: absolute; inset: -1px 0 auto 0; height: 146px; z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(180deg,
-    var(--paper) 0%,
-    var(--paper) 52%,
-    color-mix(in srgb, var(--paper) 72%, transparent) 74%,
-    color-mix(in srgb, var(--paper) 0%, transparent) 100%);
+.n3-nav {
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
 }
-@media (max-width: 860px) { .n3-nav::before { display: none; } }
 .n3-brand {
   display: flex; align-items: center; gap: 9px;
   background: none; border: 0; cursor: pointer; padding: 0;
@@ -583,7 +578,7 @@
   background: none; border: 0; cursor: pointer; color: inherit; font: inherit;
 }
 .n3-case-thumb {
-  flex: none; width: 96px; aspect-ratio: 16/10; border-radius: 7px; overflow: hidden; background: #E7E1D6;
+  flex: none; width: 124px; aspect-ratio: 16/10; border-radius: 7px; overflow: hidden; background: #E7E1D6;
 }
 .n3-case-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .n3-case-tool {
@@ -689,22 +684,9 @@
   border-color: color-mix(in srgb, var(--accent) 46%, transparent);
   color: var(--ink); box-shadow: var(--shadow-lift); transform: translateY(-2px);
 }
-.n3-loop {
-  border: 1px solid var(--rule); border-radius: 16px; padding: 18px;
-  background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(10px);
-}
-.n3-loop-label {
-  display: block; margin-bottom: 12px;
-  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-45);
-}
-.n3-tool {
-  white-space: nowrap; border: 1px solid var(--rule); border-radius: 999px;
-  padding: 8px 15px; font-size: 11px; color: var(--ink-70);
-  background: rgba(255,253,249,0.6);
-}
 
 /* ==================================================================
- * TOOLKIT — copy left, orbit right
+ * ABOUT — copy left, orbit right
  * ================================================================== */
 .n3-toolkit {
   display: grid; gap: clamp(24px, 4vw, 56px);
@@ -712,11 +694,8 @@
   align-items: center;
 }
 .n3-toolkit-col { min-width: 0; }
-/* Below 1100px the orbit is the first thing to go: it is atmosphere, and the
-   belt below the skills already names every tool in a form you can read. */
 /* The orbit needs real width to keep its rings clear of each other, so it is
-   the first thing to go rather than the thing that gets squeezed. The belt
-   below the skills already names every tool in a form you can read. */
+   the first thing to go rather than the thing that gets squeezed. */
 @media (max-width: 1280px) {
   .n3-toolkit { grid-template-columns: 1fr; }
   .n3-toolkit-orbit { display: none; }
@@ -732,10 +711,20 @@
   position: absolute; border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--ink) 7%, transparent);
 }
+/*
+ * The centre.
+ *
+ * "AI" sat off-centre because the circle was a grid with a gap and TWO rows in
+ * it — the label and its caption — so the PAIR was centred, not the word. The
+ * word is what the eye centres on, so the caption is positioned out of the
+ * flow underneath it and "AI" gets the middle to itself. Bold, because at this
+ * size a medium weight reads as a placeholder against 700-weight brand marks
+ * orbiting it.
+ */
 .n3-orbit-core {
   position: absolute; z-index: 2;
-  display: grid; place-items: center; gap: 1px; text-align: center;
-  width: 88px; height: 88px; padding: 0 9px; border-radius: 50%;
+  display: grid; place-items: center; text-align: center;
+  width: 96px; height: 96px; padding: 0 9px; border-radius: 50%;
   background: var(--card); border: 1px solid var(--rule);
   box-shadow: var(--shadow); backdrop-filter: blur(10px);
   transition: border-color var(--mid) var(--ease), box-shadow var(--mid) var(--ease);
@@ -745,17 +734,20 @@
   box-shadow: var(--shadow-lift);
 }
 .n3-orbit-core span {
-  font-size: 24px; font-weight: 500; letter-spacing: -0.03em; color: var(--accent);
+  grid-area: 1 / 1;
+  font-size: 27px; font-weight: 700; letter-spacing: -0.02em; color: var(--accent);
   line-height: 1; transition: color var(--slow) var(--ease);
 }
+/* Out of the flow, so it cannot push the word off the middle. */
 .n3-orbit-core em {
-  font-style: normal; font-size: 8.5px; letter-spacing: 0.2em;
+  position: absolute; left: 0; right: 0; top: 62%;
+  font-style: normal; font-size: 8px; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--ink-45);
 }
-/* The selected tool's name. It has to fit a 104px circle at any length, so it
-   wraps and shrinks rather than being clipped. */
+/* The selected tool's name has to fit a 96px circle at any length. */
 .n3-orbit-core strong {
-  font-size: 11px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em;
+  grid-area: 1 / 1;
+  font-size: 10.5px; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em;
   color: var(--ink);
 }
 
@@ -783,6 +775,8 @@
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   box-shadow: var(--shadow-lift);
 }
+/* Without an explicit size an inline SVG takes its viewBox as its intrinsic
+   dimensions — a 24-unit icon rendering as a 24rem graphic. */
 .n3-orbit-chip svg { width: 13px; height: 13px; flex: none; }
 /* The stand-in for a tool with no published mark. Same footprint as an icon,
    so a chip without one is not visibly second class. */
@@ -794,7 +788,7 @@
 /* ==================================================================
  * BACKGROUND PICKER
  * ================================================================== */
-.n3-pick { position: absolute; z-index: 30; right: clamp(14px, 3vw, 28px); bottom: 24px; }
+.n3-pick { position: absolute; z-index: 30; right: clamp(14px, 3vw, 28px); bottom: 14px; }
 @media (max-width: 860px) { .n3-pick { bottom: calc(64px + env(safe-area-inset-bottom)); } }
 .n3-pick-btn {
   display: grid; place-items: center; width: 34px; height: 34px; cursor: pointer;
@@ -844,29 +838,6 @@
   font-size: 9.5px; color: var(--ink-45);
 }
 
-/* ==================================================================
- * THE FLOOR
- *
- * The room slug sits bottom-left and the stage scrolls underneath it, so on
- * a long room body text ran straight through the caption. Same answer as the
- * navigation bar at the top: fully opaque paper where the collision happens,
- * ramping out above it.
- * ================================================================== */
-.n3-floor {
-  position: absolute; z-index: 12; inset: auto 0 -1px 0; height: 128px;
-  pointer-events: none;
-  background: linear-gradient(0deg,
-    var(--paper) 0%,
-    var(--paper) 44%,
-    color-mix(in srgb, var(--paper) 70%, transparent) 70%,
-    color-mix(in srgb, var(--paper) 0%, transparent) 100%);
-}
-/* On a phone the bottom bar is opaque already and sits lower, so the ramp
-   only has to cover the gap above it. */
-@media (max-width: 860px) {
-  .n3-floor { height: calc(56px + env(safe-area-inset-bottom)); }
-}
-
 /* ---- contact ---- */
 .n3-big {
   margin: 0; font-size: clamp(2.2rem, 7vw, 5rem); font-weight: 500;
@@ -910,7 +881,13 @@
 }
 .n3-back:hover { color: var(--ink); gap: 11px; }
 .n3-case-head { margin-bottom: 26px; }
-.n3-case-head .n3-eyebrow { display: inline-flex; align-items: center; gap: 7px; }
+/* `inline-flex` with a wrapping label put the icon on the first line and the
+   rest of the text on the second, hanging past it. Grid keeps the icon in its
+   own column so the label wraps under itself. */
+.n3-case-head .n3-eyebrow {
+  display: grid; grid-template-columns: auto 1fr; gap: 7px; align-items: start;
+}
+.n3-case-head .n3-eyebrow svg { margin-top: 0.35em; }
 .n3-case-hero {
   border-radius: 16px; overflow: hidden; border: 1px solid var(--rule);
   aspect-ratio: 16/9; background: #E7E1D6; margin-bottom: 34px;
@@ -1056,3 +1033,19 @@
  */
 .n3-orbit, .n3-orbit-slot, .n3-orbit-track { pointer-events: none; }
 .n3-orbit-chip { pointer-events: auto; }
+
+/* ==================================================================
+ * WORKFLOW POSTERS
+ *
+ * Drawn, not photographed — see WorkflowPoster.tsx. They inherit --accent,
+ * so a poster is graded with the room it sits in for free.
+ * ================================================================== */
+.n3-poster { display: block; width: 100%; height: 100%; background: #FBF8F2; }
+.n3-case-thumb .n3-poster { border-radius: 7px; }
+
+/* One line, always. "Pocket FM · Character Canvas" wrapped to two and pushed
+   that card's title down, which broke the row baseline the grid works hard to
+   keep. */
+.n3-case-tool {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}

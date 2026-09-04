@@ -16,6 +16,9 @@ export interface MediaItem {
 
 export interface AutomationProject {
   slug: string;
+  /** Who the work was for. Separate from `tool`, which is the internal
+      system used — three of these name one and two do not. */
+  client?: string;
   title: string;
   tool: string;
   category: string;
@@ -28,6 +31,7 @@ export interface AutomationProject {
 export const automationProjects: AutomationProject[] = [
   {
     slug: "script-to-motion",
+    client: "Pocket FM",
     title: "Script to Motion",
     tool: "Mosaic 2.0",
     category: "Automation workflow",
@@ -68,6 +72,7 @@ export const automationProjects: AutomationProject[] = [
   },
   {
     slug: "script-to-image",
+    client: "Pocket FM",
     title: "Script to Image",
     tool: "Pablo",
     category: "Automation workflow",
@@ -127,6 +132,7 @@ export const automationProjects: AutomationProject[] = [
   },
   {
     slug: "character-standardization",
+    client: "Pocket FM",
     title: "Character Standardization",
     tool: "Character Canvas",
     category: "Automation workflow",
@@ -170,8 +176,9 @@ export const automationProjects: AutomationProject[] = [
   },
   {
     slug: "growth-show-thumbnail-generation",
+    client: "Pocket FM",
     title: "Growth Show Thumbnail Generation",
-    tool: "Pocket FM",
+    tool: "",
     category: "Automation workflow",
     thumbnail: "/assets/automation/growth-show-thumbnail-generation/app-example.png",
     summary: "A show-level thumbnail generation workflow that turns Story Canon into genre-aware title options, consistent thumbnail variations, and testable winners.",
@@ -210,8 +217,9 @@ export const automationProjects: AutomationProject[] = [
   },
   {
     slug: "video-dubbing-localization",
+    client: "Pocket FM",
     title: "Video Dubbing & Localization",
-    tool: "Pocket FM",
+    tool: "",
     category: "Automation workflow",
     thumbnail: "https://res.cloudinary.com/xfhm04nh/video/upload/so_0/TAB_EP1_English.jpg",
     summary: "A high-scale localization workflow that turns one English master into Hindi and other regional dubs while preserving the original video, music, and SFX.",

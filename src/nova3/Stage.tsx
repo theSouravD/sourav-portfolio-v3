@@ -10,6 +10,7 @@ import {
   type BackdropId, type TextureId,
 } from './backdrops';
 import { useSwipeRooms } from './useSwipeRooms';
+import { cue, initSound } from './titleSound';
 import './nova3.css';
 
 /**
@@ -31,6 +32,7 @@ export default function Stage() {
   const [caseSlug, setCaseSlug] = useState<string | null>(null);
   const [cutting, setCutting] = useState(false);
   const cutTimer = useRef(0);
+  const hoverRef = useRef<HTMLElement | null>(null);
 
   /* The chosen ground. Read lazily so the stored value is fetched once, on
      the first render, rather than on every one. */
@@ -50,6 +52,7 @@ export default function Stage() {
        * keeps the site quick to use; slow light is what makes the speed feel
        * directed rather than abrupt.
        */
+      cue('move');
       setCutting(true);
       window.clearTimeout(cutTimer.current);
       cutTimer.current = window.setTimeout(() => setCutting(false), 170);
@@ -65,6 +68,36 @@ export default function Stage() {
   /* The back button and shared links both have to work. A site where the
      browser's own controls do nothing is not dummy-proof, whatever the nav
      looks like. */
+  /* Audio arms itself on the first real gesture anywhere — see titleSound. */
+  useEffect(() => { initSound(); }, []);
+
+  /*
+   * Interface sound is delegated rather than wired per component: one listener
+   * on the root reads what was actually clicked or hovered. Threading an
+   * onClick through forty buttons to play a tick would mean forty places to
+   * forget one, and every new control would start silent.
+   */
+  useEffect(() => {
+    const root = document.querySelector('.n3');
+    if (!root) return;
+    const hit = (e: Event) => (e.target as HTMLElement)?.closest?.('button, a, .n3-link');
+    const onDown = (e: Event) => { if (hit(e)) cue('tap'); };
+    const onOver = (e: Event) => {
+      const el = hit(e);
+      // `pointerover` fires again for every child element under the cursor,
+      // so without this the tick repeats as the pointer crosses an icon
+      // inside the button it is already on.
+      if (el && el !== hoverRef.current) { hoverRef.current = el as HTMLElement; cue('hover'); }
+      if (!el) hoverRef.current = null;
+    };
+    root.addEventListener('pointerdown', onDown);
+    root.addEventListener('pointerover', onOver);
+    return () => {
+      root.removeEventListener('pointerdown', onDown);
+      root.removeEventListener('pointerover', onOver);
+    };
+  }, []);
+
   useEffect(() => {
     const sync = () => {
       const s = sectionFromHash();

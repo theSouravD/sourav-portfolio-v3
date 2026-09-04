@@ -6,92 +6,19 @@ import {
 import SpotlightCard from '@/reactbits/SpotlightCard';
 import ShinyText from '@/reactbits/ShinyText';
 import Magnet from '@/reactbits/Magnet';
-import LogoLoop from '@/reactbits/LogoLoop';
 import PressureName from '@/film/PressureName';
 import Counter from '@/film/shots/Counter';
 import Poster from '@/components/Poster';
 import Lightbox from '@/components/Lightbox';
 import ToolOrbit from './ToolOrbit';
+import WorkflowPoster from './WorkflowPoster';
 import { playTitle, readSound, saveSound } from './titleSound';
-import { profile, stats, about, coreSkills, tools, experience } from '@/data/content';
+import { Reveal } from './parts';
+import { glow, label, step } from './util';
+import { profile, stats, about, coreSkills, experience } from '@/data/content';
 import { automationProjects, portfolioWork } from '@/data/work';
 import type { MediaItem } from '@/data/work';
 import { setupOf, type SectionId } from './scenes';
-
-/**
- * The room's gel, as an rgba you can put in a spotlight.
- *
- * A white spotlight on a dark card is a light being switched on. The same
- * white on paper is nothing at all — you cannot get brighter than the page.
- * So on light the hover glow is the room's own colour instead, which reads as
- * a gel sliding across rather than as a lamp.
- */
-type Rgba = `rgba(${number}, ${number}, ${number}, ${number})`;
-const glow = (hex: string, a: number): Rgba => {
-  const h = hex.replace('#', '');
-  const n = parseInt(h, 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
-};
-
-/**
- * The six rooms.
- *
- * Each one is a single screen of content with a directed entrance: nothing
- * relies on scrolling to be discovered, and nothing animates in from
- * invisible. A section that starts at opacity zero waiting for an observer is
- * a section a visitor can arrive at and see nothing in — the entrances here
- * are on a timer from mount, so the room is always lit by the time you look.
- */
-
-/**
- * THE ENTRANCE — and why it is no longer a scroll trigger.
- *
- * Three separate "the content is missing" bugs in this build all had the same
- * cause: AnimatedContent reveals on a ScrollTrigger, and a trigger measures
- * where an element sits ONCE, when it is created. That is a promise the layout
- * cannot keep. Point it at the wrong scroller and everything below the fold
- * stays at opacity 0 for good. Point it at the right one and it still breaks
- * the moment the page changes height underneath it — close the open role in
- * Career and five rows slide up into space the trigger already decided was
- * off-screen, so they simply never appear. A visitor closes an accordion,
- * concludes there is nothing else, and leaves.
- *
- * No reveal on this site is worth that. An entrance is decoration; being
- * visible is the product. So the reveal is now a CSS animation on a delay from
- * mount — it cannot be told a wrong position because it never asks for one,
- * it costs no observer and no library, and `both` fill holds the start frame
- * through the delay so nothing flashes before its turn.
- *
- * The stagger caps deliberately: with twenty-nine tiles a linear ramp would
- * leave the last one waiting a second and a half, which stops reading as
- * choreography and starts reading as lag.
- */
-export function Reveal({
-  delay = 0,
-  className = '',
-  as: Tag = 'div',
-  children,
-}: {
-  delay?: number;
-  className?: string;
-  /**
-   * The element to render as. A wrapper is not free: a <div> between an <ol>
-   * and its <li> is invalid markup, and it silently breaks every `>` selector
-   * written against the list. Lists pass `as="li"` so the reveal IS the row.
-   */
-  as?: 'div' | 'li';
-  children: React.ReactNode;
-}) {
-  return (
-    <Tag className={`n3-rise ${className}`} style={{ animationDelay: `${delay}s` }}>
-      {children}
-    </Tag>
-  );
-}
-
-/** Staggered delay for the nth item in a list, capped so long lists stay brisk. */
-const step = (base: number, i: number, gap = 0.035, cap = 0.42) =>
-  base + Math.min(i * gap, cap);
 
 /* ================================================================
  * HOME
@@ -244,11 +171,11 @@ function Home({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void })
             aria-label={`Read the case study: ${featured.title}`}
           >
             <span className="n3-featured-frame">
-              <Poster src={featured.thumbnail} caption={featured.tool} />
+              <WorkflowPoster project={featured} />
             </span>
             <span className="n3-featured-foot">
               <span className="n3-featured-kick n3-accent">
-                <FileText size={10} /> Latest workflow · {featured.tool}
+                <FileText size={10} /> Latest workflow · {label(featured)}
               </span>
               <span className="n3-featured-title">{featured.title}</span>
               <span className="n3-featured-meta">Read the case <ArrowUpRight size={11} /></span>
@@ -300,7 +227,7 @@ function Work() {
     <div className="n3-room">
       <Head
         kicker="Selected work"
-        title="Work"
+        title="Gallery"
         note={`${pieces.length} pieces — campaign and trailer work, AI ad creatives, motion and video.`}
         />
 
@@ -372,10 +299,10 @@ function Systems({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void
           <Reveal key={p.slug} delay={step(0.08, i, 0.06)}>
             <SpotlightCard className="n3-case" spotlightColor={glow(setupOf('systems').accent, 0.16)}>
               <button type="button" onClick={() => onGo('systems', p.slug)}>
-                <span className="n3-case-thumb"><Poster src={p.thumbnail} caption={p.tool} /></span>
+                <span className="n3-case-thumb"><WorkflowPoster project={p} /></span>
                 <span className="n3-case-body">
                   <span className="n3-case-tool n3-accent">
-                    <FileText size={10} /> {p.tool}
+                    <FileText size={10} /> {label(p)}
                   </span>
                   <strong>{p.title}</strong>
                   <span className="n3-case-sum">{p.summary}</span>
@@ -471,50 +398,28 @@ function Career() {
 /* ================================================================
  * TOOLKIT
  * ================================================================ */
+/**
+ * ABOUT — formerly "Toolkit".
+ *
+ * The belt of tool chips is gone. It listed exactly the same sixteen tools as
+ * the orbit beside it, so the room said everything twice — and the strip's own
+ * edge fade left a hard square where it met the panel corner. One list, and
+ * the orbit is the better one: it is readable, it is clickable, and it names
+ * whatever you select in the middle.
+ */
 function Toolkit() {
-  const logos = tools.map((t) => ({
-    node: <span className="n3-tool">{t}</span>,
-    title: t,
-  }));
   return (
     <div className="n3-room n3-toolkit">
       <div className="n3-toolkit-col">
-        <Head kicker="How the work gets made" title="Toolkit" note={about.body} />
+        <Head kicker="How the work gets made" title="About" note={about.body} />
         <Reveal delay={0.14}>
           <ul className="n3-skills">
-            {coreSkills.map((s) => <li key={s}>{s}</li>)}
+            {coreSkills.map((sk) => <li key={sk}>{sk}</li>)}
           </ul>
-        </Reveal>
-        {/*
-          The belt needs its fade on. Without it the strip is guillotined at
-          both ends and the first and last chips read as broken words — and the
-          fade has to take the CARD's colour rather than the page's, because it
-          sits inside the panel and paper over near-white is a visible seam.
-
-          It stays even though the orbit shows the same tools: the belt is
-          readable and hoverable, the orbit is atmosphere. Below 1100px the
-          orbit goes and the belt is the whole answer.
-        */}
-        <Reveal delay={0.24}>
-          <div className="n3-loop" data-noswipe>
-            <span className="n3-loop-label">Tools</span>
-            <LogoLoop
-              logos={logos}
-              speed={40}
-              direction="left"
-              logoHeight={34}
-              gap={12}
-              pauseOnHover
-              hoverSpeed={8}
-              fadeOut
-              fadeOutColor="#FCFAF6"
-              ariaLabel="Tools and platforms"
-            />
-          </div>
         </Reveal>
       </div>
 
-      <Reveal delay={0.3} className="n3-toolkit-orbit">
+      <Reveal delay={0.24} className="n3-toolkit-orbit">
         <ToolOrbit />
       </Reveal>
     </div>

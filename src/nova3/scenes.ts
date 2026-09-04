@@ -17,6 +17,18 @@
  * than it was in the dark, because there is nothing else hiding the flatness.
  */
 
+/*
+ * The ids are the URL and stay put; the LABELS are what changed.
+ *
+ * "Work" and "Systems" were both his work, so the nav offered a choice between
+ * a word and a synonym of it. "Gallery" names what that room actually is — a
+ * wall of finished pieces you look at — against "Systems", which is a set of
+ * pipelines you read about. And "Toolkit" was the About page wearing a
+ * different hat: it opens with who he is and how he works.
+ *
+ * Renaming the ids would break every link anyone has already shared, so they
+ * are deliberately left alone.
+ */
 export type SectionId = 'home' | 'work' | 'systems' | 'career' | 'toolkit' | 'contact';
 
 export interface Setup {
@@ -72,7 +84,7 @@ export const SETUPS: Setup[] = [
   },
   {
     id: 'work',
-    label: 'Work',
+    label: 'Gallery',
     note: 'Selected pieces',
     wash: '#5B9BF5',
     fill: '#7C7CF0',
@@ -115,7 +127,7 @@ export const SETUPS: Setup[] = [
   },
   {
     id: 'toolkit',
-    label: 'Toolkit',
+    label: 'About',
     note: 'How the work gets made',
     wash: '#A886F5',
     fill: '#C77BEA',

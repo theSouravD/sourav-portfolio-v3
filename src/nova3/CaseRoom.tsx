@@ -1,7 +1,8 @@
 import { ArrowLeft, ArrowRight, FileText } from 'lucide-react';
-import { Reveal } from './Sections';
+import { Reveal } from './parts';
+import { label } from './util';
 import Magnet from '@/reactbits/Magnet';
-import Poster from '@/components/Poster';
+import WorkflowPoster from './WorkflowPoster';
 import AutomationCase from '@/components/AutomationCase';
 import { automationProjects } from '@/data/work';
 
@@ -55,7 +56,7 @@ export default function CaseRoom({ slug, onBack }: { slug: string; onBack: () =>
       <header className="n3-case-head">
         <Reveal delay={0.06}>
           <p className="n3-eyebrow n3-accent">
-            <FileText size={11} /> {project.tool} · {project.category}
+            <FileText size={11} /> {label(project)} · {project.category}
           </p>
         </Reveal>
         <Reveal delay={0.12}>
@@ -66,9 +67,17 @@ export default function CaseRoom({ slug, onBack }: { slug: string; onBack: () =>
         </Reveal>
       </header>
 
+      {/*
+        The hero used to be `project.thumbnail`, which for three of the five
+        is the SAME FILE the Interface module shows full-size two scrolls
+        later — so the page opened with a small, unreadable copy of a picture
+        it was about to show you properly. The poster is a drawing of the
+        pipeline instead: it says something the interface shot does not, and
+        it leaves the screenshot to be the screenshot.
+      */}
       <Reveal delay={0.24}>
         <div className="n3-case-hero">
-          <Poster src={project.thumbnail} caption={project.tool} />
+          <WorkflowPoster project={project} variant="hero" />
         </div>
       </Reveal>
 
