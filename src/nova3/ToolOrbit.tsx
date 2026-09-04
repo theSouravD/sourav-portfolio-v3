@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import * as si from 'simple-icons';
 import { tools } from '@/data/content';
+import { markFor } from './marks';
 
 /**
- * The tools, on three rings.
+ * The tools, on two rings.
  *
  * WHY WORDMARKS AND NOT A GRID OF LOGOS
  * simple-icons carries 3,400 brand marks and none of the ones this list needs
@@ -16,36 +16,15 @@ import { tools } from '@/data/content';
  *
  * Abbreviations are gone entirely. "AAE" told a reader nothing.
  *
- * THREE RINGS, SORTED BY LENGTH
- * Sixteen full names will not fit on two circles — the first attempt
- * overlapped into a knot. Three rings, with the shortest names on the
- * tightest circle, is what makes the arc lengths work out.
+ * SORTED BY LENGTH
+ * Shortest names on the tightest circle — an arc has less room the further
+ * in it sits. The ring geometry is explained where the radii are set.
  *
  * CLICKING
  * A chip selects its tool: the ring stops, the chip lights, and the centre
  * names it. Stopping matters — chasing a moving target with a cursor is a
  * game, not an interface — and the centre is where the eye already is.
  */
-
-/** Brand marks that actually exist for this list. Everything else is type. */
-const MARKS: Record<string, string> = {
-  'Blender 3D': 'siBlender',
-  'DaVinci Resolve': 'siDavinciresolve',
-  Claude: 'siClaude',
-  Gemini: 'siGooglegemini',
-  ElevenLabs: 'siElevenlabs',
-  'Minimax H3': 'siMinimax',
-  'Google Omni': 'siGoogle',
-  'Nano Banana Pro': 'siGoogle',
-};
-
-type Icon = { path: string; hex: string };
-function markFor(tool: string): Icon | null {
-  const key = MARKS[tool];
-  if (!key) return null;
-  const icon = (si as unknown as Record<string, Icon | undefined>)[key];
-  return icon?.path ? icon : null;
-}
 
 function Chip({ tool, active, onPick, spin, reverse }: {
   tool: string;
