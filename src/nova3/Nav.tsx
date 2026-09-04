@@ -1,4 +1,4 @@
-import { SCENES, type SectionId } from './scenes';
+import { SETUPS, type SectionId } from './scenes';
 import { profile } from '@/data/content';
 
 /**
@@ -23,11 +23,9 @@ import { profile } from '@/data/content';
 export default function Nav({
   active,
   onGo,
-  accent,
 }: {
   active: SectionId;
   onGo: (id: SectionId) => void;
-  accent: string;
 }) {
   return (
     <nav className="n3-nav" aria-label="Sections">
@@ -37,12 +35,12 @@ export default function Nav({
         onClick={() => onGo('home')}
         aria-label={`${profile.name} — home`}
       >
-        <span className="n3-brand-dot" style={{ background: accent }} />
+        <span className="n3-brand-dot" />
         {profile.brand}
       </button>
 
       <ul className="n3-links">
-        {SCENES.map((s) => (
+        {SETUPS.map((s) => (
           <li key={s.id}>
             <button
               type="button"
@@ -55,7 +53,7 @@ export default function Nav({
               {/* The underline is the active state and the hover state at once,
                   and it takes the room's accent — so the nav is graded with
                   everything else rather than sitting outside the lighting. */}
-              <i style={{ background: accent }} />
+              <i />
             </button>
           </li>
         ))}

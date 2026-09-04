@@ -38,7 +38,7 @@ const rise = (delay: number) => ({
 /* ================================================================
  * HOME
  * ================================================================ */
-function Home({ onGo, accent }: { onGo: (id: SectionId) => void; accent: string }) {
+function Home({ onGo }: { onGo: (id: SectionId) => void }) {
   return (
     <div className="n3-room n3-home">
       <AnimatedContent {...rise(0.05)}>
@@ -72,7 +72,7 @@ function Home({ onGo, accent }: { onGo: (id: SectionId) => void; accent: string 
         <dl className="n3-stats">
           {stats.map((s, i) => (
             <div key={s.label}>
-              <dt style={{ color: accent }}>
+              <dt className="n3-accent">
                 <Counter to={s.value} start delay={520 + i * 150} />
                 <span>{s.suffix}</span>
               </dt>
@@ -102,7 +102,7 @@ function Home({ onGo, accent }: { onGo: (id: SectionId) => void; accent: string 
 /* ================================================================
  * WORK
  * ================================================================ */
-function Work({ accent }: { accent: string }) {
+function Work() {
   const [active, setActive] = useState<MediaItem | null>(null);
   const pieces = [
     ...(portfolioWork.direction as MediaItem[]),
@@ -115,8 +115,7 @@ function Work({ accent }: { accent: string }) {
         kicker="Selected work"
         title="Work"
         note={`${pieces.length} pieces — campaign and trailer work, AI ad creatives, motion and video.`}
-        accent={accent}
-      />
+        />
 
       {/*
         A plain grid, clicked. No horizontal travel anywhere on this site —
@@ -133,10 +132,14 @@ function Work({ accent }: { accent: string }) {
               <button type="button" onClick={() => setActive(m)} aria-label={`Play ${m.title}`}>
                 <span className="n3-thumb">
                   <Poster item={m} />
+                  <span className="n3-idx">{String(i + 1).padStart(2, '0')}</span>
                   <span className="n3-play"><Play size={14} /></span>
                 </span>
-                <span className="n3-tile-title">{m.title}</span>
-                <span className="n3-tile-meta">{m.meta}</span>
+                <span className="n3-tile-foot">
+                  <span className="n3-tile-title">{m.title}</span>
+                  <span className="n3-tile-meta">{m.meta}</span>
+                  <i className="n3-tile-rule" />
+                </span>
               </button>
             </SpotlightCard>
           </AnimatedContent>
@@ -151,30 +154,29 @@ function Work({ accent }: { accent: string }) {
 /* ================================================================
  * SYSTEMS
  * ================================================================ */
-function Systems({ accent }: { accent: string }) {
+function Systems({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void }) {
   return (
     <div className="n3-room">
       <Head
         kicker="Automation workflows"
         title="Systems"
         note="Systems, not clips. Each one is a production pipeline a team runs without me."
-        accent={accent}
-      />
+        />
       <div className="n3-cases">
         {automationProjects.map((p, i) => (
           <AnimatedContent key={p.slug} {...rise(0.08 + i * 0.06)}>
             <SpotlightCard className="n3-case" spotlightColor="rgba(79, 214, 196, 0.20)">
-              <a href={`#case-${p.slug}`}>
+              <button type="button" onClick={() => onGo('systems', p.slug)}>
                 <span className="n3-case-thumb"><Poster src={p.thumbnail} caption={p.tool} /></span>
                 <span className="n3-case-body">
-                  <span className="n3-case-tool" style={{ color: accent }}>
+                  <span className="n3-case-tool n3-accent">
                     <FileText size={10} /> {p.tool}
                   </span>
                   <strong>{p.title}</strong>
                   <span className="n3-case-sum">{p.summary}</span>
                   <span className="n3-case-more">Read the case <ArrowUpRight size={12} /></span>
                 </span>
-              </a>
+              </button>
             </SpotlightCard>
           </AnimatedContent>
         ))}
@@ -186,20 +188,19 @@ function Systems({ accent }: { accent: string }) {
 /* ================================================================
  * CAREER
  * ================================================================ */
-function Career({ accent }: { accent: string }) {
+function Career() {
   return (
     <div className="n3-room">
       <Head
         kicker="2019 — 2026"
         title="Career"
         note="Graphics designer to Gen AI Production Lead, in order."
-        accent={accent}
-      />
+        />
       <ol className="n3-roles">
         {experience.map((j, i) => (
           <AnimatedContent key={j.title + j.period} {...rise(0.08 + i * 0.05)}>
             <li>
-              <span className="n3-role-when" style={{ color: accent }}>{j.period}</span>
+              <span className="n3-role-when n3-accent">{j.period}</span>
               <span className="n3-role-what">
                 <strong>{j.title}</strong>
                 <span className="n3-role-co">{j.company} · {j.place}</span>
@@ -215,14 +216,14 @@ function Career({ accent }: { accent: string }) {
 /* ================================================================
  * TOOLKIT
  * ================================================================ */
-function Toolkit({ accent }: { accent: string }) {
+function Toolkit() {
   const logos = tools.map((t) => ({
     node: <span className="n3-tool">{t}</span>,
     title: t,
   }));
   return (
     <div className="n3-room">
-      <Head kicker="How the work gets made" title="Toolkit" note={about.body} accent={accent} />
+      <Head kicker="How the work gets made" title="Toolkit" note={about.body} />
       <AnimatedContent {...rise(0.14)}>
         <ul className="n3-skills">
           {coreSkills.map((s) => <li key={s}>{s}</li>)}
@@ -251,7 +252,7 @@ function Toolkit({ accent }: { accent: string }) {
 /* ================================================================
  * CONTACT
  * ================================================================ */
-function Contact({ accent }: { accent: string }) {
+function Contact() {
   return (
     <div className="n3-room n3-contact">
       <AnimatedContent {...rise(0.05)}>
@@ -277,20 +278,18 @@ function Contact({ accent }: { accent: string }) {
         </div>
       </AnimatedContent>
       <AnimatedContent {...rise(0.32)}>
-        <p className="n3-foot" style={{ borderColor: accent }}>{profile.note}</p>
+        <p className="n3-foot">{profile.note}</p>
       </AnimatedContent>
     </div>
   );
 }
 
 /* ---- the shared room header ---- */
-function Head({ kicker, title, note, accent }: {
-  kicker: string; title: string; note: string; accent: string;
-}) {
+function Head({ kicker, title, note }: { kicker: string; title: string; note: string }) {
   return (
     <header className="n3-head">
       <AnimatedContent {...rise(0.02)}>
-        <p className="n3-eyebrow" style={{ color: accent }}>{kicker}</p>
+        <p className="n3-eyebrow n3-accent">{kicker}</p>
       </AnimatedContent>
       <AnimatedContent {...rise(0.08)}>
         <h2 className="n3-title">{title}</h2>
@@ -302,15 +301,16 @@ function Head({ kicker, title, note, accent }: {
   );
 }
 
-export function Room({ id, onGo, accent }: {
-  id: SectionId; onGo: (id: SectionId) => void; accent: string;
+export function Room({ id, onGo }: {
+  id: SectionId;
+  onGo: (id: SectionId, slug?: string | null) => void;
 }) {
   switch (id) {
-    case 'work': return <Work accent={accent} />;
-    case 'systems': return <Systems accent={accent} />;
-    case 'career': return <Career accent={accent} />;
-    case 'toolkit': return <Toolkit accent={accent} />;
-    case 'contact': return <Contact accent={accent} />;
-    default: return <Home onGo={onGo} accent={accent} />;
+    case 'work': return <Work />;
+    case 'systems': return <Systems onGo={onGo} />;
+    case 'career': return <Career />;
+    case 'toolkit': return <Toolkit />;
+    case 'contact': return <Contact />;
+    default: return <Home onGo={onGo} />;
   }
 }

@@ -13,6 +13,14 @@
   --ink-22: rgba(243, 238, 231, 0.22);
   --rule: rgba(243, 238, 231, 0.14);
   --void: #08070B;
+  --accent: #F2C79A;
+
+  /* One easing and three durations for the whole site. Motion that shares a
+     curve reads as one hand; motion that doesn't reads as a template. */
+  --ease: cubic-bezier(.22,.9,.28,1);
+  --fast: 180ms;
+  --mid: 380ms;
+  --slow: 700ms;
 
   position: fixed;
   inset: 0;
@@ -24,20 +32,38 @@
 
 /* ---- the light ---- */
 .n3-lights { position: absolute; inset: 0; z-index: 0; }
-.n3-light { position: absolute; inset: 0; }
-.n3-light canvas { display: block; width: 100% !important; height: 100% !important; }
+.n3-lights canvas { display: block; width: 100% !important; height: 100% !important; }
 
-.n3-light.is-in { animation: n3In 700ms ease forwards; }
-.n3-light.is-out { animation: n3Out 700ms ease forwards; z-index: 1; }
-@keyframes n3In { from { opacity: 0; } to { opacity: 1; } }
-@keyframes n3Out { from { opacity: 1; } to { opacity: 0; } }
+/*
+ * Grain and vignette are on every room, always. They are the two constants
+ * that turn six lighting setups into one site — the same reason film looks
+ * like film across scenes that share nothing else. Both are pure CSS, so
+ * neither costs a request or a frame.
+ */
+.n3-grain {
+  position: absolute; inset: -50%; z-index: 3; pointer-events: none;
+  opacity: 0.055; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: n3Grain 700ms steps(1) infinite;
+}
+@keyframes n3Grain {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-3%, 2%); }
+  50%  { transform: translate(2%, -3%); }
+  75%  { transform: translate(-2%, -2%); }
+  100% { transform: translate(3%, 1%); }
+}
+.n3-vig {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: radial-gradient(115% 88% at 50% 42%, transparent 42%, rgba(4,3,6,0.62) 100%);
+}
 
 .n3-scrim {
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   background:
     radial-gradient(120% 90% at 50% 0%, rgba(8,7,11,0) 0%, rgba(8,7,11,0.55) 70%, rgba(8,7,11,0.9) 100%),
     linear-gradient(180deg, rgba(8,7,11,0.5) 0%, rgba(8,7,11,0.1) 35%, rgba(8,7,11,0.75) 100%);
-  transition: opacity 700ms ease;
+  transition: opacity var(--slow) var(--ease);
 }
 
 /* ==================================================================
@@ -53,7 +79,15 @@
   background: none; border: 0; cursor: pointer; padding: 0;
   color: var(--ink); font-size: 15px; font-weight: 600; letter-spacing: -0.02em;
 }
-.n3-brand-dot { width: 7px; height: 7px; border-radius: 50%; transition: background 700ms ease; }
+.n3-brand-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  transition: background var(--slow) var(--ease), box-shadow var(--slow) var(--ease);
+}
+/* Everything that carries the room's temperature. One rule, so a new element
+   only has to opt in rather than be wired up. */
+.n3-accent { color: var(--accent); transition: color var(--slow) var(--ease); }
 
 .n3-links { display: flex; gap: 2px; list-style: none; margin: 0 auto; padding: 0; }
 .n3-link {
@@ -65,8 +99,9 @@
 .n3-link:hover { color: var(--ink); }
 .n3-link i {
   position: absolute; left: 14px; right: 14px; bottom: 3px; height: 1px;
+  background: var(--accent);
   transform: scaleX(0); transform-origin: left;
-  transition: transform 320ms cubic-bezier(.3,.9,.25,1);
+  transition: transform var(--mid) var(--ease), background var(--slow) var(--ease);
 }
 .n3-link:hover i { transform: scaleX(1); }
 .n3-link.is-on { color: var(--ink); }
@@ -102,6 +137,18 @@
 /* ==================================================================
  * THE STAGE
  * ================================================================== */
+/*
+ * The cut. Content leaves in 160ms and arrives in 380 while the light takes
+ * 700 to change temperature — fast content keeps the site quick to use, slow
+ * light is what makes the speed feel directed rather than abrupt.
+ */
+.n3-cut { animation: n3Cut var(--mid) var(--ease) both; width: 100%; }
+@keyframes n3Cut {
+  from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+.n3-stage.is-cutting .n3-cut { opacity: 0; filter: blur(8px); transition: opacity var(--fast), filter var(--fast); }
+
 .n3-stage {
   position: absolute; inset: 0; z-index: 10;
   display: grid; place-items: center;
@@ -132,9 +179,9 @@
   font-size: clamp(1.9rem, 4.6vw, 3rem); font-weight: 300;
   letter-spacing: -0.045em; line-height: 1;
   font-variant-numeric: tabular-nums;
-  transition: color 700ms ease;
+  transition: color var(--slow) var(--ease);
 }
-.n3-stats dt span { opacity: 0.55; }
+.n3-stats dt span { opacity: 0.5; }
 .n3-stats dd {
   margin: 9px 0 0; max-width: 11ch;
   font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; line-height: 1.7;
@@ -170,7 +217,12 @@
   display: grid; gap: 14px;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
 }
-.n3-tile { padding: 0 !important; border-radius: 12px !important; overflow: hidden; }
+.n3-tile {
+  padding: 0 !important; border-radius: 14px !important; overflow: hidden;
+  border-color: rgba(243,238,231,0.10) !important;
+  transition: transform var(--mid) var(--ease), border-color var(--mid) var(--ease);
+}
+.n3-tile:hover { transform: translateY(-4px); border-color: var(--accent) !important; }
 .n3-tile button {
   display: block; width: 100%; text-align: left; cursor: pointer;
   background: none; border: 0; padding: 0; color: inherit; font: inherit;
@@ -178,6 +230,17 @@
 .n3-thumb { position: relative; display: block; aspect-ratio: 16/9; overflow: hidden; background: #0d0c11; }
 .n3-thumb img { transition: transform 900ms cubic-bezier(.2,.8,.3,1); }
 .n3-tile:hover .n3-thumb img { transform: scale(1.07); }
+/* The index number. An editorial detail that costs nothing and makes a grid
+   of thumbnails read as a body of work rather than as a folder. */
+.n3-idx {
+  position: absolute; top: 10px; left: 12px; z-index: 2;
+  font-size: 10px; letter-spacing: 0.16em; color: rgba(255,255,255,0.55);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--mid) var(--ease);
+}
+.n3-tile:hover .n3-idx { color: var(--accent); }
+
 .n3-play {
   position: absolute; inset: 0; margin: auto; width: 40px; height: 40px;
   display: grid; place-items: center; border-radius: 50%;
@@ -186,16 +249,34 @@
   transition: transform 300ms ease, background 300ms ease, color 300ms ease;
 }
 .n3-tile:hover .n3-play { transform: scale(1.12); background: #fff; color: #08070B; }
-.n3-tile-title { display: block; padding: 12px 14px 0; font-size: 13px; font-weight: 500; }
+.n3-tile-foot { position: relative; display: block; padding: 12px 14px 14px; }
+.n3-tile-title { display: block; font-size: 13px; font-weight: 500; letter-spacing: -0.01em; }
 .n3-tile-meta {
-  display: block; padding: 4px 14px 14px;
+  display: block; margin-top: 4px;
   font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-45);
 }
+/* A rule that draws itself in on hover — the hover says something happened
+   rather than only changing a border colour. */
+.n3-tile-rule {
+  position: absolute; left: 14px; right: 14px; bottom: 8px; height: 1px;
+  background: var(--accent);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform var(--mid) var(--ease);
+}
+.n3-tile:hover .n3-tile-rule { transform: scaleX(1); }
 
 /* ---- systems ---- */
 .n3-cases { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-.n3-case { padding: 0 !important; border-radius: 12px !important; overflow: hidden; }
-.n3-case a { display: flex; gap: 14px; padding: 12px; text-decoration: none; color: inherit; }
+.n3-case {
+  padding: 0 !important; border-radius: 14px !important; overflow: hidden;
+  border-color: rgba(243,238,231,0.10) !important;
+  transition: transform var(--mid) var(--ease), border-color var(--mid) var(--ease);
+}
+.n3-case:hover { transform: translateY(-3px); border-color: var(--accent) !important; }
+.n3-case button {
+  display: flex; gap: 14px; padding: 12px; width: 100%; text-align: left;
+  background: none; border: 0; cursor: pointer; color: inherit; font: inherit;
+}
 .n3-case-thumb {
   flex: none; width: 96px; aspect-ratio: 16/10; border-radius: 7px; overflow: hidden; background: #0d0c11;
 }
@@ -209,18 +290,33 @@
   font-size: 11.5px; line-height: 1.5; color: var(--ink-45);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.n3-case-more { display: inline-flex; align-items: center; gap: 5px; margin-top: 2px; font-size: 11px; font-weight: 500; }
+.n3-case-more {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 4px;
+  font-size: 11px; font-weight: 500; color: var(--accent);
+  transition: gap var(--mid) var(--ease), color var(--slow) var(--ease);
+}
+.n3-case:hover .n3-case-more { gap: 10px; }
 
 /* ---- career ---- */
 .n3-roles { list-style: none; margin: 0; padding: 0; }
 .n3-roles li {
-  display: flex; gap: clamp(14px, 4vw, 40px); align-items: baseline;
-  padding: 16px 0; border-top: 1px solid var(--rule);
+  position: relative; display: flex; gap: clamp(14px, 4vw, 40px); align-items: baseline;
+  padding: 18px 4px; border-top: 1px solid var(--rule);
+  transition: padding-left var(--mid) var(--ease);
 }
+/* The row lights its own rule on hover. Six static rows is a table; six rows
+   that answer you is a list somebody reads to the end. */
+.n3-roles li::before {
+  content: ''; position: absolute; left: 0; right: 0; top: -1px; height: 1px;
+  background: var(--accent); transform: scaleX(0); transform-origin: left;
+  transition: transform var(--mid) var(--ease);
+}
+.n3-roles li:hover::before { transform: scaleX(1); }
+.n3-roles li:hover { padding-left: 12px; }
 .n3-role-when {
   flex: none; width: clamp(96px, 16vw, 150px);
   font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-  transition: color 700ms ease;
+  font-variant-numeric: tabular-nums;
 }
 .n3-role-what { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .n3-role-what strong { font-size: clamp(15px, 2.2vw, 19px); font-weight: 500; letter-spacing: -0.02em; }
@@ -250,9 +346,9 @@
   letter-spacing: -0.045em; line-height: 1.02;
 }
 .n3-foot {
-  margin: 40px 0 0; padding-left: 16px; border-left: 2px solid;
+  margin: 40px 0 0; padding-left: 16px; border-left: 2px solid var(--accent);
   max-width: 46ch; font-size: 13px; line-height: 1.7; color: var(--ink-70);
-  transition: border-color 700ms ease;
+  transition: border-color var(--slow) var(--ease);
 }
 
 /* ---- the room slug ---- */
@@ -262,10 +358,48 @@
   font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-45);
   pointer-events: none;
 }
-.n3-slug span { width: 18px; height: 1px; transition: background 700ms ease; }
+.n3-slug span { width: 18px; height: 1px; background: var(--accent); transition: background var(--slow) var(--ease); }
 @media (max-width: 860px) { .n3-slug { display: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   .n3-light.is-in, .n3-light.is-out { animation-duration: 1ms; }
   .n3-thumb img { transition: none; }
+}
+
+
+/* ==================================================================
+ * CASE STUDY
+ *
+ * A room of its own, with a URL of its own. The written breakdown is the
+ * evidence for workflow work — the thumbnail is only the poster — so it
+ * has to be linkable and sendable on its own.
+ * ================================================================== */
+.n3-case-room { max-width: 940px; }
+.n3-back {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  background: none; border: 0; padding: 0 0 22px;
+  color: var(--ink-45); font: inherit; font-size: 12px;
+  transition: color var(--fast) var(--ease), gap var(--fast) var(--ease);
+}
+.n3-back:hover { color: var(--ink); gap: 11px; }
+.n3-case-head { margin-bottom: 26px; }
+.n3-case-head .n3-eyebrow { display: inline-flex; align-items: center; gap: 7px; }
+.n3-case-hero {
+  border-radius: 16px; overflow: hidden; border: 1px solid var(--rule);
+  aspect-ratio: 16/9; background: #0d0c11; margin-bottom: 34px;
+}
+.n3-case-modules { margin-bottom: 44px; }
+.n3-case-next {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
+  padding-top: 26px; border-top: 1px solid var(--rule);
+}
+.n3-case-next .n3-eyebrow { margin: 0; }
+
+/* Focus is visible and takes the room's colour, because a site you can only
+   use with a mouse is not dummy-proof either. */
+.n3 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .n3-grain { animation: none; }
+  .n3-cut { animation-duration: 1ms; }
 }
