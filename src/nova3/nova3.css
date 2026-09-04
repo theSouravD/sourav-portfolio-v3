@@ -860,8 +860,8 @@
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 .n3-pick-panel {
-  position: absolute; right: 0; bottom: 44px; width: 258px;
-  padding: 12px; border-radius: 14px;
+  position: absolute; right: 0; bottom: 44px; width: 272px;
+  border-radius: 14px; overflow: hidden;
   background: #FFFDF9; border: 1px solid var(--rule);
   box-shadow: 0 24px 56px -18px rgba(23,20,15,0.34);
   animation: n3PickIn 220ms var(--ease) both;
@@ -870,16 +870,76 @@
   from { opacity: 0; transform: translateY(8px) scale(0.985); }
   to   { opacity: 1; transform: none; }
 }
+
+/* Tabs, not one long column. A panel you have to scroll to compare two
+   options makes comparison hard, which is the one job it has. */
+.n3-pick-tabs {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--rule);
+}
+.n3-pick-tabs button {
+  position: relative; padding: 9px 4px; cursor: pointer;
+  border: 0; background: none; color: var(--ink-45); font: inherit;
+  font-size: 11px; font-weight: 500;
+  transition: color var(--fast) var(--ease), background var(--fast) var(--ease);
+}
+.n3-pick-tabs button:hover { color: var(--ink); }
+.n3-pick-tabs button.is-on { color: var(--ink); }
+.n3-pick-tabs button.is-on::after {
+  content: ''; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px;
+  background: var(--accent);
+}
+
+/* The panel has to fit a laptop. Nine grounds plus two sliders plus three
+   textures is taller than a 13-inch viewport, so the body scrolls and the
+   tabs and footer stay put — scrolling past the tabs to get back to them is
+   exactly the problem tabs were added to solve. */
+.n3-pick-body {
+  padding: 12px;
+  max-height: min(56vh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The sliders sit above the list, not below it: they apply to whichever
+   ground is selected, and underneath they would read as belonging to the
+   last item in the list. */
+.n3-slider { display: block; margin-bottom: 12px; }
+.n3-slider > span {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11px; font-weight: 500; color: var(--ink);
+}
+.n3-slider em {
+  font-style: normal; font-size: 10px; color: var(--ink-45);
+  font-variant-numeric: tabular-nums;
+}
+.n3-slider input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 3px; border-radius: 2px; cursor: pointer;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.n3-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 50%; cursor: pointer;
+  background: var(--accent); border: 2px solid #FFFDF9;
+  box-shadow: 0 1px 4px rgba(23,20,15,0.3);
+}
+.n3-slider input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%; cursor: pointer; border: 2px solid #FFFDF9;
+  background: var(--accent); box-shadow: 0 1px 4px rgba(23,20,15,0.3);
+}
+
 .n3-pick-head {
-  margin: 2px 0 7px; font-size: 9px; letter-spacing: 0.18em;
+  margin: 12px 0 6px; font-size: 9px; letter-spacing: 0.18em;
   text-transform: uppercase; color: var(--ink-45);
 }
-.n3-pick-panel ul { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 2px; }
-.n3-pick-panel ul:last-of-type { margin-bottom: 8px; }
+.n3-pick-head:first-child { margin-top: 2px; }
+.n3-pick-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
 .n3-pick-panel li button {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  width: 100%; padding: 7px 9px; cursor: pointer; text-align: left;
-  border: 0; border-radius: 9px; background: none; color: inherit; font: inherit;
+  width: 100%; padding: 6px 9px; cursor: pointer; text-align: left;
+  border: 0; border-radius: 8px; background: none; color: inherit; font: inherit;
   transition: background var(--fast) var(--ease);
 }
 .n3-pick-panel li button:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
@@ -890,12 +950,23 @@
 }
 .n3-pick-panel li em {
   display: block; margin-top: 1px; font-style: normal;
-  font-size: 10px; line-height: 1.35; color: var(--ink-45);
+  font-size: 10px; line-height: 1.3; color: var(--ink-45);
+}
+.n3-pick-note {
+  margin: 10px 2px 0; font-size: 10px; line-height: 1.45; color: var(--ink-45);
 }
 .n3-pick-foot {
-  margin: 0; padding-top: 9px; border-top: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 12px; border-top: 1px solid var(--rule);
   font-size: 9.5px; color: var(--ink-45);
 }
+.n3-pick-foot button {
+  display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+  padding: 4px 8px; border-radius: 999px; border: 1px solid var(--rule);
+  background: none; color: var(--ink-45); font: inherit; font-size: 9.5px;
+  transition: color var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+.n3-pick-foot button:hover { color: var(--ink); border-color: var(--ink-22); }
 
 /* ---- contact ---- */
 .n3-big {
@@ -1123,3 +1194,61 @@
  * what keeps content out of it, and the room slug simply sits on the
  * backdrop like everything else.
  */
+
+/* ==================================================================
+ * THE TWO CSS GROUNDS
+ *
+ * Mesh and Dots mount no canvas at all. That is not a compromise: on a
+ * text-heavy room they are the most legible options in the set, and they are
+ * the only two that cost nothing on a laptop battery. Both build themselves
+ * from `--wash`, `--accent` and `--k` (the intensity slider), so they re-gel
+ * with the room exactly like the shaders do.
+ * ================================================================== */
+.n3-mesh {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(46% 38% at 18% 82%, color-mix(in srgb, var(--wash) calc(52% * var(--k)), transparent), transparent 70%),
+    radial-gradient(40% 34% at 82% 74%, color-mix(in srgb, var(--accent) calc(24% * var(--k)), transparent), transparent 70%),
+    radial-gradient(52% 40% at 62% 12%, color-mix(in srgb, var(--wash) calc(30% * var(--k)), transparent), transparent 72%);
+}
+/* A printed dot field. The dots fade out toward the top so the ground has a
+   direction rather than being a flat pattern the eye reads as a texture swatch. */
+.n3-dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--accent) calc(42% * var(--k)), transparent) 1.4px,
+    transparent 1.5px
+  );
+  background-size: 18px 18px;
+  -webkit-mask-image: linear-gradient(0deg, #000 6%, rgba(0,0,0,0.15) 72%, transparent 100%);
+          mask-image: linear-gradient(0deg, #000 6%, rgba(0,0,0,0.15) 72%, transparent 100%);
+}
+
+/* ==================================================================
+ * CURSORS
+ *
+ * Drawn on `transform` in a rAF loop, never `left`/`top` — one lays out every
+ * frame, the other composites. `pointer-events: none` is not optional: a
+ * cursor element under the pointer would swallow every click on the site.
+ * ================================================================== */
+.n3-nocursor, .n3-nocursor * { cursor: none !important; }
+.n3-cur-dot, .n3-cur-ring {
+  position: fixed; top: 0; left: 0; z-index: 90; pointer-events: none;
+  will-change: transform;
+  transition: opacity 200ms var(--ease);
+}
+.n3-cur-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--accent);
+}
+.n3-cur-dot.is-small { width: 5px; height: 5px; }
+.n3-cur-ring {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.4px solid color-mix(in srgb, var(--accent) 62%, transparent);
+}
+/* A custom cursor is meaningless on touch, and hiding the real one there
+   would leave nothing at all. */
+@media (pointer: coarse) {
+  .n3-cur-dot, .n3-cur-ring { display: none; }
+  .n3-nocursor, .n3-nocursor * { cursor: auto !important; }
+}

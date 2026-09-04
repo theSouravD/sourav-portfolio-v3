@@ -5,12 +5,15 @@ import Nav from './Nav';
 import { Room } from './Sections';
 import CaseRoom from './CaseRoom';
 import { SETUPS, setupOf, sectionFromHash, type SectionId } from './scenes';
+import Cursor from './Cursor';
 import {
-  readBackdrop, readTexture, saveBackdrop, saveTexture,
-  type BackdropId, type TextureId,
-} from './backdrops';
+  paperAt, readBackdrop, readCursor, readIntensity, readPaperness,
+  readSoundPack, readTexture, save,
+  INTENSITY, PAPERNESS,
+} from './theme';
+import type { ThemeState } from './BackdropPicker';
 import { useSwipeRooms } from './useSwipeRooms';
-import { cue, initSound } from './titleSound';
+import { cue, initSound, setPack } from './titleSound';
 import './nova3.css';
 
 /**
@@ -36,12 +39,42 @@ export default function Stage() {
   const stageRef = useRef<HTMLElement | null>(null);
   const [scrolled, setScrolled] = useState(false);
 
-  /* The chosen ground. Read lazily so the stored value is fetched once, on
-     the first render, rather than on every one. */
-  const [backdrop, setBackdrop] = useState<BackdropId>(readBackdrop);
-  const [texture, setTexture] = useState<TextureId>(readTexture);
-  const pickBackdrop = useCallback((b: BackdropId) => { setBackdrop(b); saveBackdrop(b); }, []);
-  const pickTexture = useCallback((t: TextureId) => { setTexture(t); saveTexture(t); }, []);
+  /*
+   * Everything the theme centre controls, in one object.
+   *
+   * Read lazily so storage is touched once on the first render rather than on
+   * every one, and written as a patch so a new option needs no new setter —
+   * the panel says what changed and this persists it generically.
+   */
+  const [theme, setTheme] = useState<ThemeState>(() => ({
+    backdrop: readBackdrop(),
+    texture: readTexture(),
+    sound: readSoundPack(),
+    cursor: readCursor(),
+    intensity: readIntensity(),
+    paperness: readPaperness(),
+  }));
+
+  const patchTheme = useCallback((patch: Partial<ThemeState>) => {
+    setTheme((cur) => {
+      const next = { ...cur, ...patch };
+      for (const [k, v] of Object.entries(patch)) {
+        save(k === 'sound' ? 'soundpack' : k, v as string | number);
+      }
+      if (patch.sound) setPack(patch.sound);
+      return next;
+    });
+  }, []);
+
+  const resetTheme = useCallback(() => {
+    const d: ThemeState = {
+      backdrop: 'wash', texture: 'fine', sound: 'soft', cursor: 'system',
+      intensity: INTENSITY.def, paperness: PAPERNESS.def,
+    };
+    setTheme(d);
+    for (const [k, v] of Object.entries(d)) save(k === 'sound' ? 'soundpack' : k, v);
+    setPack(d.sound);
+  }, []);
 
   const setup = setupOf(id);
 
@@ -170,10 +203,20 @@ export default function Stage() {
   }, [id, caseSlug, go]);
 
   return (
-    <div className={`n3 ${scrolled ? 'is-scrolled' : ''}`} style={{ ['--accent' as string]: setup.accent, ['--wash' as string]: setup.wash }}>
+    <div
+      className={`n3 ${scrolled ? 'is-scrolled' : ''}`}
+      style={{
+        ['--accent' as string]: setup.accent,
+        ['--wash' as string]: setup.wash,
+        /* The paper slider rewrites the ground token, so every surface that
+           is built from it — cards, the bar, the picker — moves with it and
+           nothing has to be told about the change. */
+        ['--paper' as string]: paperAt(theme.paperness / 100),
+      }}
+    >
       {/* ---- the wash: one instance, re-gelled ---- */}
       <div className="n3-lights" aria-hidden>
-        <Backdrop id={backdrop} setup={setup} />
+        <Backdrop id={theme.backdrop} setup={setup} k={theme.intensity / 100} />
         {/*
           The shaders' light mode paints down from pure #ffffff, and pure white
           is what a template looks like. One multiply of the paper stock over
@@ -181,8 +224,8 @@ export default function Stage() {
           image on cream rather than recolouring every pixel of it.
         */}
         <div className="n3-paper" />
-        {texture !== 'none' && <div className="n3-grain" />}
-        {texture === 'full' && <div className="n3-tooth" />}
+        {theme.texture !== 'none' && <div className="n3-grain" />}
+        {theme.texture === 'full' && <div className="n3-tooth" />}
         <div className="n3-vig" />
       </div>
 
@@ -196,12 +239,8 @@ export default function Stage() {
         </div>
       </main>
 
-      <BackdropPicker
-        backdrop={backdrop}
-        texture={texture}
-        onBackdrop={pickBackdrop}
-        onTexture={pickTexture}
-      />
+      <BackdropPicker state={theme} onChange={patchTheme} onReset={resetTheme} />
+      <Cursor mode={theme.cursor} accent={setup.accent} />
 
       <p className="n3-slug">
         <span />

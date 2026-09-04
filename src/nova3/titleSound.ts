@@ -21,13 +21,16 @@
  * are quieter than clicks because they happen ten times as often.
  */
 
+import type { SoundId } from './theme';
+import { readSoundPack, save } from './theme';
+
 let ctx: AudioContext | null = null;
 let bus: GainNode | null = null;
 let armed = false;
-let enabled = true;
+let pack: SoundId = 'soft';
 
 function ac(): AudioContext | null {
-  if (typeof window === 'undefined' || !armed || !enabled) return null;
+  if (typeof window === 'undefined' || !armed || pack === 'off') return null;
   if (!ctx) {
     const Ctor = window.AudioContext
       ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -118,41 +121,66 @@ function blip(c: AudioContext, at: number, from: number, to: number, gain: numbe
 
 export type Cue = 'tap' | 'hover' | 'move' | 'open' | 'close';
 
+/**
+ * THE PACKS.
+ *
+ * What makes a click read as a click is that it is almost pure transient:
+ * very short, very high, and with no audible pitch. The first attempt was a
+ * 35ms burst at 2.1kHz, which has far too much body and landed as a drum. So
+ * every pack here is built from the same two ideas — a short filtered burst
+ * for the mechanism and, at most, a very quick pitch move for direction — and
+ * they differ in how bright, how long and how many.
+ *
+ * `sparse` has no hover cue at all. Hover fires ten times as often as
+ * anything else, and on a page with this many controls that is the one cue
+ * most likely to become an irritant.
+ */
 export function cue(kind: Cue) {
   const c = ac();
   if (!c) return;
   const t = c.currentTime;
-  switch (kind) {
-    case 'hover':
-      // Quietest thing on the site by a wide margin. It fires constantly.
-      noise(c, t, 0.009, 6400, 0.009, 3.4);
-      break;
-    case 'tap':
-      /*
-       * The old tap was a 35ms bandpass at 2.1kHz, which has far too much
-       * body — it read as a drum, not a click. What makes a click a click is
-       * that it is almost pure transient: very short, very high, and with no
-       * audible pitch. So it is a third the length, an octave and a half up,
-       * and narrow-Q, with one even shorter, quieter tick above it for the
-       * "snap" — two tiny bursts a few milliseconds apart is the difference
-       * between a tap and a thud.
-       */
+
+  if (kind === 'hover') {
+    if (pack === 'sparse') return;
+    if (pack === 'mech') noise(c, t, 0.010, 7200, 0.007, 4);
+    else if (pack === 'airy') noise(c, t, 0.008, 4200, 0.02, 1.6);
+    else noise(c, t, 0.009, 6400, 0.009, 3.4);
+    return;
+  }
+
+  if (kind === 'tap') {
+    if (pack === 'mech') {
+      // Two bursts a few milliseconds apart — the gap is what reads as a
+      // mechanism actuating rather than as one flat tick.
+      noise(c, t, 0.038, 4200, 0.009, 4.5);
+      noise(c, t + 0.008, 0.026, 9000, 0.006, 5);
+    } else if (pack === 'airy') {
+      noise(c, t, 0.022, 3000, 0.03, 1.2);
+      blip(c, t, 900, 1500, 0.02, 0.06);
+    } else {
       noise(c, t, 0.03, 5200, 0.012, 3.2);
       noise(c, t + 0.006, 0.018, 8200, 0.008, 4);
-      break;
-    case 'move':
-      // Changing room: a tick and a low fall, so it reads as travel rather
-      // than as another button press.
+    }
+    return;
+  }
+
+  if (kind === 'move') {
+    // Travel, not another button press: a tick plus a short fall.
+    if (pack === 'mech') {
+      noise(c, t, 0.035, 3600, 0.016, 3);
+      blip(c, t, 300, 140, 0.035, 0.18);
+    } else if (pack === 'airy') {
+      noise(c, t, 0.02, 2600, 0.05, 1);
+      blip(c, t, 420, 240, 0.045, 0.3);
+    } else {
       noise(c, t, 0.03, 4200, 0.014, 2.6);
       blip(c, t, 260, 150, 0.04, 0.22);
-      break;
-    case 'open':
-      blip(c, t, 320, 520, 0.045, 0.16);
-      break;
-    case 'close':
-      blip(c, t, 520, 300, 0.04, 0.14);
-      break;
+    }
+    return;
   }
+
+  if (kind === 'open') blip(c, t, 320, 520, 0.045, 0.16);
+  if (kind === 'close') blip(c, t, 520, 300, 0.04, 0.14);
 }
 
 /**
@@ -189,25 +217,22 @@ export function playTitle(glyphs: number, stagger: number, delay = 0) {
 
 /* ---- the switch ---- */
 
-const KEY = 'nova3.sound';
-
-/** On unless this device has said otherwise. */
-export function readSound(): boolean {
-  try { return localStorage.getItem(KEY) !== 'off'; } catch { return true; }
-}
-
-export function saveSound(on: boolean) {
-  enabled = on;
+export function setPack(next: SoundId) {
+  pack = next;
+  save('soundpack', next);
   if (bus && ctx) {
     // Ramped, not switched. Setting a gain instantly mid-tone clicks.
     bus.gain.cancelScheduledValues(ctx.currentTime);
-    bus.gain.setTargetAtTime(on ? 0.9 : 0, ctx.currentTime, 0.02);
+    bus.gain.setTargetAtTime(next === 'off' ? 0 : 0.9, ctx.currentTime, 0.02);
   }
-  try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch { /* ignore */ }
 }
 
-/** Sync the module's flag with stored state at startup. */
+/** The name toggle is a shorthand for the pack: silent, or back to soft. */
+export function readSound(): boolean { return readSoundPack() !== 'off'; }
+export function saveSound(on: boolean) { setPack(on ? 'soft' : 'off'); }
+
+/** Sync the module with stored state at startup. */
 export function initSound() {
-  enabled = readSound();
+  pack = readSoundPack();
   armAudio();
 }
