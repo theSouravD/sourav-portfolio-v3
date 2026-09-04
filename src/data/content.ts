@@ -26,7 +26,7 @@ export const about = {
   body: "I work where creative direction, Gen AI research and production systems meet. My focus is turning ambitious visual ideas into repeatable workflows that teams can actually use at scale, while maintaining quality across high-volume creative production.",
   linkLabel: "View Resume ->",
   aside: {
-    title: "Creative direction + Gen AI production",
+    title: "Creative Direction + Gen AI Production",
     body: "Visual thinking, model testing, automation workflows and quality control for high-volume content.",
   },
 };

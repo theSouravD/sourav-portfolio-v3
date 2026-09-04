@@ -7,7 +7,7 @@ import { about, coreSkills, tools } from '@/data/content';
 const DISCIPLINES = [
   { title: about.aside.title, body: about.aside.body },
   {
-    title: 'Research \u2192 production',
+    title: 'Research \u2192 Production',
     body: 'Model testing, RCA, prompt engineering and validation, turned into workflows a team can run.',
   },
   {
@@ -81,7 +81,7 @@ export default function ToolkitShot({ local }: { local: number }) {
               </Card>
               <Card customClass="!bg-[#0d0d0d] !border-white/20 p-5">
                 <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/45">Discipline 02</span>
-                <strong className="mt-2 block text-[15px] font-medium text-white">Research → production</strong>
+                <strong className="mt-2 block text-[15px] font-medium text-white">Research → Production</strong>
                 <span className="mt-2 block text-[12px] leading-relaxed text-white/65">
                   Model testing, RCA, prompt engineering and validation, turned into workflows a team can run.
                 </span>

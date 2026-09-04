@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useIsMobile } from '@/lib/useViewport';
 import { Play, ArrowUpRight, FileText, ArrowDown, ArrowRight } from 'lucide-react';
 import Lightbox from '@/components/Lightbox';
@@ -107,23 +107,64 @@ export default function ReelShot({ local }: { local: number }) {
    *
    * A 320px tile does not fit a 390px phone, and asking a thumb to drive
    * horizontal travel with a vertical swipe is the single least intuitive thing
-   * this page did. On a phone the same scroll-driven strip runs on Y with
-   * full-width tiles, so the gesture and the motion finally point the same way.
+   * this page did. On a phone the same scroll-driven strip runs on Y, so the
+   * gesture and the motion finally point the same way.
+   *
+   * WHY THE PHONE CELL IS A ROW, NOT A CARD
+   * It used to be the desktop card at full width: a 16:9 still with the label
+   * underneath, about 268px tall. Two consequences, and they were the two
+   * complaints. Only about one and a half of them fitted on screen at once, so
+   * there was never enough on screen to read as a *strip* of work — it looked
+   * like one picture that kept being replaced. And 37 of them make a column
+   * about 10,000px long, which has to be crossed inside the chapter's ~4,600px
+   * of scrolling: the strip moved at more than twice the speed of the thumb
+   * pushing it.
+   *
+   * Laid out as a row — thumbnail beside the title — a cell is ~96px. Four or
+   * five are visible at once, so it reads as a list you are travelling through,
+   * and the whole column is ~4,300px, which is slightly *less* than the scroll
+   * available. The strip now moves a little slower than the finger rather than
+   * twice as fast.
    */
-  const TILE = isMobile ? 268 : 320;   // tile extent along the travel axis
-  const MARKER = isMobile ? 150 : 210;
-  const GAP = isMobile ? 14 : 20;
+  const TILE = isMobile ? 96 : 320;   // cell extent along the travel axis
+  const MARKER = isMobile ? 76 : 210;
+  const GAP = isMobile ? 12 : 20;
   const extent = (c: Cell) => (c.kind === 'marker' ? MARKER : TILE);
   const strip = cells.reduce((n, c) => n + extent(c) + GAP, 0);
-  const viewport = isMobile ? 520 : 900;
+
+  /*
+   * The frame measures itself on phones instead of assuming a number.
+   *
+   * The old 520px constant was both the height the strip was given and the
+   * height the travel maths subtracted, but it was never what the frame
+   * actually got — the header and the counter take whatever they need first, so
+   * on a small phone the strip was handed less than 520 and the last cells
+   * could never be reached. Measuring closes that gap and makes the maths
+   * correct on every screen size.
+   */
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [frameH, setFrameH] = useState(0);
+  useLayoutEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    const measure = () => setFrameH(el.clientHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const viewport = isMobile ? frameH || 440 : 900;
   const shift = run * Math.max(0, strip - viewport);
   const at = Math.min(tileCount, Math.floor(run * tileCount) + 1);
 
   return (
     <>
-      <div className="flex h-full flex-col justify-center pb-28 pt-24">
+      {/* `min-h-0` so the strip below can be a flex child that shrinks rather
+          than one that pushes the header off the top of a phone. */}
+      <div className="flex h-full min-h-0 flex-col justify-center pb-24 pt-16 md:pb-28 md:pt-24">
         <div
-          className="nova-shell mb-7 flex flex-wrap items-end justify-between gap-5"
+          className="nova-shell mb-5 flex flex-wrap items-end justify-between gap-5 md:mb-7"
           style={{ opacity: head * (1 - out), transform: `translateY(${(1 - head) * 20}px)` }}
         >
           <div>
@@ -135,7 +176,11 @@ export default function ReelShot({ local }: { local: number }) {
             </h2>
           </div>
           <div className="max-w-sm md:text-right">
-            <p className="text-sm leading-relaxed text-white/65">{workScene.intro}</p>
+            {/* Hidden on phones. It costs about 60px of the strip's frame and
+                says what the three marker boards in the strip say anyway. */}
+            <p className="hidden text-sm leading-relaxed text-white/65 md:block">
+              {workScene.intro}
+            </p>
             {/*
               The one place the page breaks the vertical convention, so it says
               so out loud. Set as a hairline-ruled mono line — the same language
@@ -144,7 +189,7 @@ export default function ReelShot({ local }: { local: number }) {
               on top of it. It brightens if someone tries the wrong gesture.
             */}
             <p
-              className="mt-4 flex items-center gap-2.5 border-l-2 py-1 pl-3 font-mono text-[10px] uppercase leading-[1.5] tracking-[0.18em] transition-colors duration-300 md:ml-auto md:w-fit"
+              className="mt-2 flex items-center gap-2.5 border-l-2 py-1 pl-3 font-mono text-[10px] uppercase leading-[1.5] tracking-[0.18em] transition-colors duration-300 md:ml-auto md:mt-4 md:w-fit"
               style={{
                 borderColor: wrongWay ? '#ffffff' : 'rgba(255,255,255,0.28)',
                 color: wrongWay ? '#ffffff' : 'rgba(255,255,255,0.62)',
@@ -166,20 +211,22 @@ export default function ReelShot({ local }: { local: number }) {
         {/*
           The strip.
 
-          Height is capped on phones. Stacked vertically the cells are one very
-          tall column, and inside a `justify-center` stage that column shoved the
-          heading clean off the top of the screen. Capping it to the same 520px
-          the travel maths already assumes keeps the header, the strip and the
-          counter all in frame.
+          On a phone it is a flex child that takes whatever the header and the
+          counter leave, and reports that height back through `frameRef`. It
+          used to be a hard 520px, which is more than a small phone has to give
+          — so the column overflowed the stage and the heading was pushed off
+          the top. Letting it claim the remainder means the header, the strip
+          and the counter are always all in frame, whatever the device.
         */}
         <div
-          className="relative overflow-hidden"
-          style={{ opacity: 1 - out, height: isMobile ? 520 : undefined }}
+          ref={frameRef}
+          className={`relative overflow-hidden ${isMobile ? 'min-h-0 flex-1' : ''}`}
+          style={{ opacity: 1 - out }}
         >
           <div
             className={
               isMobile
-                ? 'flex flex-col gap-3.5 px-5 will-change-transform'
+                ? 'flex flex-col gap-3 px-5 will-change-transform'
                 : 'flex gap-5 pl-[calc((100vw-min(1160px,100vw-3rem))/2)] will-change-transform'
             }
             style={{
@@ -193,11 +240,30 @@ export default function ReelShot({ local }: { local: number }) {
 
               /* ---- Marker board: the leader between runs ---- */
               if (cell.kind === 'marker') {
+                if (isMobile) {
+                  return (
+                    <div
+                      key={cell.key}
+                      style={{ opacity: appear, height: MARKER }}
+                      className="flex shrink-0 flex-col justify-center border-l-2 border-white pl-3"
+                    >
+                      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/45">
+                        {String(cell.count).padStart(2, '0')} pieces
+                      </span>
+                      <span className="mt-1 block text-[15px] font-medium leading-[1.15] tracking-[-0.01em] text-white">
+                        {cell.label}
+                      </span>
+                      <span className="mt-1 block text-[10.5px] leading-[1.35] text-white/50">
+                        {cell.note}
+                      </span>
+                    </div>
+                  );
+                }
                 return (
                   <div
                     key={cell.key}
-                    style={isMobile ? { opacity: appear } : { width: MARKER, opacity: appear }}
-                    className="flex shrink-0 flex-col justify-end border-l-2 border-white pb-4 pl-4 md:pb-4"
+                    style={{ width: MARKER, opacity: appear }}
+                    className="flex shrink-0 flex-col justify-end border-l-2 border-white pb-4 pl-4"
                   >
                     <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/45">
                       {String(cell.count).padStart(2, '0')} pieces
@@ -214,6 +280,38 @@ export default function ReelShot({ local }: { local: number }) {
 
               const num = String(i).padStart(2, '0');
 
+              /* ---- A clip, as a row on phones ---- */
+              if (cell.kind === 'media' && isMobile) {
+                return (
+                  <button
+                    key={cell.key}
+                    type="button"
+                    onClick={() => setActive(cell.item)}
+                    style={{ opacity: appear, height: TILE }}
+                    className="group flex shrink-0 items-center gap-3 overflow-hidden rounded-lg border border-white/12 bg-white/[0.04] p-2.5 text-left"
+                  >
+                    <span className="relative block aspect-video w-[128px] shrink-0 overflow-hidden rounded-md bg-black/50">
+                      <Poster item={cell.item} />
+                      <span className="absolute inset-0 bg-black/25" />
+                      <span className="absolute left-1/2 top-1/2 grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/40 bg-black/45">
+                        <Play size={10} className="ml-px fill-white text-white" />
+                      </span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-mono text-[9px] uppercase tracking-[0.18em] text-white/40">
+                        {num}
+                      </span>
+                      <span className="mt-0.5 line-clamp-2 block text-[13px] font-medium leading-[1.3] text-white/90">
+                        {cell.item.title}
+                      </span>
+                      <span className="mt-1 block truncate font-mono text-[9px] uppercase tracking-[0.16em] text-white/40">
+                        {cell.item.meta}
+                      </span>
+                    </span>
+                  </button>
+                );
+              }
+
               /* ---- A clip ---- */
               if (cell.kind === 'media') {
                 return (
@@ -221,7 +319,7 @@ export default function ReelShot({ local }: { local: number }) {
                     key={cell.key}
                     type="button"
                     onClick={() => setActive(cell.item)}
-                    style={isMobile ? { opacity: appear } : { width: TILE, opacity: appear }}
+                    style={{ width: TILE, opacity: appear }}
                     className="cursor-target group shrink-0 overflow-hidden rounded-xl border border-white/12 bg-white/[0.04] text-left backdrop-blur-xl transition-colors duration-300 hover:border-white/30 hover:bg-white/10"
                   >
                     <span className="relative block aspect-video overflow-hidden bg-black/50">
@@ -252,12 +350,45 @@ export default function ReelShot({ local }: { local: number }) {
                 );
               }
 
+              /* ---- A workflow, as a row on phones. Still the brightest cell. ---- */
+              if (isMobile) {
+                return (
+                  <a
+                    key={cell.key}
+                    href={`#case-${cell.slug}`}
+                    style={{ opacity: appear, height: TILE }}
+                    className="flex shrink-0 items-center gap-3 overflow-hidden rounded-lg border-2 border-white bg-white/[0.10] p-2"
+                  >
+                    <span className="relative block aspect-video w-[128px] shrink-0 overflow-hidden rounded-md bg-black/50">
+                      <Poster src={cell.thumbnail} caption={cell.tool} />
+                      <span className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                      <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-sm bg-white px-1.5 py-0.5 font-mono text-[7.5px] font-semibold uppercase tracking-[0.16em] text-black">
+                        <FileText size={8} strokeWidth={2.5} />
+                        Workflow
+                      </span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-mono text-[9px] uppercase tracking-[0.16em] text-white/70">
+                        {cell.tool}
+                      </span>
+                      <span className="mt-0.5 line-clamp-2 block text-[13px] font-semibold leading-[1.3] text-white">
+                        {cell.title}
+                      </span>
+                      <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-white/85">
+                        Read the case
+                        <ArrowUpRight size={11} />
+                      </span>
+                    </span>
+                  </a>
+                );
+              }
+
               /* ---- A workflow. Deliberately the brightest thing in the strip. ---- */
               return (
                 <a
                   key={cell.key}
                   href={`#case-${cell.slug}`}
-                  style={isMobile ? { opacity: appear } : { width: TILE, opacity: appear }}
+                  style={{ width: TILE, opacity: appear }}
                   className="cursor-target group relative shrink-0 overflow-hidden rounded-xl border-2 border-white bg-white/[0.10] backdrop-blur-xl transition-colors duration-300 hover:bg-white/20"
                 >
                   <span className="relative block aspect-video overflow-hidden bg-black/50">
@@ -293,7 +424,7 @@ export default function ReelShot({ local }: { local: number }) {
 
         {/* Strip counter */}
         <div
-          className="nova-shell mt-7 flex items-center gap-4"
+          className="nova-shell mt-4 flex shrink-0 items-center gap-4 md:mt-7"
           style={{ opacity: head * (1 - out) }}
         >
           <div className="relative h-px flex-1 bg-white/15">
