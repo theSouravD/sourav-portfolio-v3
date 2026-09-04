@@ -90,6 +90,24 @@
   display: flex; align-items: center; gap: 22px;
   padding: 20px clamp(18px, 4vw, 44px);
 }
+/*
+ * The bar floats over a scrolling stage, so without this a headline riding
+ * up underneath it collided with the links — two sets of type in the same
+ * pixels, which is the one thing a navigation bar must never do. The mask
+ * is a soft ramp to paper rather than a hard band: content dissolves as it
+ * reaches the bar instead of being chopped off by an edge.
+ */
+.n3-nav::before {
+  content: ''; position: absolute; inset: -1px 0 auto 0; height: 108px; z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    var(--paper) 0%,
+    color-mix(in srgb, var(--paper) 92%, transparent) 46%,
+    color-mix(in srgb, var(--paper) 0%, transparent) 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
+}
+@media (max-width: 860px) { .n3-nav::before { display: none; } }
 .n3-brand {
   display: flex; align-items: center; gap: 9px;
   background: none; border: 0; cursor: pointer; padding: 0;
@@ -451,28 +469,76 @@
 
 /* ---- career ---- */
 .n3-roles { list-style: none; margin: 0; padding: 0; }
-.n3-roles li {
-  position: relative; display: flex; gap: clamp(14px, 4vw, 40px); align-items: baseline;
-  padding: 18px 4px; border-top: 1px solid var(--rule);
-  transition: padding-left var(--mid) var(--ease);
-}
+.n3-roles > li { position: relative; border-top: 1px solid var(--rule); }
 /* The row lights its own rule on hover. Six static rows is a table; six rows
    that answer you is a list somebody reads to the end. */
-.n3-roles li::before {
+.n3-roles > li::before {
   content: ''; position: absolute; left: 0; right: 0; top: -1px; height: 1px;
   background: var(--accent); transform: scaleX(0); transform-origin: left;
   transition: transform var(--mid) var(--ease);
 }
-.n3-roles li:hover::before { transform: scaleX(1); }
-.n3-roles li:hover { padding-left: 12px; }
+.n3-roles > li:hover::before,
+.n3-roles > li.is-open::before { transform: scaleX(1); }
+
+.n3-role-row {
+  display: flex; gap: clamp(14px, 4vw, 40px); align-items: baseline; width: 100%;
+  padding: 18px 4px; cursor: pointer; text-align: left;
+  background: none; border: 0; color: inherit; font: inherit;
+  transition: padding-left var(--mid) var(--ease);
+}
+.n3-roles > li:hover .n3-role-row { padding-left: 12px; }
 .n3-role-when {
   flex: none; width: clamp(96px, 16vw, 150px);
   font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
   font-variant-numeric: tabular-nums;
 }
-.n3-role-what { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.n3-role-what { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
 .n3-role-what strong { font-size: clamp(15px, 2.2vw, 19px); font-weight: 500; letter-spacing: -0.02em; }
 .n3-role-co { font-size: 12px; color: var(--ink-45); }
+
+/* The count is the affordance: it says both "there is something here" and how
+   much, which is what stops a collapsed row reading as an empty one. */
+.n3-role-toggle {
+  flex: none; display: inline-flex; align-items: center; gap: 7px;
+  color: var(--ink-45); transition: color var(--fast) var(--ease);
+}
+.n3-role-toggle em {
+  font-style: normal; font-size: 10px; letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.n3-role-toggle svg { transition: transform var(--mid) var(--ease); }
+.n3-roles > li:hover .n3-role-toggle { color: var(--ink); }
+.n3-roles > li.is-open .n3-role-toggle { color: var(--accent); }
+.n3-roles > li.is-open .n3-role-toggle svg { transform: rotate(180deg); }
+
+.n3-role-bullets {
+  list-style: none; margin: 0 4px 22px;
+  padding: 0 0 0 calc(clamp(96px, 16vw, 150px) + clamp(14px, 4vw, 40px));
+  display: grid; gap: 9px;
+  animation: n3Open var(--mid) var(--ease) both;
+}
+@keyframes n3Open {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+.n3-role-bullets li {
+  position: relative; padding-left: 17px; max-width: 74ch;
+  font-size: 13px; line-height: 1.65; color: var(--ink-70);
+}
+.n3-role-bullets li::before {
+  content: ''; position: absolute; left: 0; top: 0.62em;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); opacity: 0.5;
+}
+.n3-role-bullets b { font-weight: 600; color: var(--ink); }
+
+/* On a phone the date column can't hold its own gutter, so the bullets sit
+   flush and the row stacks instead. */
+@media (max-width: 720px) {
+  .n3-role-row { flex-wrap: wrap; gap: 6px 14px; }
+  .n3-role-when { width: auto; order: -1; flex: 1 1 100%; }
+  .n3-role-bullets { padding-left: 0; }
+}
 
 /* ---- toolkit ---- */
 .n3-skills { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0 0 28px; padding: 0; }
@@ -552,6 +618,63 @@
   box-shadow: var(--shadow);
 }
 .n3-case-modules { margin-bottom: 44px; }
+
+/* ------------------------------------------------------------------
+ * The case body, repainted for paper.
+ *
+ * AutomationCase is shared with Nova I and is written in white-on-dark
+ * utilities — on cream that is a page of invisible ink, which is exactly
+ * what "the case study is missing its data" looked like. Rather than fork
+ * the component, each element carries an `ac-` hook and the light theme
+ * repaints it here. Nova I keeps its utilities untouched.
+ * ------------------------------------------------------------------ */
+.n3 .ac-mod { border-color: var(--rule); padding-top: 30px; }
+.n3 .ac-idx { color: var(--accent); }
+.n3 .ac-h { color: var(--ink); font-weight: 600; letter-spacing: -0.02em; }
+.n3 .ac-h5 { color: var(--ink); }
+.n3 .ac-p { color: var(--ink-70); }
+.n3 .ac-li { color: var(--ink-70); }
+.n3 .ac-lab { color: var(--ink-45); }
+.n3 .ac-num { color: var(--ink-45); font-weight: 500; }
+.n3 .ac-num.is-now { color: var(--accent); font-weight: 600; }
+.n3 .ac-chip,
+.n3 .ac-card,
+.n3 .ac-note {
+  border-color: var(--rule);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  color: var(--ink-70);
+}
+/* The "after" panel in the feedback comparison is the point of the module,
+   so it is the one card that takes the room's colour rather than the ground. */
+.n3 .ac-card.is-now {
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, #FFFDF9);
+}
+.n3 .ac-img, .n3 .ac-gimg { border-color: var(--rule); }
+.n3 .ac-img { box-shadow: var(--shadow); }
+.n3 .ac-bul { color: var(--ink-70); }
+.n3 .ac-bul::before { background: var(--accent); opacity: 0.55; }
+.n3 .ac-sq { background: color-mix(in srgb, var(--accent) 26%, #E7E1D6); }
+.n3 .ac-out {
+  border-color: var(--rule); background: var(--card);
+  box-shadow: var(--shadow);
+}
+.n3 .ac-out:hover {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: var(--card);
+  box-shadow: var(--shadow-lift);
+}
+.n3 .ac-out-frame { background: #E7E1D6; }
+/* A black-to-transparent scrim exists to hold white type off a bright still.
+   There is no white type here and the ground is cream, so on paper it is a
+   smear over the artwork and nothing else. */
+.n3 .ac-out-scrim { display: none; }
+.n3 .ac-out-play {
+  border-color: rgba(255,255,255,0.55); background: rgba(23,20,15,0.46); color: #fff;
+}
+.n3 .ac-out:hover .ac-out-play { background: #fff; color: var(--ink); }
+.n3 .ac-out-play svg { fill: currentColor; color: inherit; }
 .n3-case-next {
   display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
   padding-top: 26px; border-top: 1px solid var(--rule);

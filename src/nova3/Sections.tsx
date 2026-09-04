@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowDown, ArrowUpRight, Download, FileText, Mail, Play } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, ChevronDown, Download, FileText, Mail, Play } from 'lucide-react';
 import AnimatedContent from '@/reactbits/AnimatedContent';
 import SpotlightCard from '@/reactbits/SpotlightCard';
 import ShinyText from '@/reactbits/ShinyText';
@@ -286,23 +286,70 @@ function Systems({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void
 /* ================================================================
  * CAREER
  * ================================================================ */
+/**
+ * Emphasis inside a bullet.
+ *
+ * The copy carries `**bold**` because it was written as markdown, and a role
+ * bullet's whole point is the one measurable phrase inside it — "2x or more",
+ * "AI Dubbing Studio POC". Rendered raw, the asterisks are noise; stripped,
+ * the sentence flattens. So the marks are read and set as emphasis.
+ */
+function Rich({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+        i % 2 ? <b key={i}>{part}</b> : <span key={i}>{part}</span>
+      )}
+    </>
+  );
+}
+
+/**
+ * CAREER
+ *
+ * The first pass showed six titles and dates and dropped every bullet, which
+ * turned a record into a list of job labels — the achievements are the part
+ * anyone is actually reading for. They are back, but folded: six roles times
+ * nine bullets is a wall that nobody finishes, so each role opens on click and
+ * the current one starts open. The count sits on the row so there is never any
+ * doubt that something is in there.
+ */
 function Career() {
+  const [open, setOpen] = useState(0);
   return (
     <div className="n3-room">
       <Head
         kicker="2019 — 2026"
         title="Career"
-        note="Graphics designer to Gen AI Production Lead, in order."
+        note="Graphics designer to Gen AI Production Lead, in order. Open a role to read what the job actually involved."
         />
       <ol className="n3-roles">
         {experience.map((j, i) => (
           <AnimatedContent key={j.title + j.period} {...rise(0.08 + i * 0.05)}>
-            <li>
-              <span className="n3-role-when n3-accent">{j.period}</span>
-              <span className="n3-role-what">
-                <strong>{j.title}</strong>
-                <span className="n3-role-co">{j.company} · {j.place}</span>
-              </span>
+            <li className={open === i ? 'is-open' : ''}>
+              <button
+                type="button"
+                className="n3-role-row"
+                aria-expanded={open === i}
+                onClick={() => setOpen((c) => (c === i ? -1 : i))}
+              >
+                <span className="n3-role-when n3-accent">{j.period}</span>
+                <span className="n3-role-what">
+                  <strong>{j.title}</strong>
+                  <span className="n3-role-co">{j.company} · {j.place}</span>
+                </span>
+                <span className="n3-role-toggle">
+                  <em>{j.bullets.length}</em>
+                  <ChevronDown size={14} />
+                </span>
+              </button>
+              {open === i && (
+                <ul className="n3-role-bullets">
+                  {j.bullets.map((b) => (
+                    <li key={b}><Rich text={b} /></li>
+                  ))}
+                </ul>
+              )}
             </li>
           </AnimatedContent>
         ))}

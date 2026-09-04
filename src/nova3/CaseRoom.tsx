@@ -5,6 +5,16 @@ import Poster from '@/components/Poster';
 import AutomationCase from '@/components/AutomationCase';
 import { automationProjects } from '@/data/work';
 
+/*
+ * `container` on every entrance below is load-bearing, not decoration.
+ * AnimatedContent's trigger watches the window unless it is told which
+ * element actually scrolls — and here that is `.n3-stage`. Watching a
+ * scroller that never moves means every module below the fold stays at
+ * opacity 0 for good: the case studies rendered their title and hero and
+ * then nothing, which read as "the data is missing" when in fact it was
+ * all there and simply never faded in.
+ */
+
 /**
  * The case study.
  *
@@ -39,27 +49,27 @@ export default function CaseRoom({ slug, onBack }: { slug: string; onBack: () =>
 
   return (
     <div className="n3-room n3-case-room">
-      <AnimatedContent distance={22} duration={0.6} ease="power3.out" threshold={0} delay={0.02}>
+      <AnimatedContent container=".n3-stage" distance={22} duration={0.6} ease="power3.out" threshold={0} delay={0.02}>
         <button type="button" className="n3-back" onClick={onBack}>
           <ArrowLeft size={13} /> Systems
         </button>
       </AnimatedContent>
 
       <header className="n3-case-head">
-        <AnimatedContent distance={26} duration={0.7} ease="power3.out" threshold={0} delay={0.06}>
+        <AnimatedContent container=".n3-stage" distance={26} duration={0.7} ease="power3.out" threshold={0} delay={0.06}>
           <p className="n3-eyebrow n3-accent">
             <FileText size={11} /> {project.tool} · {project.category}
           </p>
         </AnimatedContent>
-        <AnimatedContent distance={26} duration={0.7} ease="power3.out" threshold={0} delay={0.12}>
+        <AnimatedContent container=".n3-stage" distance={26} duration={0.7} ease="power3.out" threshold={0} delay={0.12}>
           <h2 className="n3-title">{project.title}</h2>
         </AnimatedContent>
-        <AnimatedContent distance={20} duration={0.7} ease="power3.out" threshold={0} delay={0.18}>
+        <AnimatedContent container=".n3-stage" distance={20} duration={0.7} ease="power3.out" threshold={0} delay={0.18}>
           <p className="n3-note">{project.summary}</p>
         </AnimatedContent>
       </header>
 
-      <AnimatedContent distance={30} duration={0.8} ease="power3.out" threshold={0} delay={0.24}>
+      <AnimatedContent container=".n3-stage" distance={30} duration={0.8} ease="power3.out" threshold={0} delay={0.24}>
         <div className="n3-case-hero">
           <Poster src={project.thumbnail} caption={project.tool} />
         </div>
@@ -67,7 +77,7 @@ export default function CaseRoom({ slug, onBack }: { slug: string; onBack: () =>
 
       {/* The modules — overview, process, outputs — rendered by the component
           that already knew how, now that it has somewhere to live. */}
-      <AnimatedContent distance={24} duration={0.8} ease="power3.out" threshold={0} delay={0.3}>
+      <AnimatedContent container=".n3-stage" distance={24} duration={0.8} ease="power3.out" threshold={0} delay={0.3}>
         <div className="n3-case-modules">
           <AutomationCase project={project} />
         </div>
