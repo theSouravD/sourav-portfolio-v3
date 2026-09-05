@@ -21,12 +21,14 @@
  * are quieter than clicks because they happen ten times as often.
  */
 
-import { readSound as readStored, save } from './theme';
+import type { ClickId } from './theme';
+import { readClick, readSound as readStored, save } from './theme';
 
 let ctx: AudioContext | null = null;
 let bus: GainNode | null = null;
 let armed = false;
 let enabled = true;
+let click: ClickId = 'hollow';
 
 function ac(): AudioContext | null {
   if (typeof window === 'undefined' || !armed || !enabled) return null;
@@ -146,14 +148,52 @@ function knock(c: AudioContext, at: number, freq: number, gain: number, len = 0.
  */
 export type Cue = 'tap';
 
+/*
+ * Six clicks, one mechanism.
+ *
+ * Every one of these is a very short excitation through a resonance, because
+ * that is what a physical click is — they differ only in where the resonance
+ * sits, how sharp it is, and how fast it dies. The pairs matter: a single
+ * resonance still reads as a pitched beep, and adding a second one a fifth or
+ * an octave away is what turns a tone into a struck object.
+ */
 export function cue(_kind: Cue) {
   const c = ac();
   if (!c) return;
   const t = c.currentTime;
-  // Two resonances a fifth apart: one alone still reads as a pitched beep,
-  // the pair reads as a struck body.
-  knock(c, t, 520, 0.12, 0.16);
-  knock(c, t + 0.004, 780, 0.045, 0.095);
+
+  switch (click) {
+    case 'none':
+      break;
+    case 'hollow':
+      knock(c, t, 520, 0.12, 0.16);
+      knock(c, t + 0.004, 780, 0.045, 0.095);
+      break;
+    case 'thock':
+      // Low, fast decay, nothing on top — a key bottoming out on foam.
+      knock(c, t, 190, 0.16, 0.1);
+      knock(c, t + 0.003, 300, 0.05, 0.055);
+      break;
+    case 'tick':
+      // Almost pure transient: no resonance to speak of, just a burst.
+      noise(c, t, 0.03, 5200, 0.012, 3.2);
+      noise(c, t + 0.006, 0.018, 8200, 0.008, 4);
+      break;
+    case 'snap':
+      // The gap between the two bursts is what reads as a mechanism
+      // actuating rather than as one flat tick.
+      noise(c, t, 0.04, 4200, 0.008, 4.5);
+      noise(c, t + 0.007, 0.03, 9600, 0.006, 5);
+      break;
+    case 'glass':
+      // High and left to ring — the only one with a tail you can hear.
+      knock(c, t, 2400, 0.055, 0.34);
+      knock(c, t + 0.002, 3600, 0.022, 0.24);
+      break;
+    case 'pop':
+      knock(c, t, 240, 0.14, 0.13);
+      break;
+  }
 }
 
 /**
@@ -190,6 +230,11 @@ export function playTitle(glyphs: number, stagger: number, delay = 0) {
 
 /* ---- the switch ---- */
 
+export function setClick(next: ClickId) {
+  click = next;
+  save('click', next);
+}
+
 export function setSound(on: boolean) {
   enabled = on;
   save('sound', on ? 'on' : 'off');
@@ -206,5 +251,6 @@ export const saveSound = setSound;
 /** Sync the module with stored state at startup. */
 export function initSound() {
   enabled = readStored();
+  click = readClick();
   armAudio();
 }

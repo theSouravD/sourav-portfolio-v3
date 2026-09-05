@@ -1351,3 +1351,8 @@
 @media (pointer: coarse) {
   .n3-cur-halo, .n3-cur-blade, .n3-cur-cross, .n3-cur-trail { display: none; }
 }
+
+/* Disabled rather than hidden: a control that vanishes leaves you wondering
+   whether you imagined it, where a greyed one tells you what to turn on. */
+.n3-pick-sub { transition: opacity var(--fast) var(--ease); }
+.n3-pick-sub.is-off { opacity: 0.4; pointer-events: none; }

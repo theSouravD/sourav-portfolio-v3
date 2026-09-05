@@ -7,13 +7,13 @@ import CaseRoom from './CaseRoom';
 import { SETUPS, setupOf, sectionFromHash, type SectionId } from './scenes';
 import Cursor from './Cursor';
 import {
-  paperAt, readBackdrop, readCursor, readIntensity, readPaperness,
+  paperAt, readBackdrop, readClick, readCursor, readIntensity, readPaperness,
   readSound, readTexture, save,
   INTENSITY, PAPERNESS,
 } from './theme';
 import type { ThemeState } from './BackdropPicker';
 import { useSwipeRooms } from './useSwipeRooms';
-import { cue, initSound, setSound } from './titleSound';
+import { cue, initSound, setClick, setSound } from './titleSound';
 import './nova3.css';
 
 /**
@@ -49,6 +49,7 @@ export default function Stage() {
     backdrop: readBackdrop(),
     texture: readTexture(),
     sound: readSound(),
+    click: readClick(),
     cursor: readCursor(),
     intensity: readIntensity(),
     paperness: readPaperness(),
@@ -62,18 +63,20 @@ export default function Stage() {
         save(k, v as string | number);
       }
       if (patch.sound !== undefined) setSound(patch.sound);
+      if (patch.click) setClick(patch.click);
       return next;
     });
   }, []);
 
   const resetTheme = useCallback(() => {
     const d: ThemeState = {
-      backdrop: 'wash', texture: 'fine', sound: true,
+      backdrop: 'wash', texture: 'fine', sound: true, click: 'hollow',
       cursor: 'system', intensity: INTENSITY.def, paperness: PAPERNESS.def,
     };
     setTheme(d);
     for (const [k, v] of Object.entries(d)) if (k !== 'sound') save(k, v as string | number);
     setSound(d.sound);
+    setClick(d.click);
   }, []);
 
   const setup = setupOf(id);

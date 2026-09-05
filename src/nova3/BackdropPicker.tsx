@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import {
-  BACKDROPS, CURSORS, INTENSITY, PAPERNESS, TEXTURES,
-  type BackdropId, type CursorId, type TextureId,
+  BACKDROPS, CLICKS, CURSORS, INTENSITY, PAPERNESS, TEXTURES,
+  type BackdropId, type ClickId, type CursorId, type TextureId,
 } from './theme';
 
 /**
@@ -25,6 +25,7 @@ export interface ThemeState {
   backdrop: BackdropId;
   texture: TextureId;
   sound: boolean;
+  click: ClickId;
   cursor: CursorId;
   intensity: number;
   paperness: number;
@@ -168,6 +169,17 @@ export default function BackdropPicker({
                   </span>
                   <i />
                 </button>
+                {/*
+                  The click list is inside the switch, and disabled rather
+                  than hidden when sound is off: a control that vanishes
+                  leaves you wondering whether you imagined it, where a
+                  greyed one tells you exactly what to turn on to reach it.
+                */}
+                <div className={`n3-pick-sub ${state.sound ? '' : 'is-off'}`}>
+                  <p className="n3-pick-head">Click</p>
+                  {list(CLICKS, state.click, (click) => onChange({ click }))}
+                </div>
+
                 <p className="n3-pick-note">
                   Nothing plays until you first click the page — every browser
                   blocks audio before that.

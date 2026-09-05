@@ -66,6 +66,33 @@ export const TEXTURES: { id: TextureId; label: string; note: string }[] = [
 
 export const SOUND = { def: true };
 
+/**
+ * THE CLICK, AS A CHOICE.
+ *
+ * The one cue that fires on demand is the one worth having options for — it
+ * is the site's response to a press, it happens constantly, and it is the
+ * only sound most visitors will consciously register. (The hover and
+ * room-change cues stayed deleted: those fired whether or not anything
+ * happened, which is what made them tiring, and no amount of choosing
+ * between flavours fixes a cue that should not be firing.)
+ *
+ * All six are the same mechanism at different settings — a very short
+ * excitation through a resonant filter — because that is what a physical
+ * click is. They differ in where the resonance sits, how sharp it is, and
+ * how fast it dies.
+ */
+export type ClickId = 'hollow' | 'thock' | 'tick' | 'snap' | 'glass' | 'pop' | 'none';
+
+export const CLICKS: { id: ClickId; label: string; note: string }[] = [
+  { id: 'hollow', label: 'Hollow', note: 'A soft woody knock' },
+  { id: 'thock',  label: 'Thock',  note: 'Deep and muted — a dampened key' },
+  { id: 'tick',   label: 'Tick',   note: 'Dry and high, almost no body' },
+  { id: 'snap',   label: 'Snap',   note: 'Sharp, with a bright tail' },
+  { id: 'glass',  label: 'Glass',  note: 'A high ping, long ring' },
+  { id: 'pop',    label: 'Pop',    note: 'Low and round, no attack' },
+  { id: 'none',   label: 'Silent', note: 'No sound on press' },
+];
+
 /* ================================================================
  * CURSOR
  * ================================================================ */
@@ -225,6 +252,9 @@ export const readBackdrop = () =>
   read('backdrop', BACKDROPS.map((b) => b.id), 'wash');
 export const readTexture = () =>
   read('texture', TEXTURES.map((t) => t.id), 'fine');
+export const readClick = () =>
+  read('click', CLICKS.map((c) => c.id), 'hollow');
+
 export const readSound = (): boolean => {
   try {
     const v = localStorage.getItem(KEY + 'sound');
