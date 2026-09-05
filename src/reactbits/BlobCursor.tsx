@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import './BlobCursor.css';
 
@@ -58,11 +58,21 @@ export default function BlobCursor({
     return { left: rect.left, top: rect.top };
   }, []);
 
+  /*
+   * VENDOR PATCH — listens on the window, not on its own container.
+   *
+   * As shipped this bound onMouseMove to `.blob-container`. That works in the
+   * demo, where the container is a normal box you move the pointer inside.
+   * Used as a CURSOR it cannot work: the container has to span the viewport
+   * and be `pointer-events: none`, or it swallows every click on the site —
+   * and a pointer-transparent element receives no pointer events, so the
+   * blobs mounted and never moved. The window always sees the pointer.
+   */
   const handleMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    (e: MouseEvent | TouchEvent) => {
       const { left, top } = updateOffset();
-      const x = 'clientX' in e ? e.clientX : e.touches[0].clientX;
-      const y = 'clientY' in e ? e.clientY : e.touches[0].clientY;
+      const x = 'clientX' in e ? e.clientX : e.touches[0]?.clientX ?? 0;
+      const y = 'clientY' in e ? e.clientY : e.touches[0]?.clientY ?? 0;
 
       blobsRef.current.forEach((el, i) => {
         if (!el) return;
@@ -81,16 +91,20 @@ export default function BlobCursor({
   useEffect(() => {
     const onResize = () => updateOffset();
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [updateOffset]);
+    window.addEventListener('mousemove', handleMove, { passive: true });
+    window.addEventListener('touchmove', handleMove, { passive: true });
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('touchmove', handleMove);
+    };
+  }, [updateOffset, handleMove]);
 
   return (
     <div
       ref={containerRef}
       className="blob-container"
       style={{ zIndex }}
-      onMouseMove={handleMove}
-      onTouchMove={handleMove}
     >
       {useFilter && (
         <svg style={{ position: 'absolute', width: 0, height: 0 }}>

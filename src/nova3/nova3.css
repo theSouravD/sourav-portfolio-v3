@@ -1295,3 +1295,11 @@
    whether you imagined it, where a greyed one tells you what to turn on. */
 .n3-pick-sub { transition: opacity var(--fast) var(--ease); }
 .n3-pick-sub.is-off { opacity: 0.4; pointer-events: none; }
+
+/* MagnetLines sizes itself from a CSS grid; as a cursor it has to fill the
+   viewport and stay out of the way of clicks. Held well back — a full-screen
+   field of rules at full strength competes with the type it is drawn over,
+   and this is meant to be felt rather than read. */
+.n3-cursor-lines .magnetLines-container {
+  width: 100%; height: 100%; opacity: 0.26;
+}

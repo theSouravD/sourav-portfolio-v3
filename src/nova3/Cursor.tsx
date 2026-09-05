@@ -1,7 +1,7 @@
 import TargetCursor from '@/reactbits/TargetCursor';
 import Crosshair from '@/reactbits/Crosshair';
 import BlobCursor from '@/reactbits/BlobCursor';
-import Ribbons from '@/reactbits/Ribbons';
+import MagnetLines from '@/reactbits/MagnetLines';
 import SplashCursor from '@/reactbits/SplashCursor';
 import type { CursorId } from './theme';
 
@@ -79,17 +79,23 @@ export default function Cursor({ mode, accent }: { mode: CursorId; accent: strin
         </div>
       );
 
-    case 'ribbons':
+    case 'lines':
       return (
-        <div className="n3-cursor-layer">
-          <Ribbons
-            colors={[accent]}
-            baseThickness={22}
-            speedMultiplier={0.4}
-            maxAge={420}
-            enableFade
-            enableShaderEffect
-            effectAmplitude={1.6}
+        <div className="n3-cursor-layer n3-cursor-lines">
+          {/*
+            A field of rules that all turn to point at the pointer. It is the
+            only option here that is not a follower at all — nothing chases
+            anything, so there is no lag to hide, and the whole viewport
+            responds rather than one shape near your hand.
+          */}
+          <MagnetLines
+            rows={10}
+            columns={16}
+            containerSize="100%"
+            lineColor={accent}
+            lineWidth="1.5px"
+            lineHeight="20px"
+            baseAngle={-10}
           />
         </div>
       );
@@ -97,13 +103,23 @@ export default function Cursor({ mode, accent }: { mode: CursorId; accent: strin
     case 'splash':
       return (
         <div className="n3-cursor-layer">
+          {/*
+            Rainbow mode off and the room's accent in its place — the default
+            picks a random hue per splat, which on a graded site means the one
+            element on screen that ignores the grade entirely. `key` on the
+            accent forces a remount when the room changes: the colour is read
+            once when the simulation initialises, so without it the fluid
+            keeps the previous room's gel until you reload.
+          */}
           <SplashCursor
-            SPLAT_RADIUS={0.14}
+            key={accent}
+            RAINBOW_MODE={false}
+            COLOR={accent}
+            SPLAT_RADIUS={0.16}
             SPLAT_FORCE={4200}
-            DENSITY_DISSIPATION={4.2}
-            VELOCITY_DISSIPATION={2.4}
-            CURL={2}
-            COLOR_UPDATE_SPEED={6}
+            DENSITY_DISSIPATION={4.6}
+            VELOCITY_DISSIPATION={2.6}
+            CURL={1.5}
             TRANSPARENT
           />
         </div>

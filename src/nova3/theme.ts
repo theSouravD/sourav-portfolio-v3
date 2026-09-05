@@ -115,14 +115,14 @@ export const CLICKS: { id: ClickId; label: string; note: string }[] = [
  * They are not the same weight, and the notes say so: Splash runs a live
  * fluid simulation and is by far the most expensive thing on the site.
  */
-export type CursorId = 'system' | 'crosshair' | 'target' | 'blob' | 'ribbons' | 'splash';
+export type CursorId = 'system' | 'crosshair' | 'target' | 'blob' | 'lines' | 'splash';
 
 export const CURSORS: { id: CursorId; label: string; note: string }[] = [
   { id: 'system',    label: 'System',    note: "The visitor's own pointer" },
   { id: 'crosshair', label: 'Crosshair', note: 'Rules across the frame, with drift' },
   { id: 'target',    label: 'Target',    note: 'Four corners that frame a target' },
   { id: 'blob',      label: 'Blob',      note: 'A gooey follower in the room colour' },
-  { id: 'ribbons',   label: 'Ribbons',   note: 'Streamers that trail the pointer' },
+  { id: 'lines',     label: 'Lines',     note: 'A field that turns to face you' },
   { id: 'splash',    label: 'Splash',    note: 'Fluid that parts as you move — heavy' },
 ];
 
