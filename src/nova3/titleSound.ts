@@ -21,17 +21,15 @@
  * are quieter than clicks because they happen ten times as often.
  */
 
-import type { ClickId, SoundId } from './theme';
-import { readClick, readSoundPack, save } from './theme';
+import { readSound as readStored, save } from './theme';
 
 let ctx: AudioContext | null = null;
 let bus: GainNode | null = null;
 let armed = false;
-let pack: SoundId = 'soft';
-let click: ClickId = 'hollow';
+let enabled = true;
 
 function ac(): AudioContext | null {
-  if (typeof window === 'undefined' || !armed || pack === 'off') return null;
+  if (typeof window === 'undefined' || !armed || !enabled) return null;
   if (!ctx) {
     const Ctor = window.AudioContext
       ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -134,102 +132,28 @@ function knock(c: AudioContext, at: number, freq: number, gain: number, len = 0.
   src.stop(at + len + 0.02);
 }
 
-/** A short sine blip. Used sparingly — pitch is what makes UI sound cute. */
-function blip(c: AudioContext, at: number, from: number, to: number, gain: number, len: number) {
-  const osc = c.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(from, at);
-  osc.frequency.exponentialRampToValueAtTime(to, at + len);
+/* ---- the two cues ---- */
 
-  const g = c.createGain();
-  g.gain.setValueAtTime(0.0001, at);
-  g.gain.exponentialRampToValueAtTime(gain, at + len * 0.18);
-  g.gain.exponentialRampToValueAtTime(0.0001, at + len);
-
-  osc.connect(g).connect(bus!);
-  osc.start(at);
-  osc.stop(at + len + 0.02);
-}
-
-/* ---- the cues ---- */
-
-export type Cue = 'tap' | 'hover' | 'move' | 'open' | 'close';
-
-/**
- * THE PACKS.
+/*
+ * The site makes sound twice: the title on arrival, and a click when you
+ * press something.
  *
- * What makes a click read as a click is that it is almost pure transient:
- * very short, very high, and with no audible pitch. The first attempt was a
- * 35ms burst at 2.1kHz, which has far too much body and landed as a drum. So
- * every pack here is built from the same two ideas — a short filtered burst
- * for the mechanism and, at most, a very quick pitch move for direction — and
- * they differ in how bright, how long and how many.
- *
- * `sparse` has no hover cue at all. Hover fires ten times as often as
- * anything else, and on a page with this many controls that is the one cue
- * most likely to become an irritant.
+ * Hover and the room-change cue were both removed rather than turned down.
+ * Hover fired ten times as often as anything else and had nothing to say —
+ * the pointer passing over a thing is not an event — and the transition cue
+ * doubled up with the click that had just caused it. A cue that fires when
+ * nothing happened is the thing that makes interface sound tiring.
  */
-export function cue(kind: Cue) {
+export type Cue = 'tap';
+
+export function cue(_kind: Cue) {
   const c = ac();
   if (!c) return;
   const t = c.currentTime;
-
-  if (kind === 'hover') {
-    if (pack === 'sparse') return;
-    if (pack === 'mech') noise(c, t, 0.010, 7200, 0.007, 4);
-    else if (pack === 'airy') noise(c, t, 0.008, 4200, 0.02, 1.6);
-    else noise(c, t, 0.009, 6400, 0.009, 3.4);
-    return;
-  }
-
-  /*
-   * The press. Chosen independently of the pack, because it is the cue you
-   * hear most and the one worth auditioning on its own.
-   */
-  if (kind === 'tap') {
-    switch (click) {
-      case 'none':
-        break;
-      case 'hollow':
-        // Two resonances a fifth apart, the upper one quieter and shorter.
-        // One alone reads as a pitched beep; the pair reads as a body.
-        knock(c, t, 520, 0.13, 0.17);
-        knock(c, t + 0.004, 780, 0.05, 0.1);
-        break;
-      case 'tick':
-        noise(c, t, 0.03, 5200, 0.012, 3.2);
-        noise(c, t + 0.006, 0.018, 8200, 0.008, 4);
-        break;
-      case 'snap':
-        // The gap between the two bursts is what reads as a mechanism
-        // actuating rather than as one flat tick.
-        noise(c, t, 0.04, 4200, 0.008, 4.5);
-        noise(c, t + 0.007, 0.03, 9600, 0.006, 5);
-        break;
-      case 'pop':
-        knock(c, t, 240, 0.14, 0.13);
-        break;
-    }
-    return;
-  }
-
-  if (kind === 'move') {
-    // Travel, not another button press: a tick plus a short fall.
-    if (pack === 'mech') {
-      noise(c, t, 0.035, 3600, 0.016, 3);
-      blip(c, t, 300, 140, 0.035, 0.18);
-    } else if (pack === 'airy') {
-      noise(c, t, 0.02, 2600, 0.05, 1);
-      blip(c, t, 420, 240, 0.045, 0.3);
-    } else {
-      noise(c, t, 0.03, 4200, 0.014, 2.6);
-      blip(c, t, 260, 150, 0.04, 0.22);
-    }
-    return;
-  }
-
-  if (kind === 'open') blip(c, t, 320, 520, 0.045, 0.16);
-  if (kind === 'close') blip(c, t, 520, 300, 0.04, 0.14);
+  // Two resonances a fifth apart: one alone still reads as a pitched beep,
+  // the pair reads as a struck body.
+  knock(c, t, 520, 0.12, 0.16);
+  knock(c, t + 0.004, 780, 0.045, 0.095);
 }
 
 /**
@@ -266,28 +190,21 @@ export function playTitle(glyphs: number, stagger: number, delay = 0) {
 
 /* ---- the switch ---- */
 
-export function setClick(next: ClickId) {
-  click = next;
-  save('click', next);
-}
-
-export function setPack(next: SoundId) {
-  pack = next;
-  save('soundpack', next);
+export function setSound(on: boolean) {
+  enabled = on;
+  save('sound', on ? 'on' : 'off');
   if (bus && ctx) {
     // Ramped, not switched. Setting a gain instantly mid-tone clicks.
     bus.gain.cancelScheduledValues(ctx.currentTime);
-    bus.gain.setTargetAtTime(next === 'off' ? 0 : 0.9, ctx.currentTime, 0.02);
+    bus.gain.setTargetAtTime(on ? 0.9 : 0, ctx.currentTime, 0.02);
   }
 }
 
-/** The name toggle is a shorthand for the pack: silent, or back to soft. */
-export function readSound(): boolean { return readSoundPack() !== 'off'; }
-export function saveSound(on: boolean) { setPack(on ? 'soft' : 'off'); }
+export function readSound() { return readStored(); }
+export const saveSound = setSound;
 
 /** Sync the module with stored state at startup. */
 export function initSound() {
-  pack = readSoundPack();
-  click = readClick();
+  enabled = readStored();
   armAudio();
 }

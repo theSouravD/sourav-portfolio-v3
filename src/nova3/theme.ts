@@ -18,9 +18,7 @@ import { PAPER } from './scenes';
  * GROUNDS
  * ================================================================ */
 
-export type BackdropId =
-  | 'wash' | 'aurora' | 'contour'
-  | 'motes' | 'mesh' | 'dots' | 'paper';
+export type BackdropId = 'wash' | 'aurora' | 'contour' | 'mesh' | 'paper';
 
 export interface BackdropDef {
   id: BackdropId;
@@ -34,9 +32,7 @@ export const BACKDROPS: BackdropDef[] = [
   { id: 'wash',     label: 'Wash',     note: 'Soft aurora across the paper' },
   { id: 'aurora',   label: 'Ribbon',   note: 'One band of colour, drifting' },
   { id: 'contour',  label: 'Contour',  note: 'Topographic lines, morphing' },
-  { id: 'motes',    label: 'Motes',    note: 'Drifting particles, very quiet' },
   { id: 'mesh',     label: 'Mesh',     note: 'Soft colour blooms — no shader', cheap: true },
-  { id: 'dots',     label: 'Dots',     note: 'A printed dot field — no shader', cheap: true },
   { id: 'paper',    label: 'Paper',    note: 'Nothing at all — plain stock', cheap: true },
 ];
 
@@ -51,50 +47,41 @@ export const TEXTURES: { id: TextureId; label: string; note: string }[] = [
 ];
 
 /* ================================================================
- * SOUND
+ * SOUND — one switch, two cues
+ *
+ * The packs and the click list are gone. Five ambient characters times five
+ * clicks is twenty-five combinations to audition, which is a lot of apparatus
+ * around a decision that turned out to be simple: the site makes sound twice.
+ * The title sequence on arrival, and a click when you press something.
+ *
+ * Everything else went because it was the wrong kind of noise. Hover fired
+ * ten times as often as anything else and had nothing to say — it responded
+ * to the pointer passing over a thing, which is not an event. The room-change
+ * cue doubled up with the click that caused it.
+ *
+ * So the control is a switch. A settings panel offering five flavours of
+ * something a visitor will hear twice is a panel making its own options feel
+ * more important than they are.
  * ================================================================ */
 
-export type SoundId = 'off' | 'soft' | 'mech' | 'airy' | 'sparse';
-
-export const SOUNDS: { id: SoundId; label: string; note: string }[] = [
-  { id: 'off',    label: 'Silent', note: 'No sound at all' },
-  { id: 'soft',   label: 'Soft',   note: 'Light ticks, barely there' },
-  { id: 'mech',   label: 'Mech',   note: 'Crisper, more mechanical' },
-  { id: 'airy',   label: 'Airy',   note: 'Breathy, pitched a little' },
-  { id: 'sparse', label: 'Sparse', note: 'Clicks and moves only — no hover' },
-];
-
-/**
- * THE CLICK IS ITS OWN CONTROL.
- *
- * It was folded into the pack, and that was wrong twice over. Practically,
- * the click is the cue you hear most and the one worth auditioning on its
- * own — changing the pack to hear a different click also changed the hover
- * and the transition, so nothing could be compared. Conceptually they are
- * different things: the pack is the site's ambient character, the click is
- * the response to a press.
- */
-export type ClickId = 'hollow' | 'tick' | 'snap' | 'pop' | 'none';
-
-export const CLICKS: { id: ClickId; label: string; note: string }[] = [
-  { id: 'hollow', label: 'Hollow', note: 'A soft woody knock' },
-  { id: 'tick',   label: 'Tick',   note: 'Dry and high — a keyswitch' },
-  { id: 'snap',   label: 'Snap',   note: 'Sharp, with a bright tail' },
-  { id: 'pop',    label: 'Pop',    note: 'Low and round, almost no attack' },
-  { id: 'none',   label: 'None',   note: 'Silent on press' },
-];
+export const SOUND = { def: true };
 
 /* ================================================================
  * CURSOR
  * ================================================================ */
 
-export type CursorId = 'system' | 'dot' | 'ring' | 'target';
+export type CursorId =
+  | 'system' | 'dot' | 'ring' | 'trail' | 'crosshair' | 'blade' | 'halo' | 'target';
 
 export const CURSORS: { id: CursorId; label: string; note: string }[] = [
-  { id: 'system', label: 'System', note: "The visitor's own cursor" },
-  { id: 'dot',    label: 'Dot',    note: 'A small accent dot that trails' },
-  { id: 'ring',   label: 'Ring',   note: 'An outline that swells on targets' },
-  { id: 'target', label: 'Target', note: 'Four corners that frame what you hover' },
+  { id: 'system',    label: 'System',    note: "The visitor's own pointer" },
+  { id: 'dot',       label: 'Dot',       note: 'A small accent dot, exact' },
+  { id: 'ring',      label: 'Ring',      note: 'Dot plus an outline that swells' },
+  { id: 'trail',     label: 'Trail',     note: 'A short fading tail behind the dot' },
+  { id: 'crosshair', label: 'Crosshair', note: 'Thin rules across the whole frame' },
+  { id: 'blade',     label: 'Blade',     note: 'An edit playhead, snaps upright' },
+  { id: 'halo',      label: 'Halo',      note: 'A soft bloom in the room colour' },
+  { id: 'target',    label: 'Target',    note: 'Four corners that frame a target' },
 ];
 
 /* ================================================================
@@ -193,22 +180,6 @@ export function contourProps(s: Setup, k: number) {
   };
 }
 
-export function motesProps(s: Setup, k: number) {
-  return {
-    particleColors: [s.wash, s.fill, s.accent],
-    particleCount: Math.round(140 * Math.min(k, 1.2)),
-    particleSpread: 12,
-    speed: 0.05,
-    particleBaseSize: 60,
-    sizeRandomness: 0.8,
-    alphaParticles: true,
-    moveParticlesOnHover: true,
-    particleHoverFactor: 0.4,
-    cameraDistance: 22,
-    disableRotation: false,
-  };
-}
-
 /* ================================================================
  * STORAGE
  *
@@ -254,10 +225,14 @@ export const readBackdrop = () =>
   read('backdrop', BACKDROPS.map((b) => b.id), 'wash');
 export const readTexture = () =>
   read('texture', TEXTURES.map((t) => t.id), 'fine');
-export const readSoundPack = () =>
-  read('soundpack', SOUNDS.map((s) => s.id), 'soft');
-export const readClick = () =>
-  read('click', CLICKS.map((c) => c.id), 'hollow');
+export const readSound = (): boolean => {
+  try {
+    const v = localStorage.getItem(KEY + 'sound');
+    return v === null ? SOUND.def : v !== 'off';
+  } catch {
+    return SOUND.def;
+  }
+};
 export const readCursor = () =>
   read('cursor', CURSORS.map((c) => c.id), 'system');
 export const readIntensity = () =>

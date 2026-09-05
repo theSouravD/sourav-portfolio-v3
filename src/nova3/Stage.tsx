@@ -7,13 +7,13 @@ import CaseRoom from './CaseRoom';
 import { SETUPS, setupOf, sectionFromHash, type SectionId } from './scenes';
 import Cursor from './Cursor';
 import {
-  paperAt, readBackdrop, readClick, readCursor, readIntensity, readPaperness,
-  readSoundPack, readTexture, save,
+  paperAt, readBackdrop, readCursor, readIntensity, readPaperness,
+  readSound, readTexture, save,
   INTENSITY, PAPERNESS,
 } from './theme';
 import type { ThemeState } from './BackdropPicker';
 import { useSwipeRooms } from './useSwipeRooms';
-import { cue, initSound, setClick, setPack } from './titleSound';
+import { cue, initSound, setSound } from './titleSound';
 import './nova3.css';
 
 /**
@@ -35,7 +35,6 @@ export default function Stage() {
   const [caseSlug, setCaseSlug] = useState<string | null>(null);
   const [cutting, setCutting] = useState(false);
   const cutTimer = useRef(0);
-  const hoverRef = useRef<HTMLElement | null>(null);
   const stageRef = useRef<HTMLElement | null>(null);
   const [scrolled, setScrolled] = useState(false);
 
@@ -49,8 +48,7 @@ export default function Stage() {
   const [theme, setTheme] = useState<ThemeState>(() => ({
     backdrop: readBackdrop(),
     texture: readTexture(),
-    sound: readSoundPack(),
-    click: readClick(),
+    sound: readSound(),
     cursor: readCursor(),
     intensity: readIntensity(),
     paperness: readPaperness(),
@@ -60,23 +58,22 @@ export default function Stage() {
     setTheme((cur) => {
       const next = { ...cur, ...patch };
       for (const [k, v] of Object.entries(patch)) {
-        save(k === 'sound' ? 'soundpack' : k, v as string | number);
+        if (k === 'sound') continue; // setSound persists it and ramps the bus
+        save(k, v as string | number);
       }
-      if (patch.sound) setPack(patch.sound);
-      if (patch.click) setClick(patch.click);
+      if (patch.sound !== undefined) setSound(patch.sound);
       return next;
     });
   }, []);
 
   const resetTheme = useCallback(() => {
     const d: ThemeState = {
-      backdrop: 'wash', texture: 'fine', sound: 'soft', click: 'hollow',
+      backdrop: 'wash', texture: 'fine', sound: true,
       cursor: 'system', intensity: INTENSITY.def, paperness: PAPERNESS.def,
     };
     setTheme(d);
-    for (const [k, v] of Object.entries(d)) save(k === 'sound' ? 'soundpack' : k, v);
-    setPack(d.sound);
-    setClick(d.click);
+    for (const [k, v] of Object.entries(d)) if (k !== 'sound') save(k, v as string | number);
+    setSound(d.sound);
   }, []);
 
   const setup = setupOf(id);
@@ -90,7 +87,6 @@ export default function Stage() {
        * keeps the site quick to use; slow light is what makes the speed feel
        * directed rather than abrupt.
        */
-      cue('move');
       setCutting(true);
       window.clearTimeout(cutTimer.current);
       cutTimer.current = window.setTimeout(() => setCutting(false), 170);
@@ -147,20 +143,8 @@ export default function Stage() {
     if (!root) return;
     const hit = (e: Event) => (e.target as HTMLElement)?.closest?.('button, a, .n3-link');
     const onDown = (e: Event) => { if (hit(e)) cue('tap'); };
-    const onOver = (e: Event) => {
-      const el = hit(e);
-      // `pointerover` fires again for every child element under the cursor,
-      // so without this the tick repeats as the pointer crosses an icon
-      // inside the button it is already on.
-      if (el && el !== hoverRef.current) { hoverRef.current = el as HTMLElement; cue('hover'); }
-      if (!el) hoverRef.current = null;
-    };
     root.addEventListener('pointerdown', onDown);
-    root.addEventListener('pointerover', onOver);
-    return () => {
-      root.removeEventListener('pointerdown', onDown);
-      root.removeEventListener('pointerover', onOver);
-    };
+    return () => root.removeEventListener('pointerdown', onDown);
   }, []);
 
   useEffect(() => {

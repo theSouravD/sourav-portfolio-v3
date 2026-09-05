@@ -21,6 +21,7 @@ import type { CursorId } from './theme';
 export default function Cursor({ mode, accent }: { mode: CursorId; accent: string }) {
   const dot = useRef<HTMLDivElement>(null);
   const ring = useRef<HTMLDivElement>(null);
+  const trail = useRef<HTMLDivElement>(null);
   const frame = useRef(0);
 
   useEffect(() => {
@@ -32,34 +33,72 @@ export default function Cursor({ mode, accent }: { mode: CursorId; accent: strin
     const p = { x: innerWidth / 2, y: innerHeight / 2 };
     const r = { x: p.x, y: p.y };
     let over = false;
+    // Where the trail's segments have been. Fixed length, written round —
+    // pushing and shifting an array sixty times a second is garbage the
+    // collector then has to chase during the animation.
+    const tail = Array.from({ length: 6 }, () => ({ x: p.x, y: p.y }));
 
     const onMove = (e: PointerEvent) => {
       p.x = e.clientX;
       p.y = e.clientY;
       over = !!(e.target as HTMLElement)?.closest?.('button, a, input, .n3-link');
     };
-    const onLeave = () => {
-      if (dot.current) dot.current.style.opacity = '0';
-      if (ring.current) ring.current.style.opacity = '0';
+    const fade = (o: string) => {
+      if (dot.current) dot.current.style.opacity = o;
+      if (ring.current) ring.current.style.opacity = o;
+      if (trail.current) trail.current.style.opacity = o;
     };
-    const onEnter = () => {
-      if (dot.current) dot.current.style.opacity = '1';
-      if (ring.current) ring.current.style.opacity = '1';
-    };
+    const onLeave = () => fade('0');
+    const onEnter = () => fade('1');
 
     const tick = () => {
-      // The ring eases; the dot does not. Two different follow rates is what
-      // gives the pair any sense of weight at all.
+      // The follower eases; the dot does not. Two different follow rates is
+      // what gives the pair any sense of weight at all.
       r.x += (p.x - r.x) * 0.18;
       r.y += (p.y - r.y) * 0.18;
+
       if (dot.current) {
         dot.current.style.transform = `translate3d(${p.x}px, ${p.y}px, 0) translate(-50%, -50%)`;
       }
+
       if (ring.current) {
-        const k = over ? 1.9 : 1;
-        ring.current.style.transform =
-          `translate3d(${r.x}px, ${r.y}px, 0) translate(-50%, -50%) scale(${k})`;
+        if (mode === 'crosshair') {
+          // Two rules the width and height of the frame. They track the exact
+          // pointer, not the eased one — a crosshair that lags is a crosshair
+          // that is pointing at the wrong thing.
+          ring.current.style.setProperty('--cx', `${p.x}px`);
+          ring.current.style.setProperty('--cy', `${p.y}px`);
+        } else if (mode === 'blade') {
+          // An edit playhead: it leans into the direction of travel and snaps
+          // upright when the pointer stops, which is the whole gesture.
+          const lean = Math.max(-14, Math.min(14, (p.x - r.x) * 0.9));
+          ring.current.style.transform =
+            `translate3d(${r.x}px, ${r.y}px, 0) translate(-50%, -50%) rotate(${lean}deg) scaleY(${over ? 1.35 : 1})`;
+        } else {
+          const k = over ? 1.9 : 1;
+          ring.current.style.transform =
+            `translate3d(${r.x}px, ${r.y}px, 0) translate(-50%, -50%) scale(${k})`;
+        }
       }
+
+      if (mode === 'trail') {
+        // Each segment chases the one in front of it, so the tail bends
+        // through the path rather than being a straight line of copies.
+        tail[0].x += (p.x - tail[0].x) * 0.5;
+        tail[0].y += (p.y - tail[0].y) * 0.5;
+        for (let i = 1; i < tail.length; i += 1) {
+          tail[i].x += (tail[i - 1].x - tail[i].x) * 0.42;
+          tail[i].y += (tail[i - 1].y - tail[i].y) * 0.42;
+        }
+        const nodes = trail.current?.children;
+        if (nodes) {
+          for (let i = 0; i < nodes.length; i += 1) {
+            (nodes[i] as HTMLElement).style.transform =
+              `translate3d(${tail[i].x}px, ${tail[i].y}px, 0) translate(-50%, -50%)`;
+          }
+        }
+      }
+
       frame.current = requestAnimationFrame(tick);
     };
     frame.current = requestAnimationFrame(tick);
@@ -93,12 +132,19 @@ export default function Cursor({ mode, accent }: { mode: CursorId; accent: strin
 
   return (
     <>
-      {mode === 'dot' && <div ref={dot} className="n3-cur-dot" aria-hidden />}
-      {mode === 'ring' && (
-        <>
-          <div ref={dot} className="n3-cur-dot is-small" aria-hidden />
-          <div ref={ring} className="n3-cur-ring" aria-hidden />
-        </>
+      {(mode === 'dot' || mode === 'ring' || mode === 'halo' || mode === 'crosshair') && (
+        <div ref={dot} className={`n3-cur-dot ${mode === 'dot' ? '' : 'is-small'}`} aria-hidden />
+      )}
+      {mode === 'ring' && <div ref={ring} className="n3-cur-ring" aria-hidden />}
+      {mode === 'halo' && <div ref={ring} className="n3-cur-halo" aria-hidden />}
+      {mode === 'blade' && <div ref={ring} className="n3-cur-blade" aria-hidden />}
+      {mode === 'crosshair' && <div ref={ring} className="n3-cur-cross" aria-hidden />}
+      {mode === 'trail' && (
+        <div ref={trail} className="n3-cur-trail" aria-hidden>
+          {Array.from({ length: 6 }, (_, i) => (
+            <span key={i} style={{ opacity: 1 - i * 0.15, scale: `${1 - i * 0.13}` }} />
+          ))}
+        </div>
       )}
     </>
   );

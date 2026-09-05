@@ -2,10 +2,9 @@ import { memo } from 'react';
 import SoftAurora from '@/reactbits/SoftAurora';
 import Aurora from '@/reactbits/Aurora';
 import Topography from '@/reactbits/Topography';
-import Particles from '@/reactbits/Particles';
 import type { Setup } from './scenes';
 import {
-  auroraProps, contourProps, motesProps, washProps,
+  auroraProps, contourProps, washProps,
   type BackdropId,
 } from './theme';
 
@@ -29,18 +28,14 @@ function BackdropInner({ id, setup, k }: { id: BackdropId; setup: Setup; k: numb
       return <Aurora {...(auroraProps(setup, k) as any)} />;
     case 'contour':
       return <Topography {...(contourProps(setup, k) as any)} />;
-    case 'motes':
-      return <Particles {...(motesProps(setup, k) as any)} />;
 
     /*
-     * Mesh and Dots are drawn by CSS from the room's own custom properties, so
-     * they re-gel with everything else for free and there is nothing to
-     * render. `--k` carries the intensity into the stylesheet.
+     * Mesh is drawn by CSS from the room's own custom properties, so it
+     * re-gels with everything else for free and there is nothing to render.
+     * `--k` carries the intensity into the stylesheet.
      */
     case 'mesh':
       return <div className="n3-mesh" style={{ ['--k' as string]: k }} />;
-    case 'dots':
-      return <div className="n3-dots" style={{ ['--k' as string]: k }} />;
 
     case 'paper':
       // Deliberately nothing.

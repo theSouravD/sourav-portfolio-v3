@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import {
-  BACKDROPS, CLICKS, CURSORS, INTENSITY, PAPERNESS, SOUNDS, TEXTURES,
-  type BackdropId, type ClickId, type CursorId, type SoundId, type TextureId,
+  BACKDROPS, CURSORS, INTENSITY, PAPERNESS, TEXTURES,
+  type BackdropId, type CursorId, type TextureId,
 } from './theme';
 
 /**
@@ -24,8 +24,7 @@ type Tab = 'ground' | 'sound' | 'cursor';
 export interface ThemeState {
   backdrop: BackdropId;
   texture: TextureId;
-  sound: SoundId;
-  click: ClickId;
+  sound: boolean;
   cursor: CursorId;
   intensity: number;
   paperness: number;
@@ -149,14 +148,26 @@ export default function BackdropPicker({
 
             {tab === 'sound' && (
               <>
-                {/* The click comes first: it is the cue you hear most, and
-                    every option in this list is audible the moment you pick
-                    it, because picking it is a click. */}
-                <p className="n3-pick-head">Click</p>
-                {list(CLICKS, state.click, (click) => onChange({ click }))}
-
-                <p className="n3-pick-head">Everything else</p>
-                {list(SOUNDS, state.sound, (sound) => onChange({ sound }))}
+                {/*
+                  A switch, not a menu. The site makes sound twice — the title
+                  on arrival and a click when you press something — and a panel
+                  offering five flavours of that makes its own options feel more
+                  important than they are.
+                */}
+                <p className="n3-pick-head">Sound</p>
+                <button
+                  type="button"
+                  className={`n3-toggle ${state.sound ? 'is-on' : ''}`}
+                  role="switch"
+                  aria-checked={state.sound}
+                  onClick={() => onChange({ sound: !state.sound })}
+                >
+                  <span>
+                    <strong>{state.sound ? 'On' : 'Off'}</strong>
+                    <em>Title on arrival, and a click on press</em>
+                  </span>
+                  <i />
+                </button>
                 <p className="n3-pick-note">
                   Nothing plays until you first click the page — every browser
                   blocks audio before that.
