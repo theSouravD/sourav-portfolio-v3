@@ -97,18 +97,33 @@ export const CLICKS: { id: ClickId; label: string; note: string }[] = [
  * CURSOR
  * ================================================================ */
 
-export type CursorId =
-  | 'system' | 'dot' | 'ring' | 'trail' | 'crosshair' | 'blade' | 'halo' | 'target';
+/**
+ * THE HAND-WRITTEN CURSORS ARE GONE.
+ *
+ * Dot, Ring, Trail, Blade and Halo were five versions of one idea — a small
+ * shape chased after the pointer — and that idea has a ceiling: the real
+ * pointer is drawn by the compositor and is never late, so anything drawn in
+ * JavaScript is always a frame behind it. A follower is then only as good as
+ * the excuse it has for lagging, and five variations on "slightly behind" is
+ * four too many.
+ *
+ * These have reasons to exist. Crosshair and Target respond to what you are
+ * pointing AT rather than merely following it. Blob, Ribbons and Splash are
+ * MADE of the lag — the trailing is the effect, so being behind the pointer
+ * is the point rather than the flaw.
+ *
+ * They are not the same weight, and the notes say so: Splash runs a live
+ * fluid simulation and is by far the most expensive thing on the site.
+ */
+export type CursorId = 'system' | 'crosshair' | 'target' | 'blob' | 'ribbons' | 'splash';
 
 export const CURSORS: { id: CursorId; label: string; note: string }[] = [
   { id: 'system',    label: 'System',    note: "The visitor's own pointer" },
-  { id: 'dot',       label: 'Dot',       note: 'A small accent dot, exact' },
-  { id: 'ring',      label: 'Ring',      note: 'Dot plus an outline that swells' },
-  { id: 'trail',     label: 'Trail',     note: 'A short fading tail behind the dot' },
-  { id: 'crosshair', label: 'Crosshair', note: 'Thin rules across the whole frame' },
-  { id: 'blade',     label: 'Blade',     note: 'An edit playhead, snaps upright' },
-  { id: 'halo',      label: 'Halo',      note: 'A soft bloom in the room colour' },
+  { id: 'crosshair', label: 'Crosshair', note: 'Rules across the frame, with drift' },
   { id: 'target',    label: 'Target',    note: 'Four corners that frame a target' },
+  { id: 'blob',      label: 'Blob',      note: 'A gooey follower in the room colour' },
+  { id: 'ribbons',   label: 'Ribbons',   note: 'Streamers that trail the pointer' },
+  { id: 'splash',    label: 'Splash',    note: 'Fluid that parts as you move — heavy' },
 ];
 
 /* ================================================================

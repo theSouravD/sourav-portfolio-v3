@@ -1244,31 +1244,25 @@
 /* ==================================================================
  * CURSORS
  *
- * Drawn on `transform` in a rAF loop, never `left`/`top` — one lays out every
- * frame, the other composites. `pointer-events: none` is not optional: a
- * cursor element under the pointer would swallow every click on the site.
+ * Every option is a React Bits component now, so this is only the frame they
+ * live in: full-bleed, above the page, and transparent to the pointer.
+ * `pointer-events: none` is not optional — a layer sitting under the cursor
+ * would swallow every click on the site.
  * ================================================================== */
-.n3-nocursor, .n3-nocursor * { cursor: none !important; }
-.n3-cur-dot, .n3-cur-ring {
-  position: fixed; top: 0; left: 0; z-index: 90; pointer-events: none;
-  will-change: transform;
-  transition: opacity 200ms var(--ease);
+.n3-cursor-layer {
+  position: fixed; inset: 0; z-index: 90; pointer-events: none;
 }
-.n3-cur-dot {
-  width: 9px; height: 9px; border-radius: 50%;
-  background: var(--accent);
-}
-.n3-cur-dot.is-small { width: 5px; height: 5px; }
-.n3-cur-ring {
-  width: 30px; height: 30px; border-radius: 50%;
-  border: 1.4px solid color-mix(in srgb, var(--accent) 62%, transparent);
-}
-/* A custom cursor is meaningless on touch, and hiding the real one there
-   would leave nothing at all. */
-@media (pointer: coarse) {
-  .n3-cur-dot, .n3-cur-ring { display: none; }
-  .n3-nocursor, .n3-nocursor * { cursor: auto !important; }
-}
+/* The vendored components size themselves to their container, and several
+   ship a `position: relative` wrapper that would otherwise collapse. */
+.n3-cursor-layer > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+.n3-cursor-layer canvas { display: block; width: 100% !important; height: 100% !important; }
+/* Crosshair draws its own lines fixed to the viewport; its wrapper must not
+   clip them. */
+.n3-cursor-layer .crosshair-line { pointer-events: none; }
+
+/* Only Target hides the system pointer, and it does that itself. The other
+   options sit ON TOP of the real cursor rather than replacing it, which is
+   what keeps them honest about latency. */
 
 /* ---- the sound switch ---- */
 .n3-toggle {
@@ -1296,61 +1290,6 @@
 }
 .n3-toggle.is-on i { background: var(--accent); }
 .n3-toggle.is-on i::after { transform: translateX(14px); }
-
-/* ---- the extra cursors ---- */
-/* A soft bloom rather than a shape. It is the one cursor that is atmosphere
-   instead of a pointer, so it eases and never sharpens on a target. */
-.n3-cur-halo {
-  position: fixed; top: 0; left: 0; z-index: 89; pointer-events: none;
-  width: 190px; height: 190px; border-radius: 50%;
-  background: radial-gradient(circle,
-    color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 68%);
-  will-change: transform;
-  transition: opacity 200ms var(--ease);
-}
-/* An edit playhead. The lean is written from JS; the height and colour are
-   here so it stays graded with the room. */
-.n3-cur-blade {
-  position: fixed; top: 0; left: 0; z-index: 90; pointer-events: none;
-  width: 2px; height: 26px; border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
-  will-change: transform;
-  transition: opacity 200ms var(--ease);
-}
-/*
- * Two rules across the whole frame, positioned from `--cx`/`--cy`. Drawn as
- * gradients on ONE element rather than as two positioned divs, so the pair
- * cannot ever disagree about where the pointer is.
- */
-.n3-cur-cross {
-  position: fixed; inset: 0; z-index: 89; pointer-events: none;
-  --cx: 50%; --cy: 50%;
-  background:
-    linear-gradient(to right,
-      transparent calc(var(--cx) - 0.5px),
-      color-mix(in srgb, var(--accent) 34%, transparent) calc(var(--cx) - 0.5px),
-      color-mix(in srgb, var(--accent) 34%, transparent) calc(var(--cx) + 0.5px),
-      transparent calc(var(--cx) + 0.5px)),
-    linear-gradient(to bottom,
-      transparent calc(var(--cy) - 0.5px),
-      color-mix(in srgb, var(--accent) 34%, transparent) calc(var(--cy) - 0.5px),
-      color-mix(in srgb, var(--accent) 34%, transparent) calc(var(--cy) + 0.5px),
-      transparent calc(var(--cy) + 0.5px));
-  transition: opacity 200ms var(--ease);
-}
-/* Six segments, each chasing the one in front. Sized and faded by inline
-   style so the falloff is one expression rather than six rules. */
-.n3-cur-trail { position: fixed; inset: 0; z-index: 90; pointer-events: none;
-  transition: opacity 200ms var(--ease); }
-.n3-cur-trail span {
-  position: fixed; top: 0; left: 0;
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--accent); will-change: transform;
-}
-@media (pointer: coarse) {
-  .n3-cur-halo, .n3-cur-blade, .n3-cur-cross, .n3-cur-trail { display: none; }
-}
 
 /* Disabled rather than hidden: a control that vanishes leaves you wondering
    whether you imagined it, where a greyed one tells you what to turn on. */
