@@ -2,12 +2,10 @@ import { memo } from 'react';
 import SoftAurora from '@/reactbits/SoftAurora';
 import Aurora from '@/reactbits/Aurora';
 import Topography from '@/reactbits/Topography';
-import Grainient from '@/reactbits/Grainient';
-import Threads from '@/reactbits/Threads';
 import Particles from '@/reactbits/Particles';
 import type { Setup } from './scenes';
 import {
-  auroraProps, contourProps, gradientProps, motesProps, threadsProps, washProps,
+  auroraProps, contourProps, motesProps, washProps,
   type BackdropId,
 } from './theme';
 
@@ -31,10 +29,6 @@ function BackdropInner({ id, setup, k }: { id: BackdropId; setup: Setup; k: numb
       return <Aurora {...(auroraProps(setup, k) as any)} />;
     case 'contour':
       return <Topography {...(contourProps(setup, k) as any)} />;
-    case 'gradient':
-      return <Grainient {...(gradientProps(setup, k) as any)} />;
-    case 'threads':
-      return <Threads {...(threadsProps(setup, k) as any)} />;
     case 'motes':
       return <Particles {...(motesProps(setup, k) as any)} />;
 

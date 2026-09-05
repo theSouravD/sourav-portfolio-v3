@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import {
-  BACKDROPS, CURSORS, INTENSITY, PAPERNESS, SOUNDS, TEXTURES,
-  type BackdropId, type CursorId, type SoundId, type TextureId,
+  BACKDROPS, CLICKS, CURSORS, INTENSITY, PAPERNESS, SOUNDS, TEXTURES,
+  type BackdropId, type ClickId, type CursorId, type SoundId, type TextureId,
 } from './theme';
 
 /**
@@ -25,6 +25,7 @@ export interface ThemeState {
   backdrop: BackdropId;
   texture: TextureId;
   sound: SoundId;
+  click: ClickId;
   cursor: CursorId;
   intensity: number;
   paperness: number;
@@ -148,7 +149,13 @@ export default function BackdropPicker({
 
             {tab === 'sound' && (
               <>
-                <p className="n3-pick-head">Sound</p>
+                {/* The click comes first: it is the cue you hear most, and
+                    every option in this list is audible the moment you pick
+                    it, because picking it is a click. */}
+                <p className="n3-pick-head">Click</p>
+                {list(CLICKS, state.click, (click) => onChange({ click }))}
+
+                <p className="n3-pick-head">Everything else</p>
                 {list(SOUNDS, state.sound, (sound) => onChange({ sound }))}
                 <p className="n3-pick-note">
                   Nothing plays until you first click the page — every browser

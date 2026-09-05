@@ -19,8 +19,8 @@ import { PAPER } from './scenes';
  * ================================================================ */
 
 export type BackdropId =
-  | 'wash' | 'aurora' | 'contour' | 'gradient'
-  | 'threads' | 'motes' | 'mesh' | 'dots' | 'paper';
+  | 'wash' | 'aurora' | 'contour'
+  | 'motes' | 'mesh' | 'dots' | 'paper';
 
 export interface BackdropDef {
   id: BackdropId;
@@ -34,8 +34,6 @@ export const BACKDROPS: BackdropDef[] = [
   { id: 'wash',     label: 'Wash',     note: 'Soft aurora across the paper' },
   { id: 'aurora',   label: 'Ribbon',   note: 'One band of colour, drifting' },
   { id: 'contour',  label: 'Contour',  note: 'Topographic lines, morphing' },
-  { id: 'gradient', label: 'Gradient', note: 'Warped colour field, near-still' },
-  { id: 'threads',  label: 'Threads',  note: 'A field of drawn lines' },
   { id: 'motes',    label: 'Motes',    note: 'Drifting particles, very quiet' },
   { id: 'mesh',     label: 'Mesh',     note: 'Soft colour blooms — no shader', cheap: true },
   { id: 'dots',     label: 'Dots',     note: 'A printed dot field — no shader', cheap: true },
@@ -64,6 +62,26 @@ export const SOUNDS: { id: SoundId; label: string; note: string }[] = [
   { id: 'mech',   label: 'Mech',   note: 'Crisper, more mechanical' },
   { id: 'airy',   label: 'Airy',   note: 'Breathy, pitched a little' },
   { id: 'sparse', label: 'Sparse', note: 'Clicks and moves only — no hover' },
+];
+
+/**
+ * THE CLICK IS ITS OWN CONTROL.
+ *
+ * It was folded into the pack, and that was wrong twice over. Practically,
+ * the click is the cue you hear most and the one worth auditioning on its
+ * own — changing the pack to hear a different click also changed the hover
+ * and the transition, so nothing could be compared. Conceptually they are
+ * different things: the pack is the site's ambient character, the click is
+ * the response to a press.
+ */
+export type ClickId = 'hollow' | 'tick' | 'snap' | 'pop' | 'none';
+
+export const CLICKS: { id: ClickId; label: string; note: string }[] = [
+  { id: 'hollow', label: 'Hollow', note: 'A soft woody knock' },
+  { id: 'tick',   label: 'Tick',   note: 'Dry and high — a keyswitch' },
+  { id: 'snap',   label: 'Snap',   note: 'Sharp, with a bright tail' },
+  { id: 'pop',    label: 'Pop',    note: 'Low and round, almost no attack' },
+  { id: 'none',   label: 'None',   note: 'Silent on press' },
 ];
 
 /* ================================================================
@@ -175,51 +193,6 @@ export function contourProps(s: Setup, k: number) {
   };
 }
 
-export function gradientProps(s: Setup, k: number) {
-  return {
-    color1: PAPER,
-    color2: s.wash,
-    color3: s.fill,
-    timeSpeed: 0.1,
-    // Weighted hard toward the paper — at 0.72 the gels won and the whole
-    // page went green. Intensity moves this balance rather than an opacity,
-    // so turning it up brings the gels forward instead of just darkening.
-    colorBalance: 1 - 0.1 * k,
-    warpStrength: 0.45,
-    warpFrequency: 1,
-    warpSpeed: 0.12,
-    warpAmplitude: 0.45,
-    blendSoftness: 0.95,
-    noiseScale: 1.1,
-    // Its own grain is better than the page's here: applied before the colour
-    // is flattened rather than multiplied over the top.
-    grainAmount: 0.05,
-    grainScale: 1.4,
-    grainAnimated: false,
-    contrast: 0.7,
-    gamma: 1.12,
-    saturation: 0.34 * k,
-    zoom: 1.3,
-  };
-}
-
-/** Threads takes a colour as 0..1 RGB rather than a hex string. */
-export function threadsProps(s: Setup, k: number) {
-  const h = s.accent.replace('#', '');
-  const n = parseInt(h, 16);
-  const rgb: [number, number, number] = [
-    ((n >> 16) & 255) / 255,
-    ((n >> 8) & 255) / 255,
-    (n & 255) / 255,
-  ];
-  return {
-    color: rgb,
-    amplitude: 0.9 * k,
-    distance: 0.35,
-    enableMouseInteraction: true,
-  };
-}
-
 export function motesProps(s: Setup, k: number) {
   return {
     particleColors: [s.wash, s.fill, s.accent],
@@ -283,6 +256,8 @@ export const readTexture = () =>
   read('texture', TEXTURES.map((t) => t.id), 'fine');
 export const readSoundPack = () =>
   read('soundpack', SOUNDS.map((s) => s.id), 'soft');
+export const readClick = () =>
+  read('click', CLICKS.map((c) => c.id), 'hollow');
 export const readCursor = () =>
   read('cursor', CURSORS.map((c) => c.id), 'system');
 export const readIntensity = () =>

@@ -23,9 +23,12 @@ import { profile } from '@/data/content';
 export default function Nav({
   active,
   onGo,
+  themeControl,
 }: {
   active: SectionId;
   onGo: (id: SectionId) => void;
+  /** The theme centre, rendered inside the bar beside Resume. */
+  themeControl?: React.ReactNode;
 }) {
   return (
     <nav className="n3-nav" aria-label="Sections">
@@ -59,9 +62,12 @@ export default function Nav({
         ))}
       </ul>
 
-      <a className="n3-cv" href={profile.resumeUrl} download>
-        Resume
-      </a>
+      <div className="n3-nav-end">
+        <a className="n3-cv" href={profile.resumeUrl} download>
+          Resume
+        </a>
+        {themeControl}
+      </div>
     </nav>
   );
 }

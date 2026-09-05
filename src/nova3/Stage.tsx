@@ -7,13 +7,13 @@ import CaseRoom from './CaseRoom';
 import { SETUPS, setupOf, sectionFromHash, type SectionId } from './scenes';
 import Cursor from './Cursor';
 import {
-  paperAt, readBackdrop, readCursor, readIntensity, readPaperness,
+  paperAt, readBackdrop, readClick, readCursor, readIntensity, readPaperness,
   readSoundPack, readTexture, save,
   INTENSITY, PAPERNESS,
 } from './theme';
 import type { ThemeState } from './BackdropPicker';
 import { useSwipeRooms } from './useSwipeRooms';
-import { cue, initSound, setPack } from './titleSound';
+import { cue, initSound, setClick, setPack } from './titleSound';
 import './nova3.css';
 
 /**
@@ -50,6 +50,7 @@ export default function Stage() {
     backdrop: readBackdrop(),
     texture: readTexture(),
     sound: readSoundPack(),
+    click: readClick(),
     cursor: readCursor(),
     intensity: readIntensity(),
     paperness: readPaperness(),
@@ -62,18 +63,20 @@ export default function Stage() {
         save(k === 'sound' ? 'soundpack' : k, v as string | number);
       }
       if (patch.sound) setPack(patch.sound);
+      if (patch.click) setClick(patch.click);
       return next;
     });
   }, []);
 
   const resetTheme = useCallback(() => {
     const d: ThemeState = {
-      backdrop: 'wash', texture: 'fine', sound: 'soft', cursor: 'system',
-      intensity: INTENSITY.def, paperness: PAPERNESS.def,
+      backdrop: 'wash', texture: 'fine', sound: 'soft', click: 'hollow',
+      cursor: 'system', intensity: INTENSITY.def, paperness: PAPERNESS.def,
     };
     setTheme(d);
     for (const [k, v] of Object.entries(d)) save(k === 'sound' ? 'soundpack' : k, v);
     setPack(d.sound);
+    setClick(d.click);
   }, []);
 
   const setup = setupOf(id);
@@ -229,7 +232,19 @@ export default function Stage() {
         <div className="n3-vig" />
       </div>
 
-      <Nav active={id} onGo={(next) => go(next)} />
+      {/*
+        The theme control lives in the bar next to Resume rather than floating
+        in a corner. A settings affordance belongs with the other chrome; on
+        its own over the page it read as a stray element, and on Contact it
+        sat on top of the content.
+      */}
+      <Nav
+        active={id}
+        onGo={(next) => go(next)}
+        themeControl={
+          <BackdropPicker state={theme} onChange={patchTheme} onReset={resetTheme} />
+        }
+      />
 
       <main ref={stageRef} className={`n3-stage ${cutting ? 'is-cutting' : ''}`}>
         <div key={caseSlug ?? id} className="n3-cut">
@@ -239,7 +254,6 @@ export default function Stage() {
         </div>
       </main>
 
-      <BackdropPicker state={theme} onChange={patchTheme} onReset={resetTheme} />
       <Cursor mode={theme.cursor} accent={setup.accent} />
 
       <p className="n3-slug">

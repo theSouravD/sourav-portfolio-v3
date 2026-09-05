@@ -21,13 +21,14 @@
  * are quieter than clicks because they happen ten times as often.
  */
 
-import type { SoundId } from './theme';
-import { readSoundPack, save } from './theme';
+import type { ClickId, SoundId } from './theme';
+import { readClick, readSoundPack, save } from './theme';
 
 let ctx: AudioContext | null = null;
 let bus: GainNode | null = null;
 let armed = false;
 let pack: SoundId = 'soft';
+let click: ClickId = 'hollow';
 
 function ac(): AudioContext | null {
   if (typeof window === 'undefined' || !armed || pack === 'off') return null;
@@ -100,6 +101,39 @@ function noise(c: AudioContext, at: number, gain: number, freq: number, len = 0.
   src.stop(at + len + 0.02);
 }
 
+/**
+ * A struck resonant body — the hollow knock.
+ *
+ * What makes a sound "hollow" is a short excitation ringing in a narrow
+ * resonance: knuckle on a door, a wood block. So this is a noise burst (the
+ * strike) fed through a very high-Q bandpass (the cavity) that is swept down
+ * slightly as it decays, which is what a real body does as its energy leaves.
+ * A plain sine would be a beep; the resonance is the whole character.
+ */
+function knock(c: AudioContext, at: number, freq: number, gain: number, len = 0.16) {
+  const n = Math.floor(c.sampleRate * 0.02);
+  const buf = c.createBuffer(1, n, c.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i += 1) d[i] = (Math.random() * 2 - 1) * (1 - i / n) ** 2;
+
+  const src = c.createBufferSource();
+  src.buffer = buf;
+
+  const body = c.createBiquadFilter();
+  body.type = 'bandpass';
+  body.Q.value = 14;
+  body.frequency.setValueAtTime(freq, at);
+  body.frequency.exponentialRampToValueAtTime(freq * 0.82, at + len);
+
+  const g = c.createGain();
+  g.gain.setValueAtTime(gain, at);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+
+  src.connect(body).connect(g).connect(bus!);
+  src.start(at);
+  src.stop(at + len + 0.02);
+}
+
 /** A short sine blip. Used sparingly — pitch is what makes UI sound cute. */
 function blip(c: AudioContext, at: number, from: number, to: number, gain: number, len: number) {
   const osc = c.createOscillator();
@@ -148,18 +182,33 @@ export function cue(kind: Cue) {
     return;
   }
 
+  /*
+   * The press. Chosen independently of the pack, because it is the cue you
+   * hear most and the one worth auditioning on its own.
+   */
   if (kind === 'tap') {
-    if (pack === 'mech') {
-      // Two bursts a few milliseconds apart — the gap is what reads as a
-      // mechanism actuating rather than as one flat tick.
-      noise(c, t, 0.038, 4200, 0.009, 4.5);
-      noise(c, t + 0.008, 0.026, 9000, 0.006, 5);
-    } else if (pack === 'airy') {
-      noise(c, t, 0.022, 3000, 0.03, 1.2);
-      blip(c, t, 900, 1500, 0.02, 0.06);
-    } else {
-      noise(c, t, 0.03, 5200, 0.012, 3.2);
-      noise(c, t + 0.006, 0.018, 8200, 0.008, 4);
+    switch (click) {
+      case 'none':
+        break;
+      case 'hollow':
+        // Two resonances a fifth apart, the upper one quieter and shorter.
+        // One alone reads as a pitched beep; the pair reads as a body.
+        knock(c, t, 520, 0.13, 0.17);
+        knock(c, t + 0.004, 780, 0.05, 0.1);
+        break;
+      case 'tick':
+        noise(c, t, 0.03, 5200, 0.012, 3.2);
+        noise(c, t + 0.006, 0.018, 8200, 0.008, 4);
+        break;
+      case 'snap':
+        // The gap between the two bursts is what reads as a mechanism
+        // actuating rather than as one flat tick.
+        noise(c, t, 0.04, 4200, 0.008, 4.5);
+        noise(c, t + 0.007, 0.03, 9600, 0.006, 5);
+        break;
+      case 'pop':
+        knock(c, t, 240, 0.14, 0.13);
+        break;
     }
     return;
   }
@@ -217,6 +266,11 @@ export function playTitle(glyphs: number, stagger: number, delay = 0) {
 
 /* ---- the switch ---- */
 
+export function setClick(next: ClickId) {
+  click = next;
+  save('click', next);
+}
+
 export function setPack(next: SoundId) {
   pack = next;
   save('soundpack', next);
@@ -234,5 +288,6 @@ export function saveSound(on: boolean) { setPack(on ? 'soft' : 'off'); }
 /** Sync the module with stored state at startup. */
 export function initSound() {
   pack = readSoundPack();
+  click = readClick();
   armAudio();
 }

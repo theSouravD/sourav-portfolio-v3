@@ -217,7 +217,9 @@
     box-shadow: 0 -8px 24px -14px rgba(23,20,15,0.22);
     gap: 0;
   }
-  .n3-brand, .n3-cv { display: none; }
+  /* On a phone the bar is the six section links and nothing else — the
+     theme centre goes with the brand and the resume button. */
+  .n3-brand, .n3-nav-end { display: none; }
   .n3-links { margin: 0; width: 100%; justify-content: space-between; gap: 0; }
   .n3-link { padding: 7px 4px; font-size: 11px; }
   .n3-link i { left: 4px; right: 4px; bottom: 1px; }
@@ -267,12 +269,37 @@
  * full-bleed: content is clipped by the container's own bounds, so it can
  * never appear under the navigation and nothing has to be painted over it.
  */
+/*
+ * THE SOFT EDGES, WITHOUT A GRADIENT OVER THE BACKGROUND.
+ *
+ * Confining the content fixed the collision but left a guillotine: a line of
+ * body copy was cut dead at the boundary. The obvious repair is a paper ramp
+ * over the top, and that is exactly the thing that put a white band across a
+ * coloured ground last time.
+ *
+ * A MASK is the other tool, and it is the right one. It removes ALPHA from
+ * the content rather than painting anything on top, so the text dissolves as
+ * it approaches the edge while the background behind it is untouched. There
+ * is no band, because nothing is drawn — the pixels that would have been
+ * text simply stop being there.
+ *
+ * (The Lightbox renders through a portal, so it sits outside this element and
+ * the mask cannot clip it. That is worth knowing before adding anything else
+ * that needs to escape the stage.)
+ */
 .n3-stage {
   position: absolute; inset: var(--bar) 0 var(--floor) 0; z-index: 10;
   display: grid; justify-items: center; align-content: safe center;
   padding: 26px clamp(18px, 5vw, 56px) 30px;
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* 26px was still readable as an edge. At 42 the last line genuinely
+     dissolves rather than thinning. */
+  --fade: 42px;
+  -webkit-mask-image: linear-gradient(180deg,
+    transparent 0, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
+          mask-image: linear-gradient(180deg,
+    transparent 0, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
 }
 @media (max-width: 860px) {
   /* No bar at the top on a phone; the strip is at the bottom instead. */
@@ -847,8 +874,10 @@
 /* ==================================================================
  * BACKGROUND PICKER
  * ================================================================== */
-.n3-pick { position: absolute; z-index: 30; right: clamp(14px, 3vw, 28px); bottom: 14px; }
-@media (max-width: 860px) { .n3-pick { bottom: calc(64px + env(safe-area-inset-bottom)); } }
+/* In the bar beside Resume, not floating in a corner. A settings affordance
+   belongs with the other chrome. */
+.n3-nav-end { flex: none; display: flex; align-items: center; gap: 8px; }
+.n3-pick { position: relative; z-index: 30; }
 .n3-pick-btn {
   display: grid; place-items: center; width: 34px; height: 34px; cursor: pointer;
   border-radius: 50%; border: 1px solid var(--ink-22); color: var(--ink);
@@ -860,14 +889,15 @@
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 .n3-pick-panel {
-  position: absolute; right: 0; bottom: 44px; width: 272px;
+  position: absolute; right: 0; top: 42px; width: 272px;
   border-radius: 14px; overflow: hidden;
   background: #FFFDF9; border: 1px solid var(--rule);
   box-shadow: 0 24px 56px -18px rgba(23,20,15,0.34);
   animation: n3PickIn 220ms var(--ease) both;
 }
+/* Opens downward now that it hangs off the bar. */
 @keyframes n3PickIn {
-  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  from { opacity: 0; transform: translateY(-8px) scale(0.985); }
   to   { opacity: 1; transform: none; }
 }
 
