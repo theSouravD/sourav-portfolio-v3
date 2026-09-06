@@ -1332,53 +1332,63 @@
   pointer-events: none;
 }
 .n3-load-mark {
-  width: min(460px, 62vw);
+  /* Shrink-wrapped to the word, not to a fixed width. The flight scales the
+     mark's box onto the brand's box, so the box has to BE the word — a wider
+     container would land the letters short of where they belong. */
+  display: inline-block;
+  position: relative;
   /* The flight is one transform on one element. `transform-origin: center`
      keeps the scale from dragging the mark sideways as it shrinks. */
   transform-origin: center;
-  /* 700ms — must match FLY in Loader.tsx, which is what schedules the
-     handover and the removal against it. */
+  /* 700ms — must match FLY in Loader.tsx, which schedules the handover and
+     the removal against it. */
   transition: transform 700ms cubic-bezier(.62,.04,.24,1);
   will-change: transform;
+  /* Depth for the letters' rotateX. Without it they scale on Y instead of
+     tipping, which is the difference between type standing up and type being
+     squashed. The value is deliberately shallow: a strong perspective on a
+     wide word makes the outer letters skew. */
+  perspective: 620px;
 }
-.n3-load-svg { display: block; width: 100%; height: auto; overflow: visible; }
 
 /*
- * Stroke first, fill second. The outline draws on with a dashoffset, and the
- * fill arrives underneath a moment later — which is what reading as "written"
- * depends on: an outline that fills is a letter being made, where a shape
- * that fades is a letter being revealed.
+ * The word itself. It inherits the site's type rather than restating it, so
+ * it cannot drift from the brand it is going to become.
  */
-.n3-load-glyph {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 96px;
+.n3-load-word {
+  font-size: clamp(52px, 9vw, 104px);
   font-weight: 600;
-  letter-spacing: -0.04em;
-  fill: var(--ink);
-  stroke: var(--accent);
-  /* 1.1 was invisible in practice. A hairline around a 96px letterform reads
-     as an anti-aliasing artefact rather than as a line being drawn, and the
-     whole first second of the sequence is that line. */
-  stroke-width: 1.6;
-  /* A dasharray longer than any glyph's outline, so one offset animation
-     works for every letter without measuring each path. */
-  stroke-dasharray: 420;
-  /* 560ms — must match WRITE in Loader.tsx. The draw phase is sized from it,
-     so that the last letter is finished before anything moves. */
-  animation: n3Write 560ms cubic-bezier(.5,0,.2,1) both;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: var(--ink);
 }
-@keyframes n3Write {
-  0%   { stroke-dashoffset: 420; fill-opacity: 0; }
-  55%  { fill-opacity: 0; }
-  100% { stroke-dashoffset: 0; fill-opacity: 1; }
+/* SplitText's mask wrappers. `inline-block` is what gives each one a box to
+   clip against; without it the overflow rule has nothing to act on. */
+.n3-load-word .split-char { display: inline-block; will-change: transform; }
+
+/* The rule under the word. It wipes in from the left as the last letters
+   land, and it is drawn on the mark rather than on the page so it travels
+   with the word and shrinks with it. */
+.n3-load-rule {
+  position: absolute;
+  left: 0; right: 0; bottom: -0.16em;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: n3Rule 620ms cubic-bezier(.22,.7,.2,1) 340ms both;
 }
-/* On the way up the outline goes and only the solid word travels — a stroked
-   wordmark shrinking to 15px would just look furry. */
-.n3-load.is-flying .n3-load-glyph {
+@keyframes n3Rule {
+  from { transform: scaleX(0); opacity: 0.9; }
+  to   { transform: scaleX(1); opacity: 0.55; }
+}
+/* On the way up the rule goes: a 2px line scaling down to the brand's size
+   would land as a smear under the wordmark. */
+.n3-load.is-flying .n3-load-rule {
   animation: none;
-  stroke-opacity: 0;
-  fill-opacity: 1;
-  transition: stroke-opacity 260ms ease;
+  transform: scaleX(1);
+  opacity: 0;
+  transition: opacity 200ms ease;
 }
 /* Fades out over the last stretch of the flight, so the copy is thinnest
    exactly where it arrives — the swap happens under a dissolve rather than at

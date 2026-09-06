@@ -5,7 +5,6 @@ import Magnet from '@/reactbits/Magnet';
 import WorkflowPoster from './WorkflowPoster';
 import AutomationCase from '@/components/AutomationCase';
 import { automationProjects } from '@/data/work';
-import { automationContribution } from '@/data/content';
 
 /*
  * The entrances here are plain CSS reveals on a delay, not scroll triggers.
@@ -90,15 +89,11 @@ export default function CaseRoom({ slug, onBack }: { slug: string; onBack: () =>
         </div>
       </Reveal>
 
-      {/* Repeated on every case, not only on the index: these have their own
-          URLs, so somebody arriving at one directly would otherwise never see
-          where his work stopped and the tech team's began. */}
-      <Reveal delay={0.34}>
-        <aside className="n3-credit">
-          <p className="n3-credit-head n3-accent">{automationContribution.heading}</p>
-          <p>{automationContribution.body}</p>
-        </aside>
-      </Reveal>
+      {/* The contribution note lives once, on the Systems index. It was
+          repeated here on the theory that a case reached by its own URL would
+          otherwise never show it — but it covers all five workflows equally,
+          so restating it inside each one turned a scoping note into a
+          disclaimer the reader has to pass five times. */}
 
       <div className="n3-case-next">
         <span className="n3-eyebrow">Next case</span>
