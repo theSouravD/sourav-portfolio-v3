@@ -7,6 +7,7 @@ import CaseRoom from './CaseRoom';
 import { SETUPS, setupOf, sectionFromHash, type SectionId } from './scenes';
 import Cursor from './Cursor';
 import Loader from './Loader';
+import SafeLoader from './SafeLoader';
 import {
   paperAt, readBackdrop, readClick, readCursor, readIntensity, readPaperness,
   readSound, readTexture, save,
@@ -45,6 +46,25 @@ export default function Stage() {
    */
   const [booted, setBooted] = useState(false);
   const boot = useCallback(() => setBooted(true), []);
+
+  /*
+   * The dead-man's switch.
+   *
+   * Everything above is driven by the loader calling back, and the loader has
+   * its own failsafe, and the loader is wrapped in an error boundary. This is
+   * the third layer, and it exists because the failure it prevents is total:
+   * `booted` gates the room, so any path that leaves it false leaves the
+   * visitor on an empty page with the whole site one flag away. Three cheap
+   * guards against a blank portfolio is not paranoia; it is the correct price.
+   *
+   * 3.5s is comfortably past the longest legitimate sequence (~2.3s), so this
+   * never fires on a healthy load.
+   */
+  useEffect(() => {
+    if (booted) return;
+    const t = window.setTimeout(() => setBooted(true), 3500);
+    return () => clearTimeout(t);
+  }, [booted]);
 
   /*
    * Everything the theme centre controls, in one object.
@@ -248,7 +268,9 @@ export default function Stage() {
         gate tore the loader out roughly a third of the way through its own
         flight, and the wordmark blinked out in mid-air instead of arriving.
       */}
-      <Loader onDone={boot} />
+      <SafeLoader onFail={boot}>
+        <Loader onDone={boot} />
+      </SafeLoader>
 
       <p className="n3-slug">
         <span />
