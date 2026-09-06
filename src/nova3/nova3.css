@@ -1303,3 +1303,110 @@
 .n3-cursor-lines .magnetLines-container {
   width: 100%; height: 100%; opacity: 0.26;
 }
+
+/* ---- the contribution note ---- */
+.n3-credit {
+  max-width: 62ch; margin: 0 0 26px;
+  padding: 14px 16px; border-radius: 12px;
+  border: 1px solid var(--rule); border-left: 2px solid var(--accent);
+  background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(8px);
+}
+.n3-case-modules + * .n3-credit, .n3-case-room .n3-credit { margin: 0 0 30px; }
+.n3-credit-head {
+  margin: 0 0 5px; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+}
+.n3-credit p:last-child {
+  margin: 0; font-size: 12.5px; line-height: 1.65; color: var(--ink-70);
+}
+
+/* ==================================================================
+ * THE OPENING
+ *
+ * "Sourav." draws itself, then flies up and becomes the brand in the bar
+ * while the room assembles underneath. See Loader.tsx for the mechanics —
+ * this is only the look.
+ * ================================================================== */
+.n3-load {
+  position: fixed; inset: 0; z-index: 80;
+  display: grid; place-items: center;
+  pointer-events: none;
+}
+.n3-load-mark {
+  width: min(460px, 62vw);
+  /* The flight is one transform on one element. `transform-origin: center`
+     keeps the scale from dragging the mark sideways as it shrinks. */
+  transform-origin: center;
+  /* 700ms — must match FLY in Loader.tsx, which is what schedules the
+     handover and the removal against it. */
+  transition: transform 700ms cubic-bezier(.62,.04,.24,1);
+  will-change: transform;
+}
+.n3-load-svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/*
+ * Stroke first, fill second. The outline draws on with a dashoffset, and the
+ * fill arrives underneath a moment later — which is what reading as "written"
+ * depends on: an outline that fills is a letter being made, where a shape
+ * that fades is a letter being revealed.
+ */
+.n3-load-glyph {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 96px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  fill: var(--ink);
+  stroke: var(--accent);
+  /* 1.1 was invisible in practice. A hairline around a 96px letterform reads
+     as an anti-aliasing artefact rather than as a line being drawn, and the
+     whole first second of the sequence is that line. */
+  stroke-width: 1.6;
+  /* A dasharray longer than any glyph's outline, so one offset animation
+     works for every letter without measuring each path. */
+  stroke-dasharray: 420;
+  /* 560ms — must match WRITE in Loader.tsx. The draw phase is sized from it,
+     so that the last letter is finished before anything moves. */
+  animation: n3Write 560ms cubic-bezier(.5,0,.2,1) both;
+}
+@keyframes n3Write {
+  0%   { stroke-dashoffset: 420; fill-opacity: 0; }
+  55%  { fill-opacity: 0; }
+  100% { stroke-dashoffset: 0; fill-opacity: 1; }
+}
+/* On the way up the outline goes and only the solid word travels — a stroked
+   wordmark shrinking to 15px would just look furry. */
+.n3-load.is-flying .n3-load-glyph {
+  animation: none;
+  stroke-opacity: 0;
+  fill-opacity: 1;
+  transition: stroke-opacity 260ms ease;
+}
+/* Fades out over the last stretch of the flight, so the copy is thinnest
+   exactly where it arrives — the swap happens under a dissolve rather than at
+   a visible instant. */
+.n3-load.is-flying { transition: opacity 200ms ease 540ms; opacity: 0; }
+
+/*
+ * THE HANDOVER, AND THEN THE CASCADE.
+ *
+ * `is-booted` lands 340ms into the 700ms flight, so every delay below is
+ * measured from there, not from page load. The brand's own delay (200ms) puts
+ * its fade-in on top of the flying copy's fade-out: for ~200ms both are on
+ * screen at partial opacity in the same place, which is what makes one look
+ * like it became the other. Widening that gap in either direction is what
+ * produced the two failure modes worth naming — a blink where nothing is
+ * there, and a beat where the word is visibly duplicated.
+ *
+ * Then the rest of the bar arrives in order, after the room rather than
+ * before it: the chrome should feel like it settled around the content.
+ */
+.n3-brand-mark, .n3-links, .n3-nav-end { opacity: 0; }
+.n3.is-booted .n3-brand-mark { opacity: 1; transition: opacity 200ms ease 200ms; }
+.n3.is-booted .n3-links { opacity: 1; transition: opacity 420ms var(--ease) 420ms; }
+.n3.is-booted .n3-nav-end { opacity: 1; transition: opacity 420ms var(--ease) 560ms; }
+.n3-brand-dot { opacity: 0; }
+.n3.is-booted .n3-brand-dot { opacity: 1; transition: opacity 300ms ease 700ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .n3-load { display: none; }
+  .n3-brand-mark, .n3-links, .n3-nav-end, .n3-brand-dot { opacity: 1; }
+}

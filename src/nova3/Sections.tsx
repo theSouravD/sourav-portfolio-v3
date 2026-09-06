@@ -15,7 +15,7 @@ import WorkflowPoster from './WorkflowPoster';
 import { playTitle, readSound, saveSound } from './titleSound';
 import { Reveal } from './parts';
 import { glow, label, step } from './util';
-import { profile, stats, about, coreSkills, experience } from '@/data/content';
+import { profile, stats, about, coreSkills, experience, automationContribution } from '@/data/content';
 import { automationProjects, portfolioWork } from '@/data/work';
 import type { MediaItem } from '@/data/work';
 import { setupOf, type SectionId } from './scenes';
@@ -294,6 +294,22 @@ function Systems({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void
         title="Systems"
         note="Systems, not clips. Each one is a production pipeline a team runs without me."
         />
+
+      {/*
+        WHAT HE ACTUALLY DID, ON THE INDEX RATHER THAN BURIED.
+        This copy already existed in the data and nothing rendered it. It is
+        the most credible line on the page precisely because it draws the
+        boundary — POCs, research and evaluation his, production build the
+        tech team's — and a claim that names its own limits is worth more
+        than five cards that do not.
+      */}
+      <Reveal delay={0.16}>
+        <aside className="n3-credit">
+          <p className="n3-credit-head n3-accent">{automationContribution.heading}</p>
+          <p>{automationContribution.body}</p>
+        </aside>
+      </Reveal>
+
       <div className="n3-cases">
         {automationProjects.map((p, i) => (
           <Reveal key={p.slug} delay={step(0.08, i, 0.06)}>

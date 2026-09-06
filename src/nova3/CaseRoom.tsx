@@ -5,6 +5,7 @@ import Magnet from '@/reactbits/Magnet';
 import WorkflowPoster from './WorkflowPoster';
 import AutomationCase from '@/components/AutomationCase';
 import { automationProjects } from '@/data/work';
+import { automationContribution } from '@/data/content';
 
 /*
  * The entrances here are plain CSS reveals on a delay, not scroll triggers.
@@ -87,6 +88,16 @@ export default function CaseRoom({ slug, onBack }: { slug: string; onBack: () =>
         <div className="n3-case-modules">
           <AutomationCase project={project} />
         </div>
+      </Reveal>
+
+      {/* Repeated on every case, not only on the index: these have their own
+          URLs, so somebody arriving at one directly would otherwise never see
+          where his work stopped and the tech team's began. */}
+      <Reveal delay={0.34}>
+        <aside className="n3-credit">
+          <p className="n3-credit-head n3-accent">{automationContribution.heading}</p>
+          <p>{automationContribution.body}</p>
+        </aside>
       </Reveal>
 
       <div className="n3-case-next">

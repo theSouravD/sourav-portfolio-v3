@@ -39,7 +39,10 @@ export default function Nav({
         aria-label={`${profile.name} — home`}
       >
         <span className="n3-brand-dot" />
-        {profile.brand}
+        {/* The loader flies its wordmark onto THIS element and measures it to
+            do so, so it needs a box of its own rather than being loose text
+            in a flex row. */}
+        <span className="n3-brand-mark">{profile.brand}</span>
       </button>
 
       <ul className="n3-links">

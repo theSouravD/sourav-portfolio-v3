@@ -6,13 +6,13 @@ import { Room } from './Sections';
 import CaseRoom from './CaseRoom';
 import { SETUPS, setupOf, sectionFromHash, type SectionId } from './scenes';
 import Cursor from './Cursor';
+import Loader from './Loader';
 import {
   paperAt, readBackdrop, readClick, readCursor, readIntensity, readPaperness,
   readSound, readTexture, save,
   INTENSITY, PAPERNESS,
 } from './theme';
 import type { ThemeState } from './BackdropPicker';
-import { useSwipeRooms } from './useSwipeRooms';
 import { cue, initSound, setClick, setSound } from './titleSound';
 import './nova3.css';
 
@@ -37,6 +37,14 @@ export default function Stage() {
   const cutTimer = useRef(0);
   const stageRef = useRef<HTMLElement | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  /*
+   * The opening runs once per page load, not per room. `booted` gates the
+   * chrome and the room so nothing appears until the wordmark has landed —
+   * and it flips a little BEFORE the flight ends, so the page assembles
+   * underneath the mark rather than after it.
+   */
+  const [booted, setBooted] = useState(false);
+  const boot = useCallback(() => setBooted(true), []);
 
   /*
    * Everything the theme centre controls, in one object.
@@ -166,17 +174,6 @@ export default function Stage() {
     };
   }, []);
 
-  /* Sideways swipe walks the rooms, on a trackpad and on a phone. Like the
-     arrow keys it is a shortcut, never the only way — the nav bar is still
-     six words that do the same thing. Disabled inside a case study, where
-     sideways would mean two different things at once. */
-  const stepRoom = useCallback((dir: 1 | -1) => {
-    const i = SETUPS.findIndex((s) => s.id === id);
-    go(SETUPS[(i + dir + SETUPS.length) % SETUPS.length].id);
-  }, [id, go]);
-
-  useSwipeRooms(() => stepRoom(-1), () => stepRoom(1), !caseSlug);
-
   /* Arrow keys walk the rooms — a shortcut for people who want one, never the
      only way to do anything. */
   useEffect(() => {
@@ -194,7 +191,7 @@ export default function Stage() {
 
   return (
     <div
-      className={`n3 ${scrolled ? 'is-scrolled' : ''}`}
+      className={`n3 ${scrolled ? 'is-scrolled' : ''} ${booted ? 'is-booted' : ''}`}
       style={{
         ['--accent' as string]: setup.accent,
         ['--wash' as string]: setup.wash,
@@ -235,13 +232,23 @@ export default function Stage() {
 
       <main ref={stageRef} className={`n3-stage ${cutting ? 'is-cutting' : ''}`}>
         <div key={caseSlug ?? id} className="n3-cut">
-          {caseSlug
+          {booted && (caseSlug
             ? <CaseRoom slug={caseSlug} onBack={() => go('systems')} />
-            : <Room id={id} onGo={go} />}
+            : <Room id={id} onGo={go} />)}
         </div>
       </main>
 
       <Cursor mode={theme.cursor} accent={setup.accent} />
+
+      {/*
+        Mounted unconditionally, and it removes itself by rendering null once
+        the sequence is over. Gating this on `!booted` was a bug with a very
+        specific symptom: `boot` fires deliberately BEFORE the flight lands, so
+        the room can assemble underneath the travelling mark — which meant the
+        gate tore the loader out roughly a third of the way through its own
+        flight, and the wordmark blinked out in mid-air instead of arriving.
+      */}
+      <Loader onDone={boot} />
 
       <p className="n3-slug">
         <span />
