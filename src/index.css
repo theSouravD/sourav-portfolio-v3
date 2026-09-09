@@ -92,7 +92,15 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    /*
+     * Nova III is a daylight theme. This said `dark`, left over from Nova II,
+     * and it is not cosmetic: `color-scheme` drives the browser's own
+     * surfaces, so scrollbars rendered dark against warm paper — and in print
+     * the PAGE CANVAS took the dark value, which put black bands in the
+     * margins of every page after the first. The body's background paints the
+     * body box; it does not reach the page margins, and only this does.
+     */
+    color-scheme: light;
   }
 
   html {
@@ -101,8 +109,11 @@
 
   body {
     margin: 0;
-    background: #0a0a0a;
-    color: #fff;
+    /* The stage paints its own ground over all of this, so these show only
+       where it cannot reach: overscroll rubber-banding, and the page canvas
+       when printing. Both used to flash black on a paper-coloured site. */
+    background: #F7F3EC;
+    color: #17140F;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -110,8 +121,10 @@
   }
 
   ::selection {
-    background: rgb(255 255 255 / 0.2);
-    color: #fff;
+    /* White at 20% over warm paper is invisible — selecting text appeared to
+       do nothing at all. */
+    background: rgb(23 20 15 / 0.14);
+    color: #17140F;
   }
 
   /*

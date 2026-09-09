@@ -68,6 +68,37 @@ export const tools = [
 ];
 
 /**
+ * THE RESUME SIDEBAR, lifted verbatim from the 2026 PDF.
+ *
+ * The site's own `tools` list above is a curated sixteen, chosen for the
+ * orbit — where each name has to match a logo in marks.ts. The CV carries a
+ * longer list and splits it in two, which is the right call on a resume: a
+ * recruiter scanning for After Effects and one scanning for a diffusion model
+ * are looking for different things, and one merged column serves neither.
+ *
+ * They are kept separate rather than reconciled because they are genuinely
+ * different lists with different jobs, and quietly overwriting one with the
+ * other would lose whichever was more current.
+ */
+export const resumeAside = {
+  aiTools: [
+    "ChatGPT", "Codex", "Claude", "Claude Code", "Gemini",
+    "Seedance 2.5", "Seedance 2.0", "Seedream 5.0 Pro",
+    "Nano Banana 2", "Nano Banana Pro", "Minimax H3",
+    "Grok Imagine", "Google Omni", "Magnific AI", "ElevenLabs",
+  ],
+  traditional: [
+    "Adobe After Effects", "Adobe Premiere Pro", "Adobe Illustrator",
+    "Adobe Photoshop", "Blender 3D", "Adobe Character Animator",
+    "DaVinci Resolve",
+  ],
+  focus: [
+    "Gen AI production", "Creative automation",
+    "Scaled asset workflows", "Motion and video",
+  ],
+};
+
+/**
  * Lifted verbatim from the 2026 PDF, which carried it while the site did not.
  * It lives here so the resume view can be built from this file alone, rather
  * than from this file plus a document none of this code can read.

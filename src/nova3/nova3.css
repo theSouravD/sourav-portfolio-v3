@@ -1416,18 +1416,17 @@
 /* ==================================================================
  * THE RESUME
  *
- * The one place on the site that draws a page edge, and it does so on
- * purpose. Everywhere else content sits directly on the ground because the
- * ground IS the page; a resume is a document, and letting it read as a sheet
- * lying on that ground is what tells a visitor at a glance what they are
- * looking at before they have read a word.
+ * A rebuild of the structure the old PDF already had — full-bleed masthead,
+ * a tinted sidebar the height of the page, numbered employer blocks, a date
+ * pill each — in this site's materials rather than that document's. The band
+ * is `--ink`, the same solid the primary buttons use; the sidebar is a wash of
+ * it; the numbers and section rules take the room's accent.
  *
- * Every value here is a site token. That is the whole point of building the
- * resume as a room rather than shipping a second artefact: it takes the
- * room's accent, the paper, the grain and the type ramp automatically, so
- * there is no second theme that can drift out of step with this one.
+ * The first attempt matched the site's COLOURS and dropped its LAYOUT, which
+ * is not a trade worth making: a resume that is merely on-palette is still a
+ * worse resume.
  * ================================================================== */
-.n3-resume-room { max-width: 980px; }
+.n3-resume-room { max-width: 1000px; }
 
 .n3-sheet {
   background: var(--card);
@@ -1435,180 +1434,305 @@
   border-radius: 14px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
-  padding: 40px 44px 44px;
+  /* The band runs edge to edge, so the padding lives on the inner sections
+     and `overflow: hidden` is what keeps the band inside the radius. */
+  padding: 0;
+  overflow: hidden;
 }
 
-.n3-sheet-head {
-  display: flex; flex-wrap: wrap; gap: 18px 32px;
+/* ---- masthead ---- */
+.n3-cv-band {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 30px 36px 28px;
+  display: flex; flex-wrap: wrap; gap: 16px 36px;
   align-items: flex-start; justify-content: space-between;
-  padding-bottom: 20px;
-  /* The accent rule under the masthead is the one flash of room colour on the
-     sheet. More than one and the document starts looking decorated. */
-  border-bottom: 2px solid var(--accent);
 }
-.n3-sheet-name {
-  margin: 0; font-size: clamp(28px, 4vw, 40px); font-weight: 600;
-  letter-spacing: -0.035em; line-height: 1.05;
+.n3-cv-name {
+  margin: 0; font-size: clamp(30px, 4.2vw, 42px); font-weight: 600;
+  letter-spacing: -0.035em; line-height: 1.02; color: var(--paper);
 }
-.n3-sheet-role {
-  margin: 6px 0 0; font-size: 12px; letter-spacing: 0.13em;
-  text-transform: uppercase; color: var(--ink-70);
+.n3-cv-role {
+  margin: 8px 0 0; font-size: 10.5px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
 }
-.n3-sheet-contact {
-  margin: 0; padding: 0; list-style: none;
-  font-size: 12.5px; line-height: 1.75; text-align: right; color: var(--ink-70);
+.n3-cv-summary {
+  margin: 14px 0 0; max-width: 62ch;
+  font-size: 12.5px; line-height: 1.62;
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
 }
-.n3-sheet-contact a { color: inherit; text-decoration: none; }
-.n3-sheet-contact a:hover { color: var(--accent); }
+.n3-cv-contact {
+  margin: 0; padding: 0; list-style: none; text-align: right;
+  font-size: 11.5px; line-height: 1.85;
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
+}
+.n3-cv-contact a { color: inherit; text-decoration: none; }
+.n3-cv-contact a:hover { color: var(--paper); }
 
-.n3-sheet-summary {
-  margin: 20px 0 0; max-width: 68ch;
-  font-size: 14px; line-height: 1.7; color: var(--ink-70);
+/* ---- the two columns ---- */
+.n3-cv-body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 2.1fr);
+  align-items: start;
 }
+.n3-cv-side {
+  padding: 28px 22px 34px 36px;
+  /* A wash of the ink rather than a grey: a neutral panel on warm stock reads
+     as a different material, and the sheet has to look like one sheet. */
+  background: color-mix(in srgb, var(--ink) 4.5%, transparent);
+  border-right: 1px solid var(--rule);
+  align-self: stretch;
+}
+.n3-cv-main { padding: 28px 36px 34px 30px; }
 
-/* Main column and sidebar. Experience gets roughly two thirds because it is
-   what anyone reading a resume is actually there for; the lists are reference
-   the eye scans rather than reads. */
-.n3-sheet-body {
-  display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr);
-  gap: 34px; margin-top: 28px;
+/* ---- section labels ---- */
+.n3-cv-h {
+  margin: 0 0 12px; padding-bottom: 7px;
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-70);
+  position: relative;
 }
-@media (max-width: 780px) {
-  .n3-sheet { padding: 28px 22px 30px; }
-  .n3-sheet-body { grid-template-columns: minmax(0, 1fr); gap: 26px; }
-  .n3-sheet-contact { text-align: left; }
+/* A short accent rule under the label, not a full-width one: a rule that
+   spans the column reads as a divider between things, where a stub reads as
+   an underline belonging to the word. */
+.n3-cv-h::after {
+  content: ''; position: absolute; left: 0; bottom: 0;
+  width: 22px; height: 2px; background: var(--accent);
 }
+.n3-cv-block { margin-bottom: 24px; }
+.n3-cv-block:last-child { margin-bottom: 0; }
 
-.n3-sheet-h {
-  margin: 0 0 14px; font-size: 10px; font-weight: 600;
-  letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent);
+.n3-cv-list { margin: 0; padding: 0; list-style: none; }
+.n3-cv-list li {
+  font-size: 11.6px; line-height: 1.5; color: var(--ink-70);
+  padding: 3px 0 3px 13px; position: relative;
 }
-.n3-sheet-side .n3-sheet-h { margin-top: 26px; }
-.n3-sheet-side section:first-child .n3-sheet-h { margin-top: 0; }
+.n3-cv-list li::before {
+  content: ''; position: absolute; left: 0; top: 11px;
+  width: 6px; height: 1px; background: var(--accent); opacity: 0.65;
+}
+.n3-cv-edu { font-size: 11.6px; line-height: 1.5; color: var(--ink-70); }
+.n3-cv-edu p { margin: 0 0 2px; }
+.n3-cv-edu-school { color: var(--ink); font-weight: 600; }
 
-.n3-sheet-job { margin-bottom: 22px; }
-.n3-sheet-job:last-child { margin-bottom: 0; }
-.n3-sheet-job-head {
-  display: flex; flex-wrap: wrap; gap: 4px 14px;
+/* ---- employers ---- */
+.n3-firm {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px;
+  padding-bottom: 18px; margin-bottom: 18px;
+  border-bottom: 1px solid var(--rule);
+}
+.n3-firm:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+.n3-firm-no {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+  color: var(--accent); padding-top: 4px;
+}
+.n3-firm-head {
+  display: flex; flex-wrap: wrap; gap: 6px 14px;
   align-items: baseline; justify-content: space-between;
 }
-.n3-sheet-job-head h4 {
-  margin: 0; font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em;
+.n3-firm-name {
+  margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.015em;
 }
-.n3-sheet-when {
-  font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+.n3-firm-place {
+  margin-left: 9px; font-size: 11px; font-weight: 400; color: var(--ink-70);
+}
+/* The date as a pill. It is the one thing on the line a skimming reader is
+   looking for, and a border finds it faster than weight or colour can. */
+.n3-firm-span {
+  font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--ink-70); white-space: nowrap;
+  border: 1px solid var(--rule); border-radius: 999px; padding: 3px 10px;
 }
-.n3-sheet-where {
-  margin: 3px 0 8px; font-size: 12px; color: var(--ink-70);
+.n3-role { margin-top: 11px; }
+.n3-role-name { margin: 0; font-size: 12.8px; font-weight: 600; }
+.n3-cv-when {
+  margin: 2px 0 0; font-size: 9.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-70);
 }
-.n3-sheet-bullets { margin: 0; padding-left: 16px; }
-.n3-sheet-bullets li {
-  margin-bottom: 5px; font-size: 12.8px; line-height: 1.62; color: var(--ink-70);
+.n3-cv-bullets { margin: 7px 0 0; padding: 0; list-style: none; }
+.n3-cv-bullets li {
+  position: relative; padding-left: 14px; margin-bottom: 5px;
+  font-size: 12.2px; line-height: 1.6; color: var(--ink-70);
 }
-.n3-sheet-bullets b { color: var(--ink); font-weight: 600; }
-
-.n3-sheet-list { margin: 0; padding: 0; list-style: none; }
-.n3-sheet-list li {
-  font-size: 12.3px; line-height: 1.55; color: var(--ink-70);
-  padding: 3px 0 3px 12px; position: relative;
+.n3-cv-bullets li::before {
+  content: '–'; position: absolute; left: 0; top: 0; color: var(--accent); opacity: 0.7;
 }
-.n3-sheet-list li::before {
-  content: ''; position: absolute; left: 0; top: 10px;
-  width: 4px; height: 4px; border-radius: 50%; background: var(--accent); opacity: 0.5;
-}
-.n3-sheet-edu { font-size: 12.3px; line-height: 1.55; color: var(--ink-70); }
-.n3-sheet-edu p { margin: 0 0 2px; }
-.n3-sheet-edu-school { color: var(--ink); font-weight: 600; }
+.n3-cv-bullets b { color: var(--ink); font-weight: 600; }
 
 .n3-sheet-actions { display: flex; gap: 10px; margin-top: 22px; }
 
-/* ---- printing ----
- *
- * Print is not a second design, it is this one with the room taken away.
- * `print-color-adjust` is the load-bearing line: browsers drop backgrounds
- * and lighten colours by default, which would silently strip the accent —
- * the one thing tying the printed sheet to the site.
- */
+@media (max-width: 820px) {
+  .n3-cv-band { padding: 24px 20px 22px; }
+  .n3-cv-contact { text-align: left; }
+  .n3-cv-body { grid-template-columns: minmax(0, 1fr); }
+  .n3-cv-side {
+    padding: 24px 20px; border-right: 0; border-bottom: 1px solid var(--rule);
+  }
+  .n3-cv-main { padding: 24px 20px 28px; }
+}
+
 @media print {
-  @page { size: A4; margin: 12mm; }
+  /*
+   * Page one has no margin at all, so the masthead and the sidebar tint can
+   * reach the paper edge; its white space comes from --edge, applied by the
+   * sections themselves.
+   *
+   * Every page AFTER the first needs a real top and bottom margin, though —
+   * a continuation page has no band to start it, so with zero margin the
+   * first line of the sidebar sat hard against the top edge of the sheet. The
+   * sides stay at zero on those pages too, so the tint keeps bleeding.
+   */
+  @page { size: A4; margin: 13mm 0; }
+  @page :first { margin: 0; }
+  .n3-sheet { --edge: 13mm; }
   html, body { background: #fff !important; }
+
   /*
    * Every ground layer goes, not just the shader.
    *
    * `.n3-paper` was the one that got missed, and the way it failed is worth
    * recording: it is an absolutely positioned sheet at z-index 2, and the
-   * content above it only wins because `.n3-stage` carries z-index 10. Forcing
-   * the stage to `position: static` for print — which the rules below do, to
-   * let the document flow across pages — silently voids that z-index, because
+   * content only outranks it because `.n3-stage` carries z-index 10. Forcing
+   * the stage to `position: static` for print — which the rules below do, so
+   * the document can flow across pages — silently voids that z-index, because
    * z-index does nothing on a static element. The ground then painted straight
    * over the masthead and the whole experience column, and the PDF came out
    * with a cream rectangle where the resume should be.
    *
-   * It was invisible until the filter came off `.n3-cut`, because a filtered
-   * subtree is its own rasterised layer and was compositing above the ground
-   * regardless. One fix exposed the other.
+   * It stayed invisible until the filter came off `.n3-cut`, because a
+   * filtered subtree is its own rasterised layer and was compositing above the
+   * ground regardless. One fix exposed the other.
    */
   .n3-nav, .n3-slug, .n3-noprint, .n3-back,
   .n3-bg, .n3-paper, .n3-grain, .n3-vig,
   .n3-cursor-layer, .n3-load { display: none !important; }
+
   .n3, .n3-stage {
     position: static !important; inset: auto !important;
     height: auto !important; overflow: visible !important;
     mask-image: none !important; background: #fff !important;
   }
   .n3-stage { padding: 0 !important; display: block !important; }
+
   /*
    * The room-change cut leaves `filter: blur(0px)` on this wrapper. A filter
    * of ANY radius, zero included, promotes the subtree to its own layer — and
    * Chromium's PDF export rasterises filtered layers, which turned the whole
    * resume into a picture of a resume: nothing selectable, nothing copyable,
-   * and nothing an applicant-tracking system can read. For a CV that is not a
+   * and nothing an applicant-tracking system could read. On a CV that is not a
    * cosmetic bug, it is the document failing at its job.
    */
   .n3-cut { filter: none !important; transform: none !important; animation: none !important; }
+
   .n3-room, .n3-resume-room { max-width: none !important; padding: 0 !important; }
+
+  /* Reveal enters from opacity 0 via `n3-rise`. Without this the printed page
+     can come out blank — print snapshots the computed style, and anything
+     mid-animation is partly transparent while anything not yet started is
+     invisible. */
+  .n3-rise { opacity: 1 !important; transform: none !important; animation: none !important; }
+
   .n3-sheet {
     border: 0; border-radius: 0; box-shadow: none;
-    backdrop-filter: none; background: #fff; padding: 0;
+    backdrop-filter: none; background: #fff; overflow: visible;
+    /* Browsers drop backgrounds and lighten colours for print by default,
+       which would strip the masthead to white-on-white. */
     print-color-adjust: exact; -webkit-print-color-adjust: exact;
   }
-  /* Reveal enters from opacity 0 via `n3-rise`. Without this the printed page
-     can come out blank — the print snapshot is taken from the current computed
-     style, which for anything mid-animation is a partly transparent element,
-     and for anything not yet started is an invisible one. */
-  .n3-rise { opacity: 1 !important; transform: none !important; animation: none !important; }
+
   /*
    * Hold the two columns.
    *
-   * A4 minus its margins is about 700 CSS pixels, which is under the 780px
-   * breakpoint above — so without this the sheet stacks itself for print and
-   * a two-page CV becomes three, most of the last one blank. Print is a NARROW
-   * page, not a small screen, and a width query cannot tell those apart.
+   * A4 minus its margins is about 700 CSS pixels, under the 820px breakpoint
+   * above — so without this the sheet stacks itself for print and a two-page
+   * CV becomes three, most of the last one blank. Print is a NARROW PAGE, not
+   * a small screen, and a width query cannot tell those apart.
    */
-  .n3-sheet-body {
-    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr) !important;
-    gap: 26px !important;
+  .n3-cv-body {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 2.05fr) !important;
   }
-  .n3-sheet { padding: 0 !important; }
-  .n3-sheet-contact { text-align: right !important; }
+  .n3-cv-contact { text-align: right !important; }
+  .n3-cv-side {
+    border-right: 1px solid var(--rule) !important;
+    border-bottom: 0 !important;
+    padding: 20px 16px 24px 0 !important;
+    background: transparent !important;
+  }
+  .n3-cv-main { padding: 20px 0 24px 22px !important; }
+  .n3-cv-band { padding: 22px 0 20px !important; }
 
-  /* Print sets tighter than screen: on paper the reader is closer, the line
-     length is fixed, and every millimetre saved is a page not spilled. */
-  .n3-sheet-name { font-size: 27px; }
-  .n3-sheet-summary { font-size: 11.5px; margin-top: 14px; }
-  .n3-sheet-body { margin-top: 18px; }
-  .n3-sheet-job { margin-bottom: 15px; }
-  .n3-sheet-bullets li { font-size: 10.4px; line-height: 1.5; margin-bottom: 3px; }
-  .n3-sheet-list li { font-size: 10.2px; padding: 1.5px 0 1.5px 11px; }
-  .n3-sheet-list li::before { top: 8px; }
-  .n3-sheet-job-head h4 { font-size: 12.4px; }
-  .n3-sheet-where { font-size: 10.2px; margin-bottom: 5px; }
-  .n3-sheet-when { font-size: 9px; }
-  .n3-sheet-edu { font-size: 10.2px; }
+  /* Print sets tighter than screen: the reader is closer, the measure is
+     fixed, and every millimetre saved is a page not spilled. */
+  .n3-cv-name { font-size: 30px; }
+  .n3-cv-summary { font-size: 10.6px; margin-top: 10px; }
+  .n3-cv-contact { font-size: 10px; line-height: 1.7; }
+  .n3-cv-role { font-size: 9px; }
+  .n3-cv-list li { font-size: 9.8px; padding: 1.5px 0 1.5px 12px; }
+  .n3-cv-list li::before { top: 9px; }
+  .n3-cv-bullets li { font-size: 10.2px; line-height: 1.5; margin-bottom: 3px; }
+  .n3-firm-name { font-size: 12.6px; }
+  .n3-firm-place { font-size: 9.6px; }
+  .n3-role-name { font-size: 11px; }
+  .n3-cv-edu { font-size: 9.8px; }
+  .n3-firm { padding-bottom: 12px; margin-bottom: 12px; }
+  .n3-cv-block { margin-bottom: 18px; }
 
-  /* Never split a role across a page break: a heading orphaned at the foot of
-     a page with its bullets overleaf is the classic printed-CV failure. */
-  .n3-sheet-job, .n3-sheet-edu { break-inside: avoid; }
-  .n3-sheet-h { break-after: avoid; }
+  /*
+   * THE BAND BLEEDS.
+   *
+   * A first pass turned the masthead into a plain rule for print, on the
+   * theory that a filled block wastes toner. That was the wrong call: the band
+   * is most of what makes this read as a designed document rather than a text
+   * dump, and a CV today is looked at on a screen far more often than it is
+   * printed. Losing it to save ink on the rare printed copy is a bad trade.
+   *
+   * Bleeding it properly means `@page { margin: 0 }` — a page margin is white
+   * space the browser reserves OUTSIDE the content box, so nothing can paint
+   * into it, and a band that stops 11mm short of the paper edge looks like a
+   * mistake. The margin therefore moves onto the sections themselves, which is
+   * what lets the band and the sidebar tint run right off the sheet.
+   */
+  .n3-cv-band {
+    background: var(--ink) !important;
+    color: var(--paper) !important;
+    padding: 24px var(--edge) 22px !important;
+  }
+  .n3-cv-side {
+    padding: 22px 16px 26px var(--edge) !important;
+    background: color-mix(in srgb, var(--ink) 4.5%, transparent) !important;
+    border-right: 1px solid var(--rule) !important;
+    border-bottom: 0 !important;
+  }
+  .n3-cv-main { padding: 22px var(--edge) 26px 20px !important; }
+
+  /*
+   * The sidebar tint is painted by the GRID, not by the sidebar.
+   *
+   * `align-items: stretch` was the obvious way to make the panel run the full
+   * height, and it does not survive a page break: the aside is one box that
+   * fragments, and Chromium paints its background only as far down as its own
+   * content goes. On page two the panel stopped under "Focus" while the
+   * experience column carried on — a panel that ends halfway down beside text
+   * that does not is worse than no panel.
+   *
+   * A background on the container behaves differently: it fills each
+   * fragment's full height. So the stripe becomes a linear-gradient with a
+   * hard stop at the column boundary, hairline included. The percentage is
+   * the sidebar's share of the track list below (0.8 of 0.8 + 2.05) and has
+   * to be changed with it.
+   */
+  .n3-cv-body {
+    background: linear-gradient(to right,
+      color-mix(in srgb, var(--ink) 4.5%, transparent) 0 28.07%,
+      var(--rule) 28.07% calc(28.07% + 0.6px),
+      transparent calc(28.07% + 0.6px)) !important;
+  }
+  .n3-cv-side { background: transparent !important; border-right: 0 !important; }
+
+  /* Never split an employer across a page break: a heading orphaned at the
+     foot of a page with its bullets overleaf is the classic printed-CV
+     failure. */
+  .n3-firm, .n3-role, .n3-cv-edu, .n3-cv-block { break-inside: avoid; }
+  .n3-cv-h { break-after: avoid; }
 }

@@ -2,36 +2,100 @@ import { ArrowLeft, Download, Printer } from 'lucide-react';
 import { Reveal } from './parts';
 import { Rich } from './Sections';
 import {
-  profile, contact, coreSkills, tools, experience, education,
+  profile, contact, coreSkills, resumeAside, experience, education, type Job,
 } from '@/data/content';
 
 /**
  * THE RESUME, AS A PAGE.
  *
- * The Resume button used to hand over a PDF: a download, opened in whatever
- * viewer the visitor happened to have, laid out to a different grid, set in
- * different type and coloured to a palette the site does not use. Every step
- * of that is a place where the impression the site just made gets dropped.
+ * The Resume button used to hand over a PDF: a download, opened in another
+ * application, laid out to another grid, set in other type and coloured to a
+ * palette this site does not use. Every step of that drops the impression the
+ * site just spent a minute making.
  *
- * So the resume is a room now, built from the same `content.ts` the rest of
- * the site is built from and painted with the same tokens. It inherits the
- * room's accent, the paper, the grain and the type ramp automatically — there
- * is no second theme to keep in sync, because there is no second theme.
+ * So the resume is a room, built from the same `content.ts` as everything else
+ * and painted with the same tokens — and the downloadable PDF is printed FROM
+ * this page. One source: a bullet edited once lands in both, and they cannot
+ * drift apart.
  *
- * ONE SOURCE, NOT TWO
- * The old PDF and the site were separate artefacts describing the same career,
- * which is a guarantee that they will disagree: a bullet edited here would not
- * reach the file a recruiter actually opens. Now the page is generated from
- * the data, and the downloadable PDF is printed FROM this page — so a change
- * to a bullet lands in both, and neither can drift.
+ * THE STRUCTURE IS THE ONE THAT WAS ALREADY WORKING
+ * The first version of this page was a plain two-column document, and it was
+ * a clear step down from the PDF it replaced. That PDF was properly designed —
+ * a full-bleed masthead, a tinted sidebar running the height of the page,
+ * numbered company blocks, a date pill per employer — and matching the site's
+ * COLOURS while throwing away its LAYOUT is not a trade worth making.
  *
- * WHY THE PDF STAYS AVAILABLE
- * Reading it here is better for anyone browsing. It is useless to someone who
- * has to attach a file to an ATS or forward it to a hiring manager, and that
- * is most of what a resume is for. Viewing is the default; the file is one
- * click away rather than the only option.
+ * So this rebuilds that structure in the site's own materials: the masthead
+ * band is `--ink`, the same solid the primary buttons use; the sidebar is a
+ * wash of it; the numbers and the section rules take the room's accent. Same
+ * document, same palette as the page it lives on.
  */
+
+/** One employer, with every consecutive role held there. */
+interface Firm {
+  company: string;
+  place: string;
+  roles: Job[];
+}
+
+/**
+ * Consecutive roles at the same employer are one block.
+ *
+ * Listing six roles flat makes three separate Pocket FM headings and reads as
+ * three jobs at three companies. Grouping them says the true thing — one
+ * employer, promoted through it — which is the single most valuable fact a
+ * career section can carry, and it costs a reduce.
+ *
+ * Only CONSECUTIVE runs merge: he returned to Pocket FM after Ginger Monkey,
+ * and collapsing those into one block would invent continuity that isn't
+ * there.
+ */
+function groupByFirm(jobs: Job[]): Firm[] {
+  return jobs.reduce<Firm[]>((acc, job) => {
+    const last = acc[acc.length - 1];
+    if (last && last.company === job.company) last.roles.push(job);
+    else acc.push({ company: job.company, place: job.place, roles: [job] });
+    return acc;
+  }, []);
+}
+
+/**
+ * The span across a block: the earliest role's start to the latest role's end.
+ *
+ * Periods are written "Feb 2026 - Present", so the halves come off the dash.
+ * The list runs newest first, so the block's END is the FIRST role's end and
+ * its START is the LAST role's start — the reversal is the whole subtlety
+ * here, and getting it backwards produces a plausible-looking date range that
+ * is wrong in both directions.
+ */
+function span(roles: Job[]): string {
+  const parts = (p: string) => p.split(/\s*[-–—]\s*/);
+  const end = parts(roles[0].period)[1] ?? roles[0].period;
+  const startRole = roles[roles.length - 1].period;
+  const start = parts(startRole)[0] ?? startRole;
+  return `${start} — ${end}`;
+}
+
+/** "Bengaluru, Karnataka | Remote" → the city, and the arrangement, apart. */
+function splitPlace(place: string) {
+  const [where, ...rest] = place.split('|').map((s) => s.trim());
+  return { where, mode: rest.join(' · ') };
+}
+
+function Aside({ title, items }: { title: string; items: string[] }) {
+  return (
+    <section className="n3-cv-block">
+      <h3 className="n3-cv-h">{title}</h3>
+      <ul className="n3-cv-list">
+        {items.map((t) => <li key={t}>{t}</li>)}
+      </ul>
+    </section>
+  );
+}
+
 export default function ResumeRoom({ onBack }: { onBack: () => void }) {
+  const firms = groupByFirm(experience);
+
   return (
     <div className="n3-room n3-resume-room">
       <Reveal delay={0.02}>
@@ -41,96 +105,102 @@ export default function ResumeRoom({ onBack }: { onBack: () => void }) {
       </Reveal>
 
       <Reveal delay={0.06}>
-        {/*
-          `n3-sheet` is the only place on the site that draws a page edge, and
-          it does it on purpose: a resume is a document, and letting it read as
-          one — a sheet lying on the ground rather than more of the ground —
-          is what tells the visitor at a glance what they are looking at.
-        */}
+        {/* The one place on the site that draws a page edge, on purpose: a
+            resume is a document, and letting it read as a sheet lying on the
+            ground says what it is before a word is read. */}
         <article className="n3-sheet">
-          <header className="n3-sheet-head">
+          <header className="n3-cv-band">
             <div>
-              <h2 className="n3-sheet-name">{profile.name}</h2>
-              <p className="n3-sheet-role">{profile.role}</p>
+              <h2 className="n3-cv-name">{profile.name}</h2>
+              <p className="n3-cv-role">{profile.role}</p>
+              <p className="n3-cv-summary">{profile.intro}</p>
             </div>
-            {/*
-              Contact comes from the same list the Connect room uses, so there
-              is exactly one place a phone number or a handle is written down.
-              A resume with a stale email is worse than no resume.
-            */}
-            <ul className="n3-sheet-contact">
+            {/* Straight from the list the Connect room uses, so a phone number
+                or a handle is written down in exactly one place. A resume with
+                a stale email is worse than no resume. */}
+            <ul className="n3-cv-contact">
               {contact.items.map((c) => (
                 <li key={c.label}>
-                  {c.href
-                    ? <a href={c.href}>{c.value}</a>
-                    : <span>{c.value}</span>}
+                  {c.href ? <a href={c.href}>{c.value}</a> : <span>{c.value}</span>}
                 </li>
               ))}
             </ul>
           </header>
 
-          <p className="n3-sheet-summary">{profile.intro}</p>
+          <div className="n3-cv-body">
+            {/*
+              The sidebar comes FIRST in the DOM as well as on the left, so it
+              reads in that order to a screen reader and, on a phone, stacks
+              above the experience rather than below all of it.
 
-          <div className="n3-sheet-body">
-            <main className="n3-sheet-main">
-              <h3 className="n3-sheet-h">Experience</h3>
-              {/*
-                Every role, every bullet, open. The Career room collapses these
-                behind an accordion because it is a page you browse; a resume
-                is a page you read straight through, and one that hides most of
-                itself is not a resume.
-              */}
-              {experience.map((j) => (
-                <section className="n3-sheet-job" key={`${j.company}-${j.period}`}>
-                  <div className="n3-sheet-job-head">
-                    <h4>{j.title}</h4>
-                    <span className="n3-sheet-when">{j.period}</span>
-                  </div>
-                  <p className="n3-sheet-where">{j.company} · {j.place}</p>
-                  <ul className="n3-sheet-bullets">
-                    {j.bullets.map((b) => (
-                      <li key={b}><Rich text={b} /></li>
-                    ))}
-                  </ul>
-                </section>
-              ))}
-            </main>
+              It is also deliberately long. A sidebar that ends halfway down
+              page one leaves the second page of the printed CV with an empty
+              column beside the text — the exact fault the old PDF avoided by
+              carrying different sections onto page two.
+            */}
+            <aside className="n3-cv-side">
+              <Aside title="Core skills" items={coreSkills} />
+              <Aside title="AI tools" items={resumeAside.aiTools} />
+              <Aside title="Traditional software" items={resumeAside.traditional} />
 
-            <aside className="n3-sheet-side">
-              <section>
-                <h3 className="n3-sheet-h">Core skills</h3>
-                <ul className="n3-sheet-list">
-                  {coreSkills.map((s) => <li key={s}>{s}</li>)}
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="n3-sheet-h">Tools</h3>
-                <ul className="n3-sheet-list">
-                  {tools.map((t) => <li key={t}>{t}</li>)}
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="n3-sheet-h">Education</h3>
+              <section className="n3-cv-block">
+                <h3 className="n3-cv-h">Education</h3>
                 {education.map((e) => (
-                  <div className="n3-sheet-edu" key={e.school}>
-                    <p className="n3-sheet-edu-school">{e.school}</p>
+                  <div className="n3-cv-edu" key={e.school}>
+                    <p className="n3-cv-edu-school">{e.school}</p>
                     <p>{e.course}</p>
-                    <p className="n3-sheet-when">{e.period}</p>
+                    <p className="n3-cv-when">{e.period}</p>
                   </div>
                 ))}
               </section>
+
+              <Aside title="Focus" items={resumeAside.focus} />
             </aside>
+
+            <main className="n3-cv-main">
+              <h3 className="n3-cv-h">Experience</h3>
+
+              {firms.map((f, i) => {
+                const { where, mode } = splitPlace(f.place);
+                return (
+                  <section className="n3-firm" key={`${f.company}-${i}`}>
+                    <span className="n3-firm-no">{String(i + 1).padStart(2, '0')}</span>
+                    <div className="n3-firm-body">
+                      <div className="n3-firm-head">
+                        <h4 className="n3-firm-name">
+                          {f.company}
+                          <span className="n3-firm-place">
+                            {where}{mode ? ` · ${mode}` : ''}
+                          </span>
+                        </h4>
+                        <span className="n3-firm-span">{span(f.roles)}</span>
+                      </div>
+
+                      {f.roles.map((r) => (
+                        <div className="n3-role" key={r.title + r.period}>
+                          <p className="n3-role-name">{r.title}</p>
+                          {/* Just the dates. "Remote" belongs once, on the
+                              employer, not restated under every role held
+                              there. */}
+                          <p className="n3-cv-when">{r.period}</p>
+                          <ul className="n3-cv-bullets">
+                            {r.bullets.map((b) => (
+                              <li key={b}><Rich text={b} /></li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </main>
           </div>
         </article>
       </Reveal>
 
-      {/*
-        Both actions are hidden from the printed output — a sheet of paper with
-        a "Print" button on it is the oldest tell that a page was never meant
-        to be printed.
-      */}
+      {/* Hidden from print — a sheet of paper with a "Print" button on it is
+          the oldest tell that a page was never meant to be printed. */}
       <Reveal delay={0.14}>
         <div className="n3-sheet-actions n3-noprint">
           <button type="button" className="n3-btn" onClick={() => window.print()}>
