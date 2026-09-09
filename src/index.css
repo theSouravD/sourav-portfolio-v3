@@ -1,4 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/*
+ * Inter, self-hosted, in the four weights this site actually sets.
+ *
+ * This was a Google Fonts @import, which is the worst available way to load a
+ * typeface: the browser must fetch and parse THIS file before it even learns
+ * the font exists, then open a connection to a second origin, fetch a
+ * stylesheet from it, and only then begin the font files. Every one of those
+ * steps sits in front of first paint.
+ *
+ * Bundling also makes the site work where that CDN does not — a locked-down
+ * corporate network, an offline demo, a region that blocks it — which are
+ * exactly the conditions a portfolio gets opened in without warning. And it
+ * is what lets the resume print correctly: a PDF generated anywhere the CDN
+ * is unreachable was coming out in a fallback face.
+ *
+ * Vite fingerprints and serves the woff2 files from the bundle, so this costs
+ * one origin and no extra round trip.
+ */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 

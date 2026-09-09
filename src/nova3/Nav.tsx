@@ -23,10 +23,12 @@ import { profile } from '@/data/content';
 export default function Nav({
   active,
   onGo,
+  onResume,
   themeControl,
 }: {
   active: SectionId;
   onGo: (id: SectionId) => void;
+  onResume: () => void;
   /** The theme centre, rendered inside the bar beside Resume. */
   themeControl?: React.ReactNode;
 }) {
@@ -66,8 +68,28 @@ export default function Nav({
       </ul>
 
       <div className="n3-nav-end">
-        <a className="n3-cv" href={profile.resumeUrl} download>
-          Resume
+        {/*
+          This used to be a download. A download is a decision the visitor has
+          to make before they can see anything — and what arrives is a document
+          in another application, laid out to another grid, in another
+          palette, which drops the impression the site just spent a minute
+          making. It opens the resume as a page now, styled like the rest of
+          the site; the file is still one click away, from inside it.
+
+          Still an anchor with a real href, so middle-click, ⌘-click and
+          "copy link" all behave. `preventDefault` only intercepts the plain
+          left-click, which is the one that should stay in the app.
+        */}
+        <a
+          className="n3-cv"
+          href="#resume"
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+            e.preventDefault();
+            onResume();
+          }}
+        >
+          View resume
         </a>
         {themeControl}
       </div>

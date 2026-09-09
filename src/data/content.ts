@@ -67,6 +67,19 @@ export const tools = [
   "ElevenLabs",
 ];
 
+/**
+ * Lifted verbatim from the 2026 PDF, which carried it while the site did not.
+ * It lives here so the resume view can be built from this file alone, rather
+ * than from this file plus a document none of this code can read.
+ */
+export const education = [
+  {
+    school: "Maya Academy of Advanced Cinematics (MAAC)",
+    course: "Advanced Program in Digital Media and Design",
+    period: "2020 — 2021",
+  },
+];
+
 export interface Job {
   title: string;
   company: string;

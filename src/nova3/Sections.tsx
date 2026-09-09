@@ -344,7 +344,7 @@ function Systems({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void
  * "AI Dubbing Studio POC". Rendered raw, the asterisks are noise; stripped,
  * the sentence flattens. So the marks are read and set as emphasis.
  */
-function Rich({ text }: { text: string }) {
+export function Rich({ text }: { text: string }) {
   return (
     <>
       {text.split(/\*\*(.+?)\*\*/g).map((part, i) =>

@@ -1296,14 +1296,6 @@
 .n3-pick-sub { transition: opacity var(--fast) var(--ease); }
 .n3-pick-sub.is-off { opacity: 0.4; pointer-events: none; }
 
-/* MagnetLines sizes itself from a CSS grid; as a cursor it has to fill the
-   viewport and stay out of the way of clicks. Held well back — a full-screen
-   field of rules at full strength competes with the type it is drawn over,
-   and this is meant to be felt rather than read. */
-.n3-cursor-lines .magnetLines-container {
-  width: 100%; height: 100%; opacity: 0.26;
-}
-
 /* ---- the contribution note ---- */
 .n3-credit {
   max-width: 62ch; margin: 0 0 26px;
@@ -1419,4 +1411,204 @@
 @media (prefers-reduced-motion: reduce) {
   .n3-load { display: none; }
   .n3-brand-mark, .n3-links, .n3-nav-end, .n3-brand-dot { opacity: 1; }
+}
+
+/* ==================================================================
+ * THE RESUME
+ *
+ * The one place on the site that draws a page edge, and it does so on
+ * purpose. Everywhere else content sits directly on the ground because the
+ * ground IS the page; a resume is a document, and letting it read as a sheet
+ * lying on that ground is what tells a visitor at a glance what they are
+ * looking at before they have read a word.
+ *
+ * Every value here is a site token. That is the whole point of building the
+ * resume as a room rather than shipping a second artefact: it takes the
+ * room's accent, the paper, the grain and the type ramp automatically, so
+ * there is no second theme that can drift out of step with this one.
+ * ================================================================== */
+.n3-resume-room { max-width: 980px; }
+
+.n3-sheet {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  padding: 40px 44px 44px;
+}
+
+.n3-sheet-head {
+  display: flex; flex-wrap: wrap; gap: 18px 32px;
+  align-items: flex-start; justify-content: space-between;
+  padding-bottom: 20px;
+  /* The accent rule under the masthead is the one flash of room colour on the
+     sheet. More than one and the document starts looking decorated. */
+  border-bottom: 2px solid var(--accent);
+}
+.n3-sheet-name {
+  margin: 0; font-size: clamp(28px, 4vw, 40px); font-weight: 600;
+  letter-spacing: -0.035em; line-height: 1.05;
+}
+.n3-sheet-role {
+  margin: 6px 0 0; font-size: 12px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-70);
+}
+.n3-sheet-contact {
+  margin: 0; padding: 0; list-style: none;
+  font-size: 12.5px; line-height: 1.75; text-align: right; color: var(--ink-70);
+}
+.n3-sheet-contact a { color: inherit; text-decoration: none; }
+.n3-sheet-contact a:hover { color: var(--accent); }
+
+.n3-sheet-summary {
+  margin: 20px 0 0; max-width: 68ch;
+  font-size: 14px; line-height: 1.7; color: var(--ink-70);
+}
+
+/* Main column and sidebar. Experience gets roughly two thirds because it is
+   what anyone reading a resume is actually there for; the lists are reference
+   the eye scans rather than reads. */
+.n3-sheet-body {
+  display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr);
+  gap: 34px; margin-top: 28px;
+}
+@media (max-width: 780px) {
+  .n3-sheet { padding: 28px 22px 30px; }
+  .n3-sheet-body { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .n3-sheet-contact { text-align: left; }
+}
+
+.n3-sheet-h {
+  margin: 0 0 14px; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent);
+}
+.n3-sheet-side .n3-sheet-h { margin-top: 26px; }
+.n3-sheet-side section:first-child .n3-sheet-h { margin-top: 0; }
+
+.n3-sheet-job { margin-bottom: 22px; }
+.n3-sheet-job:last-child { margin-bottom: 0; }
+.n3-sheet-job-head {
+  display: flex; flex-wrap: wrap; gap: 4px 14px;
+  align-items: baseline; justify-content: space-between;
+}
+.n3-sheet-job-head h4 {
+  margin: 0; font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em;
+}
+.n3-sheet-when {
+  font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-70); white-space: nowrap;
+}
+.n3-sheet-where {
+  margin: 3px 0 8px; font-size: 12px; color: var(--ink-70);
+}
+.n3-sheet-bullets { margin: 0; padding-left: 16px; }
+.n3-sheet-bullets li {
+  margin-bottom: 5px; font-size: 12.8px; line-height: 1.62; color: var(--ink-70);
+}
+.n3-sheet-bullets b { color: var(--ink); font-weight: 600; }
+
+.n3-sheet-list { margin: 0; padding: 0; list-style: none; }
+.n3-sheet-list li {
+  font-size: 12.3px; line-height: 1.55; color: var(--ink-70);
+  padding: 3px 0 3px 12px; position: relative;
+}
+.n3-sheet-list li::before {
+  content: ''; position: absolute; left: 0; top: 10px;
+  width: 4px; height: 4px; border-radius: 50%; background: var(--accent); opacity: 0.5;
+}
+.n3-sheet-edu { font-size: 12.3px; line-height: 1.55; color: var(--ink-70); }
+.n3-sheet-edu p { margin: 0 0 2px; }
+.n3-sheet-edu-school { color: var(--ink); font-weight: 600; }
+
+.n3-sheet-actions { display: flex; gap: 10px; margin-top: 22px; }
+
+/* ---- printing ----
+ *
+ * Print is not a second design, it is this one with the room taken away.
+ * `print-color-adjust` is the load-bearing line: browsers drop backgrounds
+ * and lighten colours by default, which would silently strip the accent —
+ * the one thing tying the printed sheet to the site.
+ */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html, body { background: #fff !important; }
+  /*
+   * Every ground layer goes, not just the shader.
+   *
+   * `.n3-paper` was the one that got missed, and the way it failed is worth
+   * recording: it is an absolutely positioned sheet at z-index 2, and the
+   * content above it only wins because `.n3-stage` carries z-index 10. Forcing
+   * the stage to `position: static` for print — which the rules below do, to
+   * let the document flow across pages — silently voids that z-index, because
+   * z-index does nothing on a static element. The ground then painted straight
+   * over the masthead and the whole experience column, and the PDF came out
+   * with a cream rectangle where the resume should be.
+   *
+   * It was invisible until the filter came off `.n3-cut`, because a filtered
+   * subtree is its own rasterised layer and was compositing above the ground
+   * regardless. One fix exposed the other.
+   */
+  .n3-nav, .n3-slug, .n3-noprint, .n3-back,
+  .n3-bg, .n3-paper, .n3-grain, .n3-vig,
+  .n3-cursor-layer, .n3-load { display: none !important; }
+  .n3, .n3-stage {
+    position: static !important; inset: auto !important;
+    height: auto !important; overflow: visible !important;
+    mask-image: none !important; background: #fff !important;
+  }
+  .n3-stage { padding: 0 !important; display: block !important; }
+  /*
+   * The room-change cut leaves `filter: blur(0px)` on this wrapper. A filter
+   * of ANY radius, zero included, promotes the subtree to its own layer — and
+   * Chromium's PDF export rasterises filtered layers, which turned the whole
+   * resume into a picture of a resume: nothing selectable, nothing copyable,
+   * and nothing an applicant-tracking system can read. For a CV that is not a
+   * cosmetic bug, it is the document failing at its job.
+   */
+  .n3-cut { filter: none !important; transform: none !important; animation: none !important; }
+  .n3-room, .n3-resume-room { max-width: none !important; padding: 0 !important; }
+  .n3-sheet {
+    border: 0; border-radius: 0; box-shadow: none;
+    backdrop-filter: none; background: #fff; padding: 0;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  /* Reveal enters from opacity 0 via `n3-rise`. Without this the printed page
+     can come out blank — the print snapshot is taken from the current computed
+     style, which for anything mid-animation is a partly transparent element,
+     and for anything not yet started is an invisible one. */
+  .n3-rise { opacity: 1 !important; transform: none !important; animation: none !important; }
+  /*
+   * Hold the two columns.
+   *
+   * A4 minus its margins is about 700 CSS pixels, which is under the 780px
+   * breakpoint above — so without this the sheet stacks itself for print and
+   * a two-page CV becomes three, most of the last one blank. Print is a NARROW
+   * page, not a small screen, and a width query cannot tell those apart.
+   */
+  .n3-sheet-body {
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr) !important;
+    gap: 26px !important;
+  }
+  .n3-sheet { padding: 0 !important; }
+  .n3-sheet-contact { text-align: right !important; }
+
+  /* Print sets tighter than screen: on paper the reader is closer, the line
+     length is fixed, and every millimetre saved is a page not spilled. */
+  .n3-sheet-name { font-size: 27px; }
+  .n3-sheet-summary { font-size: 11.5px; margin-top: 14px; }
+  .n3-sheet-body { margin-top: 18px; }
+  .n3-sheet-job { margin-bottom: 15px; }
+  .n3-sheet-bullets li { font-size: 10.4px; line-height: 1.5; margin-bottom: 3px; }
+  .n3-sheet-list li { font-size: 10.2px; padding: 1.5px 0 1.5px 11px; }
+  .n3-sheet-list li::before { top: 8px; }
+  .n3-sheet-job-head h4 { font-size: 12.4px; }
+  .n3-sheet-where { font-size: 10.2px; margin-bottom: 5px; }
+  .n3-sheet-when { font-size: 9px; }
+  .n3-sheet-edu { font-size: 10.2px; }
+
+  /* Never split a role across a page break: a heading orphaned at the foot of
+     a page with its bullets overleaf is the classic printed-CV failure. */
+  .n3-sheet-job, .n3-sheet-edu { break-inside: avoid; }
+  .n3-sheet-h { break-after: avoid; }
 }

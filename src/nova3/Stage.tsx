@@ -4,6 +4,7 @@ import BackdropPicker from './BackdropPicker';
 import Nav from './Nav';
 import { Room } from './Sections';
 import CaseRoom from './CaseRoom';
+import ResumeRoom from './ResumeRoom';
 import { SETUPS, setupOf, sectionFromHash, type SectionId } from './scenes';
 import Cursor from './Cursor';
 import Loader from './Loader';
@@ -34,6 +35,8 @@ import './nova3.css';
 export default function Stage() {
   const [id, setId] = useState<SectionId>('home');
   const [caseSlug, setCaseSlug] = useState<string | null>(null);
+  /* The resume is a route, not a room — see sectionFromHash. */
+  const [resume, setResume] = useState(false);
   const [cutting, setCutting] = useState(false);
   const cutTimer = useRef(0);
   const stageRef = useRef<HTMLElement | null>(null);
@@ -124,9 +127,28 @@ export default function Stage() {
       return next;
     });
     setCaseSlug(slug);
+    setResume(false);
     const hash = slug ? `#case/${slug}` : `#${next}`;
     if (window.location.hash !== hash) window.history.pushState(null, '', hash);
   }, [caseSlug]);
+
+  /*
+   * The resume gets its own opener rather than an extra argument on `go`,
+   * because it is not a room: it has no entry in SETUPS, no nav link and no
+   * lighting of its own. Threading it through `go` would mean every call site
+   * carrying a parameter that is false everywhere but one.
+   */
+  const openResume = useCallback(() => {
+    setCutting(true);
+    window.clearTimeout(cutTimer.current);
+    cutTimer.current = window.setTimeout(() => setCutting(false), 170);
+    setId('career');
+    setCaseSlug(null);
+    setResume(true);
+    if (window.location.hash !== '#resume') {
+      window.history.pushState(null, '', '#resume');
+    }
+  }, []);
 
   /*
    * A room opens at its top, the way turning to a page does.
@@ -146,7 +168,7 @@ export default function Stage() {
     // flag is almost always already false here, and setting it anyway would
     // schedule a render on every single room change for nothing.
     setScrolled((v) => (v ? false : v));
-  }, [id, caseSlug]);
+  }, [id, caseSlug, resume]);
 
   /* The bar only lifts once something is actually underneath it. */
   useEffect(() => {
@@ -183,6 +205,7 @@ export default function Stage() {
       const s = sectionFromHash();
       setId(s.id);
       setCaseSlug(s.caseSlug);
+      setResume(s.resume);
     };
     sync();
     window.addEventListener('popstate', sync);
@@ -200,14 +223,18 @@ export default function Stage() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.closest('input, textarea')) return;
       if (e.key === 'Escape' && caseSlug) { go('systems'); return; }
-      if (caseSlug) return;
+      if (e.key === 'Escape' && resume) { go('career'); return; }
+      /* Arrow keys walk the ROOMS. On a case or the resume they would jump
+         you out of what you were reading, which is not what a reader pressing
+         right expects. */
+      if (caseSlug || resume) return;
       const i = SETUPS.findIndex((s) => s.id === id);
       if (e.key === 'ArrowRight') go(SETUPS[(i + 1) % SETUPS.length].id);
       if (e.key === 'ArrowLeft') go(SETUPS[(i - 1 + SETUPS.length) % SETUPS.length].id);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [id, caseSlug, go]);
+  }, [id, caseSlug, resume, go]);
 
   return (
     <div
@@ -245,16 +272,19 @@ export default function Stage() {
       <Nav
         active={id}
         onGo={(next) => go(next)}
+        onResume={openResume}
         themeControl={
           <BackdropPicker state={theme} onChange={patchTheme} onReset={resetTheme} />
         }
       />
 
       <main ref={stageRef} className={`n3-stage ${cutting ? 'is-cutting' : ''}`}>
-        <div key={caseSlug ?? id} className="n3-cut">
-          {booted && (caseSlug
-            ? <CaseRoom slug={caseSlug} onBack={() => go('systems')} />
-            : <Room id={id} onGo={go} />)}
+        <div key={resume ? 'resume' : caseSlug ?? id} className="n3-cut">
+          {booted && (
+            resume ? <ResumeRoom onBack={() => go('career')} />
+              : caseSlug ? <CaseRoom slug={caseSlug} onBack={() => go('systems')} />
+                : <Room id={id} onGo={go} />
+          )}
         </div>
       </main>
 

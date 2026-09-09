@@ -98,31 +98,30 @@ export const CLICKS: { id: ClickId; label: string; note: string }[] = [
  * ================================================================ */
 
 /**
- * THE HAND-WRITTEN CURSORS ARE GONE.
+ * FOUR, DOWN FROM ELEVEN.
  *
- * Dot, Ring, Trail, Blade and Halo were five versions of one idea — a small
- * shape chased after the pointer — and that idea has a ceiling: the real
- * pointer is drawn by the compositor and is never late, so anything drawn in
- * JavaScript is always a frame behind it. A follower is then only as good as
- * the excuse it has for lagging, and five variations on "slightly behind" is
- * four too many.
+ * The five hand-written ones went first — Dot, Ring, Trail, Blade and Halo
+ * were all a single idea, a small shape chasing the pointer, and that idea
+ * has a ceiling: the real pointer is drawn by the compositor and is never
+ * late, so anything drawn in JavaScript is permanently a frame behind it.
  *
- * These have reasons to exist. Crosshair and Target respond to what you are
- * pointing AT rather than merely following it. Blob, Ribbons and Splash are
- * MADE of the lag — the trailing is the effect, so being behind the pointer
- * is the point rather than the flaw.
+ * Blob and Lines have now gone too, for a different reason. Both worked.
+ * Neither had anything to do with this site: a gooey ball trailing the hand
+ * and a field of rules swivelling to face it are effects that announce
+ * themselves, and on a portfolio whose whole argument is restraint they read
+ * as a tour of a component library rather than as a decision.
  *
- * They are not the same weight, and the notes say so: Splash runs a live
- * fluid simulation and is by far the most expensive thing on the site.
+ * What is left responds to the page instead of performing over it. Crosshair
+ * and Target register what you are pointing AT. Splash stays because it is
+ * genuinely beautiful and honestly labelled — a live fluid simulation, and by
+ * some distance the heaviest thing on the site.
  */
-export type CursorId = 'system' | 'crosshair' | 'target' | 'blob' | 'lines' | 'splash';
+export type CursorId = 'system' | 'crosshair' | 'target' | 'splash';
 
 export const CURSORS: { id: CursorId; label: string; note: string }[] = [
   { id: 'system',    label: 'System',    note: "The visitor's own pointer" },
   { id: 'crosshair', label: 'Crosshair', note: 'Rules across the frame, with drift' },
   { id: 'target',    label: 'Target',    note: 'Four corners that frame a target' },
-  { id: 'blob',      label: 'Blob',      note: 'A gooey follower in the room colour' },
-  { id: 'lines',     label: 'Lines',     note: 'A field that turns to face you' },
   { id: 'splash',    label: 'Splash',    note: 'Fluid that parts as you move — heavy' },
 ];
 
@@ -132,16 +131,24 @@ export const CURSORS: { id: CursorId; label: string; note: string }[] = [
  * INTENSITY scales the ground and NOTHING else. It is a separate control from
  * paper for a reason: turning the colour down is not the same request as
  * making the page whiter, and one slider doing both would make each
- * unreachable. 0 leaves the ground bare, 100 is the tuned value, and it goes
- * to 140 because on a bright monitor the tuned value can read as too timid.
+ * unreachable. 0 leaves the ground bare and it goes to 140 because on a bright
+ * monitor a timid ground disappears entirely.
  *
  * PAPER moves the ground between warm stock and near-white. It is the closest
  * thing to a "whiteness" control and it deliberately does not touch the ink,
  * so contrast only ever improves as it goes up.
+ *
+ * THE DEFAULTS ARE THE SETTLED ONES, NOT THE TUNED ONES.
+ * These were 100 and 0 — the values the shaders were tuned at, in isolation,
+ * against no type. Sourav auditioned the panel on the real pages and landed on
+ * 25 and 50: a much quieter ground on much whiter stock. That is the answer to
+ * the question the panel was built to ask, so it is now what a first-time
+ * visitor sees. A settings panel whose defaults ignore its own findings is
+ * just a toy.
  * ================================================================ */
 
-export const INTENSITY = { min: 0, max: 140, step: 5, def: 100 };
-export const PAPERNESS = { min: 0, max: 100, step: 5, def: 0 };
+export const INTENSITY = { min: 0, max: 140, step: 5, def: 25 };
+export const PAPERNESS = { min: 0, max: 100, step: 5, def: 50 };
 
 /** Blend the warm stock toward white by `t` (0..1). */
 export function paperAt(t: number) {

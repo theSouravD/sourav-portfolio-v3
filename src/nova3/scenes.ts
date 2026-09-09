@@ -196,10 +196,29 @@ export function washProps(s: Setup) {
   } as Record<string, unknown>;
 }
 
-/** Read the room out of the URL, so a shared link and the back button work. */
-export function sectionFromHash(): { id: SectionId; caseSlug: string | null } {
+/**
+ * Read the room out of the URL, so a shared link and the back button work.
+ *
+ * Two routes are not rooms: a case study and the resume. Each renders in a
+ * room's place while borrowing that room's lighting, and neither gets an entry
+ * in SETUPS — which is also what keeps them out of the nav, since the nav is
+ * built from that list. A case borrows Systems; the resume borrows Career,
+ * being the long form of it.
+ */
+export function sectionFromHash(): {
+  id: SectionId;
+  caseSlug: string | null;
+  resume: boolean;
+} {
   const raw = window.location.hash.replace('#', '');
-  if (raw.startsWith('case/')) return { id: 'systems', caseSlug: raw.slice(5) || null };
+  if (raw.startsWith('case/')) {
+    return { id: 'systems', caseSlug: raw.slice(5) || null, resume: false };
+  }
+  if (raw === 'resume') return { id: 'career', caseSlug: null, resume: true };
   const id = raw as SectionId;
-  return { id: SETUPS.some((s) => s.id === id) ? id : 'home', caseSlug: null };
+  return {
+    id: SETUPS.some((s) => s.id === id) ? id : 'home',
+    caseSlug: null,
+    resume: false,
+  };
 }
