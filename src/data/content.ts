@@ -81,6 +81,13 @@ export const tools = [
  * other would lose whichever was more current.
  */
 export const resumeAside = {
+  /*
+   * The CV's own role line, which carries a third discipline the site's
+   * masthead does not. It is verbatim from the document rather than derived
+   * from `profile.role`, because the two are answering different questions:
+   * the site introduces him, the CV lists what he is hired as.
+   */
+  roleLine: "Gen AI Production Lead | Creative Director | Motion Graphics",
   aiTools: [
     "ChatGPT", "Codex", "Claude", "Claude Code", "Gemini",
     "Seedance 2.5", "Seedance 2.0", "Seedream 5.0 Pro",

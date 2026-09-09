@@ -1,4 +1,4 @@
-import { ArrowLeft, Download, Printer } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import { Reveal } from './parts';
 import { Rich } from './Sections';
 import {
@@ -18,17 +18,20 @@ import {
  * this page. One source: a bullet edited once lands in both, and they cannot
  * drift apart.
  *
- * THE STRUCTURE IS THE ONE THAT WAS ALREADY WORKING
- * The first version of this page was a plain two-column document, and it was
- * a clear step down from the PDF it replaced. That PDF was properly designed —
- * a full-bleed masthead, a tinted sidebar running the height of the page,
- * numbered company blocks, a date pill per employer — and matching the site's
- * COLOURS while throwing away its LAYOUT is not a trade worth making.
+ * THE PDF IS THE REFERENCE, NOT THE OUTPUT
+ * Two earlier passes got this backwards. The first replaced a well-designed
+ * CV with a plainer page; the second rebuilt the CV's structure from scratch
+ * and still drifted from it, so the file and the page disagreed.
  *
- * So this rebuilds that structure in the site's own materials: the masthead
- * band is `--ink`, the same solid the primary buttons use; the sidebar is a
- * wash of it; the numbers and the section rules take the room's accent. Same
- * document, same palette as the page it lives on.
+ * The document was only ever asked to change PALETTE. So the shipped PDF is
+ * now the original file with its colours rewritten in place — every
+ * coordinate, every measure, every line break exactly as designed — and THIS
+ * page is matched to that file rather than the file being generated from this
+ * page. The CV is the fixed thing; the web view follows it.
+ *
+ * That is also why nothing here is accent-coloured. The CV is built entirely
+ * from one ink and one paper at varying opacity, and giving the page an
+ * accent the file cannot have would put them back out of step.
  */
 
 /** One employer, with every consecutive role held there. */
@@ -95,6 +98,7 @@ function Aside({ title, items }: { title: string; items: string[] }) {
 
 export default function ResumeRoom({ onBack }: { onBack: () => void }) {
   const firms = groupByFirm(experience);
+  const linkedIn = contact.items.find((c) => c.label === 'LinkedIn');
 
   return (
     <div className="n3-room n3-resume-room">
@@ -112,7 +116,7 @@ export default function ResumeRoom({ onBack }: { onBack: () => void }) {
           <header className="n3-cv-band">
             <div>
               <h2 className="n3-cv-name">{profile.name}</h2>
-              <p className="n3-cv-role">{profile.role}</p>
+              <p className="n3-cv-role">{resumeAside.roleLine}</p>
               <p className="n3-cv-summary">{profile.intro}</p>
             </div>
             {/* Straight from the list the Connect room uses, so a phone number
@@ -139,9 +143,10 @@ export default function ResumeRoom({ onBack }: { onBack: () => void }) {
               carrying different sections onto page two.
             */}
             <aside className="n3-cv-side">
+              {/* Same sections, same order as the file — which splits them
+                  across its two pages and this page runs as one column. */}
               <Aside title="Core skills" items={coreSkills} />
               <Aside title="AI tools" items={resumeAside.aiTools} />
-              <Aside title="Traditional software" items={resumeAside.traditional} />
 
               <section className="n3-cv-block">
                 <h3 className="n3-cv-h">Education</h3>
@@ -154,6 +159,18 @@ export default function ResumeRoom({ onBack }: { onBack: () => void }) {
                 ))}
               </section>
 
+              {linkedIn && (
+                <section className="n3-cv-block">
+                  <h3 className="n3-cv-h">LinkedIn</h3>
+                  <p className="n3-cv-edu">
+                    <a className="n3-cv-link" href={linkedIn.href ?? undefined}>
+                      {linkedIn.value}
+                    </a>
+                  </p>
+                </section>
+              )}
+
+              <Aside title="Traditional software" items={resumeAside.traditional} />
               <Aside title="Focus" items={resumeAside.focus} />
             </aside>
 
@@ -202,10 +219,13 @@ export default function ResumeRoom({ onBack }: { onBack: () => void }) {
       {/* Hidden from print — a sheet of paper with a "Print" button on it is
           the oldest tell that a page was never meant to be printed. */}
       <Reveal delay={0.14}>
+        {/*
+          One action, not two. A "Print" button beside it produced a THIRD
+          artefact — this page run through the browser's print path — which
+          differed from the file in small ways and put the two out of step
+          again. The file is the document; this is the view of it.
+        */}
         <div className="n3-sheet-actions n3-noprint">
-          <button type="button" className="n3-btn" onClick={() => window.print()}>
-            <Printer size={14} /> Print
-          </button>
           <a className="n3-btn" href={profile.resumeUrl} download>
             <Download size={14} /> Download PDF
           </a>
