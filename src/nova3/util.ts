@@ -39,3 +39,27 @@ export const glow = (hex: string, a: number): Rgba => {
   const n = parseInt(h, 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 };
+
+/**
+ * Lighten and darken, for building a gradient out of one colour.
+ *
+ * The workflow tiles take a room's accent and derive their whole gradient from
+ * it — a light stop, a near-true stop, a deep stop — rather than storing three
+ * hand-picked hexes per tile. Change a room's accent in scenes.ts and its tile
+ * follows, which is the only way five tiles stay a set without somebody
+ * remembering to keep them one.
+ */
+const channels = (hex: string) => {
+  const h = hex.replace('#', '');
+  const n = parseInt(h, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+const css = (c: number[]) => `rgb(${c.map((v) => Math.round(v)).join(',')})`;
+
+/** Toward white by `t` (0..1). */
+export const tint = (hex: string, t: number) =>
+  css(channels(hex).map((v) => v + (255 - v) * t));
+
+/** Toward black by `t` (0..1). */
+export const shade = (hex: string, t: number) =>
+  css(channels(hex).map((v) => v * (1 - t)));
