@@ -20,6 +20,22 @@ import type { AutomationProject } from '@/data/work';
  * the whole idea. It is a language designed for something an inch wide on a
  * home screen, which is exactly the problem a card thumbnail poses.
  *
+ * ALMOST NO GROUND AT ALL.
+ * The first cut was a deep accent ground with paper symbols, and it was too
+ * heavy: a dark tile is a heavy object, and five on Systems plus one on the
+ * home hero pulled the eye off the type the page is for. A mid tint fixed the
+ * weight and still put a coloured panel in every card.
+ *
+ * So the ground is now barely there — paper, falling to a whisper of accent —
+ * and the symbol does all the work. The tile stops being a panel with a mark
+ * on it and becomes a drawing that happens to be framed, which is the lightest
+ * a thumbnail can be while still reading as a made thing.
+ *
+ * What holds it together at that weight is the EDGE. On a near-paper tile
+ * inside a near-paper card there is no value difference left to define the
+ * boundary, so the hairline is accent-tinted and slightly firmer than it would
+ * otherwise need to be — without it the thumbnail dissolves into the card.
+ *
  * THE COLOUR IS THE ROOM'S.
  * Every stop is mixed from `--accent`, the same variable the nav underline,
  * the kickers and the hover borders take, so a tile is graded with the room it
@@ -44,21 +60,19 @@ const W = 320;
 const H = 180;
 
 /**
- * Where each tile sits on the ramp.
+ * Where each tile's ground settles, as a percentage toward paper.
  *
- * One accent, five depths. `lift` is how far the top stop is pulled toward
- * paper and `sink` how far the bottom is pushed toward ink, so a tile is
- * lighter or deeper without ever leaving the room's hue.
- *
- * The range is deliberately narrow. Widen it and the pale end stops holding
- * paper-coloured symbols — legibility sets the floor here, not taste.
+ * At this weight the ramp is nearly flat — a few points either side of 93 —
+ * because there is almost no room left to vary. Tone has stopped being what
+ * separates these; the symbols do that now, which is the right division of
+ * labour and was always half true.
  */
-const RAMP: Record<string, { lift: number; sink: number }> = {
-  'script-to-motion': { lift: 40, sink: 30 },
-  'script-to-image': { lift: 52, sink: 20 },
-  'character-standardization': { lift: 34, sink: 34 },
-  'growth-show-thumbnail-generation': { lift: 58, sink: 16 },
-  'video-dubbing-localization': { lift: 46, sink: 26 },
+const RAMP: Record<string, number> = {
+  'script-to-motion': 92,
+  'script-to-image': 95,
+  'character-standardization': 90,
+  'growth-show-thumbnail-generation': 96,
+  'video-dubbing-localization': 93,
 };
 
 /* Mixing happens in CSS rather than in JS because `--accent` is only known at
@@ -66,8 +80,28 @@ const RAMP: Record<string, { lift: number; sink: number }> = {
    in a render would freeze the tile at whatever the accent was then. */
 const PAPER = '#F7F3EC';
 const INK = '#17140F';
+/** `pct` toward paper: 0 is the raw accent, 100 is paper. */
 const lighter = (pct: number) => `color-mix(in srgb, var(--accent) ${100 - pct}%, ${PAPER})`;
 const deeper = (pct: number) => `color-mix(in srgb, var(--accent) ${100 - pct}%, ${INK})`;
+
+/**
+ * The four roles a shape can take on a light tile.
+ *
+ * On the dark version the solids were paper and the knockouts were accent.
+ * Inverting the ground inverts all of that, so the roles are named rather than
+ * spelled out per symbol — otherwise the next value change means editing five
+ * drawings by hand and getting one of them wrong.
+ */
+interface Palette {
+  /** The hero shape: deep accent, carries the idea. */
+  mark: string;
+  /** Outlines and connectors. */
+  soft: string;
+  /** Supporting shapes — the ones that are context, not subject. */
+  faint: string;
+  /** Knocked out of `mark`. */
+  paper: string;
+}
 
 /**
  * A superellipse — |x/a|ⁿ + |y/b|ⁿ = 1 — sampled as a path.
@@ -93,9 +127,6 @@ function sq(cx: number, cy: number, w: number, h: number, n = 5, steps = 72) {
   return `${d}Z`;
 }
 
-/** Symbols are the site's paper, not pure white — warm against warm accents. */
-const P = (o: number) => `rgba(247, 243, 236, ${o})`;
-
 /* ==================================================================
  * THE SYMBOLS
  *
@@ -106,63 +137,63 @@ const P = (o: number) => `rgba(247, 243, 236, ${o})`;
  * ================================================================== */
 
 /** A page, and the frame it becomes. */
-const ScriptToMotion = ({ deep }: { deep: string }) => (
+const ScriptToMotion = ({ c }: { c: Palette }) => (
   <>
-    <path d={sq(92, 90, 64, 84)} fill={P(0.95)} />
+    <path d={sq(92, 90, 64, 84)} fill={c.faint} stroke={c.soft} strokeWidth={1.3} />
     {[0, 1, 2, 3].map((i) => (
       <rect
         key={i} x={70} y={64 + i * 14} width={44 - (i % 2 ? 14 : 0)} height={5}
-        rx={2.5} fill={deep} opacity={0.55}
+        rx={2.5} fill={c.mark} opacity={0.45}
       />
     ))}
-    <g fill={P(0.92)}>
+    <g fill={c.mark}>
       <rect x={140} y={86} width={26} height={8} rx={4} />
       <path d="M164 78 l18 12 -18 12 z" />
     </g>
-    <path d={sq(240, 90, 72, 84)} fill={P(0.22)} stroke={P(0.6)} strokeWidth={1.6} />
-    <path d="M228 74 l26 16 -26 16 z" fill={P(0.95)} />
+    <path d={sq(240, 90, 72, 84)} fill={c.mark} />
+    <path d="M228 74 l26 16 -26 16 z" fill={c.paper} />
   </>
 );
 
 /** Nine panes, one chosen, drawn out as a slice. */
-const ScriptToImage = () => (
+const ScriptToImage = ({ c }: { c: Palette }) => (
   <>
     {[0, 1, 2].map((r) =>
-      [0, 1, 2].map((c) => {
-        const sel = r === 1 && c === 1;
+      [0, 1, 2].map((col) => {
+        const sel = r === 1 && col === 1;
         return (
           <path
-            key={`${r}-${c}`}
-            d={sq(112 + c * 48, 46 + r * 44, 40, 36)}
-            fill={P(sel ? 0.96 : 0.3)}
-            stroke={sel ? undefined : P(0.5)}
-            strokeWidth={sel ? undefined : 1.4}
+            key={`${r}-${col}`}
+            d={sq(112 + col * 48, 46 + r * 44, 40, 36)}
+            fill={sel ? c.mark : c.faint}
+            stroke={sel ? undefined : c.soft}
+            strokeWidth={sel ? undefined : 1.3}
           />
         );
       }),
     )}
-    <path d={sq(160, 90, 52, 48)} fill="none" stroke={P(0.95)} strokeWidth={2.6} />
-    <path d={sq(252, 90, 44, 48)} fill={P(0.96)} />
-    <path d="M196,90 h30" stroke={P(0.75)} strokeWidth={2.4} strokeLinecap="round" />
+    <path d={sq(160, 90, 52, 48)} fill="none" stroke={c.mark} strokeWidth={2.6} />
+    <path d={sq(252, 90, 44, 48)} fill={c.mark} />
+    <path d="M196,90 h30" stroke={c.soft} strokeWidth={2.4} strokeLinecap="round" />
   </>
 );
 
 /** One subject, ringed by its own coverage. */
-const CharacterCanvas = ({ deep }: { deep: string }) => (
+const CharacterCanvas = ({ c }: { c: Palette }) => (
   <>
-    <circle cx={160} cy={90} r={62} fill="none" stroke={P(0.32)} strokeWidth={1.4} />
+    <circle cx={160} cy={90} r={62} fill="none" stroke={c.soft} strokeWidth={1.3} />
     {Array.from({ length: 10 }, (_, i) => {
       const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
       return (
         <path
           key={i}
           d={sq(160 + Math.cos(a) * 62, 90 + Math.sin(a) * 62, 17, 20)}
-          fill={P(0.42)}
+          fill={c.faint}
         />
       );
     })}
-    <path d={sq(160, 90, 62, 74)} fill={P(0.96)} />
-    <g fill={deep}>
+    <path d={sq(160, 90, 62, 74)} fill={c.mark} />
+    <g fill={c.paper}>
       <circle cx={160} cy={76} r={11} />
       <path d="M143,116 Q145,92 160,90 Q175,92 177,116 Z" />
     </g>
@@ -170,31 +201,31 @@ const CharacterCanvas = ({ deep }: { deep: string }) => (
 );
 
 /** A field of candidates, and the one that shipped. */
-const ThumbnailWall = ({ deep }: { deep: string }) => (
+const ThumbnailWall = ({ c }: { c: Palette }) => (
   <>
     {Array.from({ length: 12 }, (_, i) => (
       <path
         key={i}
         d={sq(66 + (i % 6) * 26, 40 + Math.floor(i / 6) * 24, 20, 16)}
-        fill={P(0.26)}
+        fill={c.faint}
       />
     ))}
-    <path d={sq(238, 52, 44, 36)} fill={P(0.34)} />
-    <path d={sq(160, 124, 132, 64)} fill={P(0.96)} />
-    <g fill={deep}>
+    <path d={sq(238, 52, 44, 36)} fill={c.soft} />
+    <path d={sq(160, 124, 132, 64)} fill={c.mark} />
+    <g fill={c.paper}>
       <circle cx={126} cy={112} r={9} />
       <path d="M112,140 Q114,120 126,118 Q138,120 140,140 Z" />
       <rect x={156} y={110} width={60} height={7} rx={3.5} />
-      <rect x={156} y={124} width={38} height={5} rx={2.5} opacity={0.5} />
+      <rect x={156} y={124} width={38} height={5} rx={2.5} opacity={0.55} />
     </g>
   </>
 );
 
 /** One mouth, three carriers — the same shape at three weights. */
-const Dubbing = ({ deep }: { deep: string }) => (
+const Dubbing = ({ c }: { c: Palette }) => (
   <>
-    <path d={sq(84, 90, 72, 84)} fill={P(0.96)} />
-    <g fill={deep}>
+    <path d={sq(84, 90, 72, 84)} fill={c.mark} />
+    <g fill={c.paper}>
       <circle cx={84} cy={74} r={13} />
       <path d="M62,118 Q65,92 84,90 Q103,92 106,118 Z" />
     </g>
@@ -203,7 +234,8 @@ const Dubbing = ({ deep }: { deep: string }) => (
         key={i}
         d={`M140,${52 + i * 38 + 14} q40,${-16 + i * 5} 100,0`}
         fill="none"
-        stroke={P([0.95, 0.68, 0.42][i])}
+        stroke={c.mark}
+        opacity={[1, 0.6, 0.32][i]}
         strokeWidth={10}
         strokeLinecap="round"
       />
@@ -211,7 +243,7 @@ const Dubbing = ({ deep }: { deep: string }) => (
   </>
 );
 
-const SYMBOLS: Record<string, (p: { deep: string }) => React.ReactElement> = {
+const SYMBOLS: Record<string, (p: { c: Palette }) => React.ReactElement> = {
   'script-to-motion': ScriptToMotion,
   'script-to-image': ScriptToImage,
   'character-standardization': CharacterCanvas,
@@ -228,7 +260,7 @@ export default function WorkflowPoster({
 }) {
   // A future workflow with no symbol yet gets the grid rather than an empty box.
   const Symbol = SYMBOLS[project.slug] ?? ScriptToImage;
-  const { lift, sink } = RAMP[project.slug] ?? { lift: 46, sink: 26 };
+  const base = RAMP[project.slug] ?? 64;
 
   /*
    * Gradient ids must be unique per instance. Five tiles on the Systems index
@@ -237,8 +269,22 @@ export default function WorkflowPoster({
    * all five come out the same colour, which looks like a data bug and isn't.
    */
   const uid = `wp-${project.slug}`;
-  // What the symbols are knocked out in: deep enough to hold a paper shape.
-  const deep = deeper(sink + 18);
+  /*
+   * With the ground gone, every one of these has to work harder.
+   *
+   * `mark` is pushed past the raw accent toward ink so it holds a paper
+   * knockout at symbol size. `faint` is much stronger than it looks like it
+   * should be: on a mid tint the supporting shapes had a coloured ground to
+   * sit against, and on paper they have nothing, so the same value that read
+   * as "quiet" there reads as "missing" here — most visibly on the coverage
+   * ring, which vanished entirely at card size before this was raised.
+   */
+  const c: Palette = {
+    mark: deeper(16),
+    soft: lighter(52),
+    faint: lighter(74),
+    paper: PAPER,
+  };
 
   return (
     <svg
@@ -251,44 +297,25 @@ export default function WorkflowPoster({
       <defs>
         {/* Light to deep on the diagonal, all three stops derived from the
             room's single accent. */}
-        <linearGradient id={`${uid}-g`} x1="0" y1="0" x2="0.32" y2="1">
-          <stop offset="0" stopColor={lighter(lift)} />
-          <stop offset="0.5" stopColor={lighter(6)} />
-          <stop offset="1" stopColor={deeper(sink)} />
+        {/* Straight down rather than diagonal: a diagonal wants a light
+            source, and there is no longer enough colour here to carry one. */}
+        <linearGradient id={`${uid}-g`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={PAPER} />
+          <stop offset="1" stopColor={lighter(base)} />
         </linearGradient>
-        {/* Corner falloff. Without it a flat gradient reads as printed colour
-            rather than as a lit surface. */}
-        <radialGradient id={`${uid}-v`} cx="0.62" cy="0.46" r="0.78">
-          <stop offset="0" stopColor="#000" stopOpacity="0" />
-          <stop offset="1" stopColor="#000" stopOpacity="0.3" />
-        </radialGradient>
-        <radialGradient id={`${uid}-s`} cx="0.24" cy="0.06" r="0.72">
-          <stop offset="0" stopColor="#F7F3EC" stopOpacity="0.55" />
-          <stop offset="0.55" stopColor="#F7F3EC" stopOpacity="0.1" />
-          <stop offset="1" stopColor="#F7F3EC" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id={`${uid}-b`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#F7F3EC" stopOpacity="0.3" />
-          <stop offset="1" stopColor="#F7F3EC" stopOpacity="0" />
-        </linearGradient>
+        {/* No specular, no vignette. The dark version carried both; a paper
+            highlight on a paper ground is nothing, and a vignette at this
+            weight reads as dirt rather than as falloff. */}
       </defs>
 
       <rect width={W} height={H} fill={`url(#${uid}-g)`} />
-      <rect width={W} height={H} fill={`url(#${uid}-v)`} />
-      <rect width={W} height={H} fill={`url(#${uid}-s)`} />
-      {/* The specular band Apple puts across the upper third of every icon —
-          a highlight that curves, not a straight sheen. */}
-      <path
-        d={`M0,0 H${W} V54 Q${W / 2},92 0,54 Z`}
-        fill={`url(#${uid}-b)`}
-        opacity={0.55}
-      />
 
-      <Symbol deep={deep} />
+      <Symbol c={c} />
 
+      {/* The only thing separating the tile from the card. */}
       <rect
         x={0.5} y={0.5} width={W - 1} height={H - 1}
-        fill="none" stroke={P(0.22)} strokeWidth={1}
+        fill="none" stroke={lighter(70)} strokeWidth={1}
       />
     </svg>
   );
