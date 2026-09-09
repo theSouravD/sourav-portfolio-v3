@@ -1,6 +1,4 @@
 import type { AutomationProject } from '@/data/work';
-import { SETUPS, type SectionId } from './scenes';
-import { tint, shade } from './util';
 
 /**
  * A tile per workflow — the third attempt, so it is worth recording what the
@@ -22,11 +20,21 @@ import { tint, shade } from './util';
  * the whole idea. It is a language designed for something an inch wide on a
  * home screen, which is exactly the problem a card thumbnail poses.
  *
- * THE COLOUR IS THE SITE'S, NOT IOS'S.
- * Each tile takes one of the six room accents straight from scenes.ts and
- * derives its entire gradient from that single value. Re-grade a room and its
- * tile follows, with no second place to edit — and the Systems grid ends up
- * previewing the palette of the whole site.
+ * THE COLOUR IS THE ROOM'S.
+ * Every stop is mixed from `--accent`, the same variable the nav underline,
+ * the kickers and the hover borders take, so a tile is graded with the room it
+ * is standing in and re-grades itself the moment the room changes.
+ *
+ * An earlier pass gave each workflow a DIFFERENT room's accent — teal, blue,
+ * violet, amber, rose — on the theory that five hues make five workflows more
+ * memorable. It does, and it was still wrong: the Systems room is graded teal,
+ * so four of the five tiles sat against a colour they had nothing to do with.
+ * A thumbnail that ignores the grade is not a thumbnail with personality, it
+ * is a thumbnail from another site.
+ *
+ * They stay separable through TONE and symbol instead of hue: each tile takes
+ * its own position on one ramp, so the set reads as a family without any of
+ * them reading as a mistake.
  *
  * ONE CANVAS FOR BOTH SIZES. 16:9, composed to fill the frame, so the same
  * drawing serves a 118px card and a 940px hero.
@@ -36,25 +44,30 @@ const W = 320;
 const H = 180;
 
 /**
- * Which room lends each workflow its colour.
+ * Where each tile sits on the ramp.
  *
- * Deliberately five DIFFERENT rooms rather than five tints of Systems teal.
- * One hue in five tints is quieter and more obviously a family, but the tiles
- * stop being individually memorable — and on a page whose entire job is making
- * five workflows distinguishable at a glance, memorable wins.
+ * One accent, five depths. `lift` is how far the top stop is pulled toward
+ * paper and `sink` how far the bottom is pushed toward ink, so a tile is
+ * lighter or deeper without ever leaving the room's hue.
+ *
+ * The range is deliberately narrow. Widen it and the pale end stops holding
+ * paper-coloured symbols — legibility sets the floor here, not taste.
  */
-const ROOM_OF: Record<string, SectionId> = {
-  'script-to-motion': 'systems',
-  'script-to-image': 'work',
-  'character-standardization': 'toolkit',
-  'growth-show-thumbnail-generation': 'home',
-  'video-dubbing-localization': 'career',
+const RAMP: Record<string, { lift: number; sink: number }> = {
+  'script-to-motion': { lift: 40, sink: 30 },
+  'script-to-image': { lift: 52, sink: 20 },
+  'character-standardization': { lift: 34, sink: 34 },
+  'growth-show-thumbnail-generation': { lift: 58, sink: 16 },
+  'video-dubbing-localization': { lift: 46, sink: 26 },
 };
 
-const accentOf = (slug: string) => {
-  const room = ROOM_OF[slug] ?? 'systems';
-  return SETUPS.find((s) => s.id === room)?.accent ?? '#0B6A57';
-};
+/* Mixing happens in CSS rather than in JS because `--accent` is only known at
+   paint time — it animates as the room's light changes, and a value read once
+   in a render would freeze the tile at whatever the accent was then. */
+const PAPER = '#F7F3EC';
+const INK = '#17140F';
+const lighter = (pct: number) => `color-mix(in srgb, var(--accent) ${100 - pct}%, ${PAPER})`;
+const deeper = (pct: number) => `color-mix(in srgb, var(--accent) ${100 - pct}%, ${INK})`;
 
 /**
  * A superellipse — |x/a|ⁿ + |y/b|ⁿ = 1 — sampled as a path.
@@ -213,9 +226,9 @@ export default function WorkflowPoster({
   project: AutomationProject;
   className?: string;
 }) {
-  const accent = accentOf(project.slug);
   // A future workflow with no symbol yet gets the grid rather than an empty box.
   const Symbol = SYMBOLS[project.slug] ?? ScriptToImage;
+  const { lift, sink } = RAMP[project.slug] ?? { lift: 46, sink: 26 };
 
   /*
    * Gradient ids must be unique per instance. Five tiles on the Systems index
@@ -224,7 +237,8 @@ export default function WorkflowPoster({
    * all five come out the same colour, which looks like a data bug and isn't.
    */
   const uid = `wp-${project.slug}`;
-  const deep = shade(accent, 0.16);
+  // What the symbols are knocked out in: deep enough to hold a paper shape.
+  const deep = deeper(sink + 18);
 
   return (
     <svg
@@ -238,9 +252,9 @@ export default function WorkflowPoster({
         {/* Light to deep on the diagonal, all three stops derived from the
             room's single accent. */}
         <linearGradient id={`${uid}-g`} x1="0" y1="0" x2="0.32" y2="1">
-          <stop offset="0" stopColor={tint(accent, 0.46)} />
-          <stop offset="0.5" stopColor={tint(accent, 0.06)} />
-          <stop offset="1" stopColor={shade(accent, 0.2)} />
+          <stop offset="0" stopColor={lighter(lift)} />
+          <stop offset="0.5" stopColor={lighter(6)} />
+          <stop offset="1" stopColor={deeper(sink)} />
         </linearGradient>
         {/* Corner falloff. Without it a flat gradient reads as printed colour
             rather than as a lit surface. */}
