@@ -228,7 +228,7 @@ function Work() {
       <Head
         kicker="Selected work"
         title="Gallery"
-        note={`${pieces.length} pieces — campaign and trailer work, AI ad creatives, motion and video.`}
+        note={`${pieces.length} pieces of campaign and trailer work, AI ad creatives, motion and video.`}
         />
 
       {/*

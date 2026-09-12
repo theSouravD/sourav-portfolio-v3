@@ -32,8 +32,8 @@ export const BACKDROPS: BackdropDef[] = [
   { id: 'wash',     label: 'Wash',     note: 'Soft aurora across the paper' },
   { id: 'aurora',   label: 'Ribbon',   note: 'One band of colour, drifting' },
   { id: 'contour',  label: 'Contour',  note: 'Topographic lines, morphing' },
-  { id: 'mesh',     label: 'Mesh',     note: 'Soft colour blooms — no shader', cheap: true },
-  { id: 'paper',    label: 'Paper',    note: 'Nothing at all — plain stock', cheap: true },
+  { id: 'mesh',     label: 'Mesh',     note: 'Soft colour blooms, no shader', cheap: true },
+  { id: 'paper',    label: 'Paper',    note: 'Nothing at all. Plain stock', cheap: true },
 ];
 
 /* ---- texture ---- */
@@ -85,7 +85,7 @@ export type ClickId = 'hollow' | 'thock' | 'tick' | 'snap' | 'glass' | 'pop' | '
 
 export const CLICKS: { id: ClickId; label: string; note: string }[] = [
   { id: 'hollow', label: 'Hollow', note: 'A soft woody knock' },
-  { id: 'thock',  label: 'Thock',  note: 'Deep and muted — a dampened key' },
+  { id: 'thock',  label: 'Thock',  note: 'Deep and muted, like a dampened key' },
   { id: 'tick',   label: 'Tick',   note: 'Dry and high, almost no body' },
   { id: 'snap',   label: 'Snap',   note: 'Sharp, with a bright tail' },
   { id: 'glass',  label: 'Glass',  note: 'A high ping, long ring' },
@@ -122,7 +122,7 @@ export const CURSORS: { id: CursorId; label: string; note: string }[] = [
   { id: 'system',    label: 'System',    note: "The visitor's own pointer" },
   { id: 'crosshair', label: 'Crosshair', note: 'Rules across the frame, with drift' },
   { id: 'target',    label: 'Target',    note: 'Four corners that frame a target' },
-  { id: 'splash',    label: 'Splash',    note: 'Fluid that parts as you move — heavy' },
+  { id: 'splash',    label: 'Splash',    note: 'Fluid that parts as you move. Heavy' },
 ];
 
 /* ================================================================

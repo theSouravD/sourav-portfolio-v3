@@ -181,7 +181,7 @@ export default function BackdropPicker({
                 </div>
 
                 <p className="n3-pick-note">
-                  Nothing plays until you first click the page — every browser
+                  Nothing plays until you first click the page. Every browser
                   blocks audio before that.
                 </p>
               </>
