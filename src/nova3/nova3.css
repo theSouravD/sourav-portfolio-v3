@@ -542,7 +542,11 @@
 .n3-name {
   /* Sized for the LEFT COLUMN, not the page. The old 9.5vw was set when the
      headline had the full width to itself. */
-  margin: 0; font-size: clamp(2.6rem, 6.2vw, 5.4rem); font-weight: 500;
+  /* Bold. It was 500, which is a medium — the right weight when the glyphs
+     were going to thicken under the cursor and needed somewhere to go. They
+     lift now instead, so the name can just be the heaviest thing on the page
+     and stay there. 700 is the top weight this site loads. */
+  margin: 0; font-size: clamp(2.6rem, 6.2vw, 5.4rem); font-weight: 700;
   letter-spacing: -0.045em; line-height: 0.94;
 }
 /* ==================================================================
@@ -564,8 +568,23 @@
  *   follows the cause. It leaves before the letters settle, so the last
  *   thing on screen is the name and not the effect.
  * ================================================================== */
+/*
+ * `backwards`, not `both`, and this is not a detail.
+ *
+ * A filling animation keeps its last keyframe applied forever, and the
+ * animation origin outranks inline style — so with `both` the 100% frame
+ * (`transform: none; opacity: 1`) went on overriding whatever PressureName
+ * wrote to these elements after the entrance had finished. The pressure
+ * effect's scale and fade had been dead ever since the intro was added; only
+ * the font-weight, which nothing here animates, was still getting through.
+ * The bounce is pure transform, so it would have been dead on arrival.
+ *
+ * `backwards` still holds the FIRST frame through the delay, which is the
+ * half that matters — a glyph waiting its turn stays hidden instead of
+ * flashing. It just stops owning the element once it has landed.
+ */
 .n3-glyph {
-  animation: n3Glyph 900ms cubic-bezier(.16,1,.3,1) var(--d, 0ms) both;
+  animation: n3Glyph 900ms cubic-bezier(.16,1,.3,1) var(--d, 0ms) backwards;
   transform-origin: 50% 100%;
 }
 @keyframes n3Glyph {
@@ -702,32 +721,43 @@
     font-size: 9px; letter-spacing: 0.11em; line-height: 1.6;
   }
 
-  /* Two equal halves. Auto-width pills are right when there is room to spare
-     and wrong the moment there is not, and the fallback -- one full-width
-     button above a shorter one -- looks like a mistake rather than a stack. */
   /*
-   * Grid, not flex, and `minmax(0, 1fr)` rather than `1fr`. Flex with
-   * `flex: 1 1 0` came out 154 and 176 at 375px, because one item was still
-   * being held at its min-content width -- close enough to equal to look
-   * like a mistake rather than a choice. Grid tracks are exactly equal, and
-   * the zero minimum stops a long label widening its own column.
+   * THE ACTION ROW.
    *
-   * The primary action is wrapped in <Magnet>, which sets `inline-block` in
-   * an inline style that no rule here can outrank. It does not need to be
-   * outranked: an inline-level grid item is blockified by the grid, so the
-   * wrapper takes the track's width and the button fills it.
+   * This was briefly a two-up grid of equal halves, and that was wrong twice
+   * over. It centred each label inside a stretched pill, so "See the work"
+   * started 55px in while the tagline, the name, the role and the figures all
+   * started at 18 -- the page had one left edge and the buttons had another.
+   * And `.n3-cta` is shared with Contact, which has four buttons and one of
+   * them is a 23-character email address: pinned to a 165px track it broke
+   * out of both sides of its own column and off the left of the screen.
+   *
+   * Pills are their natural width and sit flush left, wrapping when they run
+   * out of room. The pill's own edge is then the left margin, which is the
+   * edge everything else on the page already uses.
    */
   .n3-cta {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex; flex-wrap: wrap; align-items: center;
     margin-top: 26px; gap: 10px;
   }
-  .n3-cta > * { min-width: 0; }
-  .n3-cta .n3-btn {
-    width: 100%; justify-content: center; white-space: nowrap;
-    padding: 12px 10px; font-size: 12.5px; gap: 7px;
-  }
-  /* The arrow's disc is 22px of the 137px a button gets at 320. */
+  .n3-cta .n3-btn { padding: 11px 17px; font-size: 12.5px; gap: 8px; }
   .n3-cta .n3-btn-solid span { width: 19px; height: 19px; }
+
+  /*
+   * The secondary actions drop to their icon.
+   *
+   * Two full pills do not fit one row at 320px, and the pair wrapping to two
+   * ragged rows of different widths is what made the block look untidy in
+   * the first place. Every one of these keeps its label as an `aria-label`
+   * and a `title`, and each icon is the conventional one for what it does,
+   * so nothing is actually hidden -- it is abbreviated.
+   */
+  .n3-btn-label { display: none; }
+  .n3-cta .n3-btn:has(.n3-btn-label),
+  .n3-cta .n3-btn-icon {
+    /* 44px is the tap target, and square plus the pill radius is a circle. */
+    width: 44px; height: 44px; padding: 0; gap: 0; justify-content: center;
+  }
 }
 .n3-btn {
   display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
@@ -1509,6 +1539,14 @@
   position: relative; display: inline-block; perspective: 800px;
   padding: 0; border: 0; background: none; color: inherit; font: inherit;
   text-align: left; cursor: pointer;
+  /*
+   * Vertical scrolling still belongs to the page; a sideways drag belongs to
+   * the letters. Without this the browser claims the gesture the moment it
+   * decides you might be scrolling, fires pointercancel, and running a
+   * finger along the name does nothing on the one device where running a
+   * finger along things is the whole vocabulary.
+   */
+  touch-action: pan-y;
 }
 .n3-name { display: flex; align-items: flex-start; gap: 12px; }
 .n3-sound {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ArrowDown, ArrowUpRight, ChevronDown, Download, ExternalLink, FileText, Mail, Play,
   Volume2, VolumeX,
@@ -49,6 +49,20 @@ function Home({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void })
   const [sound, setSound] = useState(readSound);
   const glyphs = profile.name.replace(/\s/g, '').length;
 
+  /*
+   * Which input pressed the name, so a tap and a click can mean different
+   * things.
+   *
+   * They have to. Replaying the sequence REMOUNTS the component, and a
+   * remount resets every character's spring and starts the entrance over —
+   * so on a touchscreen, where the same tap is both the press and the only
+   * way to reach a glyph, the bounce was being wiped by the thing it
+   * triggered. A finger gets the bounce; the sound button sitting right
+   * beside it is still there to replay, and is the more honest place for a
+   * replay anyway, because it is the control that makes the sound.
+   */
+  const pressedWith = useRef('');
+
   const replay = () => {
     /* A click IS the gesture the browser is waiting for, so this is also how
        sound gets unlocked the first time. Replaying the sequence means
@@ -71,16 +85,34 @@ function Home({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void })
           <button
             type="button"
             className="n3-name-seq"
-            onClick={replay}
+            onPointerDown={(e) => { pressedWith.current = e.pointerType; }}
+            onClick={() => {
+              /* Cleared as it is read, so a keyboard activation after a tap
+                 -- which fires no pointerdown at all -- still replays. */
+              const via = pressedWith.current;
+              pressedWith.current = '';
+              if (via === 'touch') return;
+              replay();
+            }}
             title="Replay"
             aria-label={`${profile.name} — replay the title`}
           >
+            {/*
+              A 260px radius covered the whole name, so the cursor thickened
+              all ten glyphs at once and the effect read as the headline
+              breathing. 72 is a little over two character widths at this
+              size: the letter under the pointer takes the whole lift, the
+              two beside it come along for about a tenth of it, and the rest
+              hold still — which is what makes it read as THAT character
+              answering you rather than as a wave passing through.
+            */}
             <PressureName
               key={run}
               text={profile.name}
-              radius={260}
+              bounce
+              radius={72}
               baseOpacity={1}
-              baseWeight={500}
+              baseWeight={700}
               intro={52}
               introDelay={260}
             />
@@ -154,8 +186,18 @@ function Home({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void })
               <span><ArrowDown size={14} /></span>
             </button>
           </Magnet>
-          <button type="button" className="n3-btn" onClick={() => onGo('contact')}>
-            <Mail size={14} /> Get in touch
+          {/* The label is a span so the phone rules can drop it and leave the
+              icon. Two full pills do not fit one row at 320px, and the pair
+              wrapping to two ragged rows was worse than one of them being
+              a symbol everybody already reads. */}
+          <button
+            type="button"
+            className="n3-btn"
+            onClick={() => onGo('contact')}
+            title="Get in touch"
+            aria-label="Get in touch"
+          >
+            <Mail size={14} /> <span className="n3-btn-label">Get in touch</span>
           </button>
         </div>
       </Reveal>
@@ -446,6 +488,23 @@ function Toolkit() {
 /* ================================================================
  * CONTACT
  * ================================================================ */
+/*
+ * The LinkedIn mark, drawn here rather than imported.
+ *
+ * Lucide dropped brand logos from the core set, and this button collapses to
+ * its icon on a phone — where a generic arrow says "a link" and nothing about
+ * which one. Solid rather than stroked, deliberately: at 13px an outlined
+ * "in" inside an outlined square is mud, and a logo that is not instantly
+ * legible is not doing the job a logo is for.
+ */
+function LinkedInMark({ size = 13 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden focusable="false">
+      <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zm1.78 13.02H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z" />
+    </svg>
+  );
+}
+
 function Contact() {
   return (
     <div className="n3-room n3-contact">
@@ -463,8 +522,18 @@ function Contact() {
               <span><Mail size={14} /></span>
             </a>
           </Magnet>
-          <a className="n3-btn" href="https://linkedin.com/in/souravdey2105" target="_blank" rel="noreferrer">
-            LinkedIn <ArrowUpRight size={13} />
+          {/* Linkedin's own mark rather than a generic arrow, because on a
+              phone this collapses to the icon alone and an arrow on its own
+              says "a link", not "this link". */}
+          <a
+            className="n3-btn"
+            href="https://linkedin.com/in/souravdey2105"
+            target="_blank"
+            rel="noreferrer"
+            title="LinkedIn"
+            aria-label="LinkedIn"
+          >
+            <LinkedInMark /> <span className="n3-btn-label">LinkedIn</span>
           </a>
           {/*
             A tab, not a panel. An iframe hands the PDF a few hundred pixels
@@ -476,7 +545,7 @@ function Contact() {
           <a className="n3-btn" href={profile.resumeUrl} target="_blank" rel="noreferrer">
             <FileText size={13} /> View resume <ExternalLink size={11} />
           </a>
-          <a className="n3-btn n3-btn-quiet" href={profile.resumeUrl} download aria-label="Download resume">
+          <a className="n3-btn n3-btn-icon" href={profile.resumeUrl} download title="Download resume" aria-label="Download resume">
             <Download size={13} />
           </a>
         </div>
