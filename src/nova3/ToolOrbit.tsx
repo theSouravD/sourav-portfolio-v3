@@ -104,6 +104,54 @@ function Ring({ items, radius, seconds, reverse, active, onPick }: {
   );
 }
 
+/**
+ * The same tools, as a list.
+ *
+ * The orbit is 486px square and its geometry is the point of it — two rings
+ * 95px apart so a wide chip on the inner one cannot reach into the outer
+ * band. There is no version of that which survives a 354px phone, so below
+ * the breakpoint the orbit is hidden.
+ *
+ * It used to be hidden into nothing. A belt of tool chips ran under the copy
+ * and was deleted as duplication, which it was on a desktop — and which left
+ * the sixteen tools appearing NOWHERE on any screen under 1280px wide. Half
+ * of what the About room is for, missing on every phone and most laptops,
+ * because the surviving copy was the one that needs a metre of space.
+ *
+ * So the list is back, as the narrow-screen form of the same content rather
+ * than as a second copy of it: same chips, same brand marks, no ring. Static
+ * rather than clickable, because selecting a chip exists to stop the ring
+ * and name the tool in the middle, and a list that holds still has already
+ * done both.
+ */
+export function ToolList() {
+  return (
+    <div className="n3-toollist">
+      {/* Labelled, unlike the core-skills row above it. Two unlabelled rows
+          of pills in one room read as one long row of the same kind of
+          thing, and these are not the same kind of thing. */}
+      <p className="n3-eyebrow">AI toolkit</p>
+      <ul>
+        {tools.map((t) => {
+          const mark = markFor(t);
+          return (
+            <li key={t}>
+              {mark ? (
+                <svg viewBox="0 0 24 24" aria-hidden style={{ fill: `#${mark.hex}` }}>
+                  <path d={mark.path} />
+                </svg>
+              ) : (
+                <i style={{ background: 'currentColor' }} />
+              )}
+              {t}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export default function ToolOrbit() {
   const [active, setActive] = useState<string | null>(null);
 

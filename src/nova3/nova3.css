@@ -1085,11 +1085,54 @@
   align-items: center;
 }
 .n3-toolkit-col { min-width: 0; }
-/* The orbit needs real width to keep its rings clear of each other, so it is
-   the first thing to go rather than the thing that gets squeezed. */
-@media (max-width: 1280px) {
+
+/*
+ * THE ORBIT AND THE LIST ARE THE SAME CONTENT.
+ *
+ * The orbit needs real width to keep its two rings clear of each other, so
+ * it is the first thing to go rather than the thing that gets squeezed —
+ * that part was right. What was wrong is what it went to: nothing. The tool
+ * belt that used to run under the copy had been deleted as duplication, so
+ * below this breakpoint the sixteen tools appeared on no screen at all.
+ * Half of what the About room is for, gone on every phone.
+ *
+ * The list is that content in a form a narrow column can hold. Exactly one
+ * of the two is ever in the document, so nothing is said twice.
+ *
+ * The threshold is 1120, down from 1280. The room caps at 1080px wide, so a
+ * 486px orbit still leaves the copy 446px at a 1100px window — perfectly
+ * readable, and 1280 was throwing the orbit away on laptops with room for
+ * it.
+ */
+.n3-toolkit-flat { display: none; }
+@media (max-width: 1120px) {
   .n3-toolkit { grid-template-columns: 1fr; }
   .n3-toolkit-orbit { display: none; }
+  .n3-toolkit-flat { display: block; }
+}
+
+.n3-toollist .n3-eyebrow { margin: 0 0 12px; }
+.n3-toollist ul {
+  display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0;
+}
+/* The orbit's chip, standing still: same pill, same brand mark, same
+   fallback dot for the tools whose owners pulled their logos. */
+.n3-toollist li {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 1px solid var(--rule); border-radius: 999px; padding: 7px 13px 7px 10px;
+  background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(8px);
+  font-size: 12px; color: var(--ink-70); white-space: nowrap;
+}
+.n3-toollist li svg { width: 14px; height: 14px; flex: none; }
+.n3-toollist li i {
+  width: 7px; height: 7px; margin: 0 3px; border-radius: 50%; flex: none;
+  color: var(--accent); opacity: 0.55;
+}
+@media (max-width: 640px) {
+  /* Sixteen pills is a lot of rows on a phone. A step down in size buys two
+     of them back without the names having to abbreviate. */
+  .n3-toollist li { font-size: 11px; padding: 6px 11px 6px 8px; gap: 6px; }
+  .n3-toollist li svg { width: 12px; height: 12px; }
 }
 
 .n3-orbit-wrap {

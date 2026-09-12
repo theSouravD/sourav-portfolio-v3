@@ -10,7 +10,7 @@ import PressureName from '@/film/PressureName';
 import Counter from '@/film/shots/Counter';
 import Poster from '@/components/Poster';
 import Lightbox from '@/components/Lightbox';
-import ToolOrbit from './ToolOrbit';
+import ToolOrbit, { ToolList } from './ToolOrbit';
 import WorkflowPoster from './WorkflowPoster';
 import { playTitle, readSound, saveSound } from './titleSound';
 import { Reveal } from './parts';
@@ -478,8 +478,14 @@ function Toolkit() {
         </Reveal>
       </div>
 
+      {/* Two forms of one thing, swapped by width in CSS rather than by a
+          resize listener in JS — the hidden one is `display: none`, so it
+          costs no layout and is out of the accessibility tree too. */}
       <Reveal delay={0.24} className="n3-toolkit-orbit">
         <ToolOrbit />
+      </Reveal>
+      <Reveal delay={0.24} className="n3-toolkit-flat">
+        <ToolList />
       </Reveal>
     </div>
   );
