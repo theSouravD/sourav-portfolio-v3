@@ -191,6 +191,19 @@ function Portrait({ id, x, y, w, h, i }: { id: string; x: number; y: number; w: 
 
 type Props = { uid: string };
 
+/*
+ * The timeline's geometry, in one place.
+ *
+ * The playhead's travel and the fill's length are the same number by
+ * construction. They were separate literals — 150 for the head, the bar's full
+ * 272 for the fill — and a tile at rest showed a completed timeline with the
+ * head parked halfway along it.
+ */
+const BAR_X = 24;
+const BAR_W = 272;
+/** How far into the run the tile settles: partway through the third frame. */
+const PLAYED = 150;
+
 /** A run of frames, and the bar that holds them in time. */
 const ScriptToMotion = ({ uid }: Props) => (
   <>
@@ -199,16 +212,30 @@ const ScriptToMotion = ({ uid }: Props) => (
         <Frame id={`${uid}-f${i}`} x={24 + i * 70} y={34} w={62} h={82} v={i + 1} />
       </g>
     ))}
-    <rect x={24} y={132} width={272} height={6} rx={3} fill={L(84)} />
-    {/* Drawn at full length and scaled from the left, because animating a
-        width attribute is a layout write on every frame. */}
-    <rect className="wp-fill" x={24} y={132} width={272} height={6} rx={3} fill={D(18)} />
-    {[0, 1, 2, 3].map((i) => (
-      <rect key={i} x={24 + i * 70} y={126} width={1.4} height={18} fill={L(56)} />
+    <rect x={BAR_X} y={132} width={BAR_W} height={6} rx={3} fill={L(84)} />
+    {/*
+      The fill is drawn PLAYED-LENGTH, not full-length, and scaled from 0 to 1
+      from its left edge. Drawing it the full width and scaling to 1 was the
+      obvious version and it was wrong: the bar finished at 100% while the
+      playhead stopped at 55%, so the tile came to rest showing a finished
+      timeline with the head stranded in the middle of it. Both now end at
+      PLAYED, so they cannot disagree.
+
+      Scaled rather than width-animated because animating a width attribute is
+      a layout write on every frame.
+    */}
+    <rect className="wp-fill" x={BAR_X} y={132} width={PLAYED} height={6} rx={3} fill={D(18)} />
+    {/* A tick at the head of every frame, and one closing the run — without
+        the last one the timeline just stops rather than ending. */}
+    {[0, 1, 2, 3, 4].map((i) => (
+      <rect
+        key={i} x={i === 4 ? BAR_X + BAR_W - 1.4 : BAR_X + i * 70}
+        y={126} width={1.4} height={18} fill={L(56)}
+      />
     ))}
     <g className="wp-head">
-      <circle cx={24} cy={135} r={6} fill={D(18)} />
-      <circle cx={24} cy={135} r={2.4} fill={PAPER} />
+      <circle cx={BAR_X} cy={135} r={6} fill={D(18)} />
+      <circle cx={BAR_X} cy={135} r={2.4} fill={PAPER} />
     </g>
   </>
 );
