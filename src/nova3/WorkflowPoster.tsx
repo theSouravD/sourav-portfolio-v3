@@ -415,13 +415,19 @@ export default function WorkflowPoster({
     >
       <rect width={W} height={H} fill={PAPER} />
       <Specimen uid={uid} phase={PHASE[project.slug] ?? 0} />
-      {/* On a paper tile inside a paper card there is no value difference left
-          to define the boundary, so this hairline is the only thing keeping
-          the thumbnail from dissolving into the card behind it. */}
-      <rect
-        x={0.5} y={0.5} width={W - 1} height={H - 1}
-        fill="none" stroke={L(76)} strokeWidth={1}
-      />
+      {/*
+        NO OUTLINE ON THE ARTWORK.
+        This carried a 1px inset stroke to stop a paper tile dissolving into a
+        paper card. It was the wrong place to solve that. The SVG is drawn at
+        320 wide and displayed at ~350, so the stroke scaled to a fractional
+        width and landed off the pixel grid — a soft, uneven line sitting just
+        inside the container's own border, which reads as a rendering fault
+        rather than as an edge.
+
+        Separation is the CONTAINER's job: `.n3-case-thumb` carries one crisp
+        rule at the boundary it shares with the copy, on the pixel grid,
+        drawn once.
+      */}
     </svg>
   );
 }
