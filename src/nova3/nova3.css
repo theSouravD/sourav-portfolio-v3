@@ -621,6 +621,114 @@
 }
 
 .n3-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
+
+/* ------------------------------------------------------------------
+ * HOME, ONCE THE COLUMNS STACK
+ *
+ * Below 980px `.n3-home` drops to one column, and at that point the left
+ * column IS the page. Nothing inside it was told: the name is sized at
+ * 6.2vw because it used to have a 1.25fr slice of a wide grid, the tagline
+ * is capped at 46ch, and the figures size to their own text. So at 820px the
+ * billing sat in the left 370px of a 780px page with the featured card
+ * running full width underneath it -- the top half of the page indented
+ * against the bottom half for no reason a reader can see.
+ *
+ * These three rules are about using the column. The density pass for phones
+ * is the block after this one.
+ * ------------------------------------------------------------------ */
+@media (max-width: 980px) {
+  .n3-name { font-size: clamp(2.6rem, 8.6vw, 4.6rem); }
+  .n3-eyebrow { max-width: 64ch; }
+
+  /* A row of figures spanning the measure, with the rules doing the aligning.
+     Sized to the text, the three of them covered a third of the width and
+     read as a stray cluster rather than a band. */
+  .n3-stats {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+  }
+  .n3-stats > div { padding-right: clamp(12px, 3vw, 22px); }
+  .n3-stats > div + div {
+    padding-left: clamp(12px, 3vw, 22px);
+    border-left: 1px solid var(--rule);
+  }
+  .n3-stats > div:last-child { padding-right: 0; }
+  .n3-stats dd { max-width: none; }
+}
+
+/* ------------------------------------------------------------------
+ * HOME, ON A PHONE
+ *
+ * Stacking the two columns is not the same as designing for the narrow one,
+ * and Home was doing the first while claiming the second. Measured at 375px:
+ *
+ *   THE FIGURES DID NOT REACH THE EDGE. `.n3-stats` is a wrapping flex row
+ *   whose labels are capped at 11ch, so the three items sized to their text
+ *   and came out 70px wide each, ending 74px short of the right margin while
+ *   every other block ran the full width. That is what reads as misaligned:
+ *   one band of the page is quietly indented and nothing explains why.
+ *
+ *   THE TAGLINE WAS 84px OF AIR. Tracked-out caps at 1.9 line-height is a
+ *   deck-distance treatment; four lines of it is the first thing on the page
+ *   and it pushes the name most of the way down the screen.
+ *
+ *   NOTHING GROUPED. 36px, 40px and 28px between the four blocks are near
+ *   enough to identical that the page reads as five unrelated things evenly
+ *   spaced rather than billing, figures, actions, evidence. Even spacing is
+ *   what "spread out" actually means: no gap is doing any work.
+ *
+ *   THE BUTTONS BROKE AT 320px. Two auto-width pills, 169 and 145, wrapped
+ *   to a second row and sat ragged against the left margin.
+ *
+ * Below 640px, then: the figures become a real three-column grid with a rule
+ * between them, the tagline tightens, the gaps are re-cut so they group, and
+ * the two actions split the row evenly.
+ * ------------------------------------------------------------------ */
+@media (max-width: 640px) {
+  .n3-home { gap: 24px; }
+
+  .n3-eyebrow {
+    font-size: 10px; letter-spacing: 0.11em; line-height: 1.65;
+    margin-bottom: 11px; max-width: none;
+  }
+  .n3-role { margin-top: 13px; }
+
+  /* The grid itself comes from the stacked block above; this is the phone's
+     share of it -- tighter gutters, smaller figures, smaller labels. */
+  .n3-stats { margin-top: 28px; }
+  .n3-stats dt { font-size: clamp(1.55rem, 8.4vw, 2.2rem); }
+  .n3-stats dd {
+    margin-top: 8px;
+    font-size: 9px; letter-spacing: 0.11em; line-height: 1.6;
+  }
+
+  /* Two equal halves. Auto-width pills are right when there is room to spare
+     and wrong the moment there is not, and the fallback -- one full-width
+     button above a shorter one -- looks like a mistake rather than a stack. */
+  /*
+   * Grid, not flex, and `minmax(0, 1fr)` rather than `1fr`. Flex with
+   * `flex: 1 1 0` came out 154 and 176 at 375px, because one item was still
+   * being held at its min-content width -- close enough to equal to look
+   * like a mistake rather than a choice. Grid tracks are exactly equal, and
+   * the zero minimum stops a long label widening its own column.
+   *
+   * The primary action is wrapped in <Magnet>, which sets `inline-block` in
+   * an inline style that no rule here can outrank. It does not need to be
+   * outranked: an inline-level grid item is blockified by the grid, so the
+   * wrapper takes the track's width and the button fills it.
+   */
+  .n3-cta {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 26px; gap: 10px;
+  }
+  .n3-cta > * { min-width: 0; }
+  .n3-cta .n3-btn {
+    width: 100%; justify-content: center; white-space: nowrap;
+    padding: 12px 10px; font-size: 12.5px; gap: 7px;
+  }
+  /* The arrow's disc is 22px of the 137px a button gets at 320. */
+  .n3-cta .n3-btn-solid span { width: 19px; height: 19px; }
+}
 .n3-btn {
   display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
   border: 1px solid var(--ink-22); border-radius: 999px; background: none;
@@ -1278,6 +1386,78 @@
 }
 .n3 .ac-img, .n3 .ac-gimg { border-color: var(--rule); }
 .n3 .ac-img { box-shadow: var(--shadow); }
+
+/* ------------------------------------------------------------------
+ * THE GALLERY, MAGNIFIED
+ *
+ * Nine shows by nine samples is eighty-one thumbnails, and at nine to a row
+ * inside the case column each one renders at 89 pixels. That is a contact
+ * sheet: it proves the volume and it shows the consistency, but you cannot
+ * actually LOOK at a single thumbnail, which is the one thing the module
+ * exists for. Scrolling to a lightbox for each of eighty-one is not an
+ * answer either.
+ *
+ * So the sheet stays a sheet and the pointer becomes the loupe. The tile
+ * under the cursor lifts to roughly 230px on top of its neighbours, the rest
+ * of its row steps back, and moving along the row reads them one after
+ * another with no clicks at all.
+ *
+ * Deliberately NOT a dock that shoves its neighbours aside. Nine tiles
+ * fanning apart every time the pointer crosses the row is a lot of movement
+ * for a page whose whole argument is restraint, and the displaced tiles end
+ * up hidden behind the magnified one anyway. One thing rises, everything
+ * else dims: the eye is told where to look exactly once.
+ * ------------------------------------------------------------------ */
+.n3 .ac-gwall { overflow: visible; }
+.n3 .ac-gimg {
+  position: relative; z-index: 0;
+  transition: transform 300ms var(--ease), box-shadow 300ms var(--ease),
+              opacity 220ms var(--ease), border-color 300ms var(--ease);
+}
+/* The card has to be able to stack above the cards after it, or the next
+   show's panel paints straight over the top of a magnified tile — each one
+   is its own opaque surface with a shadow. */
+.n3 .ac-card { position: relative; }
+
+/*
+ * Pointer only, and only where the row is nine wide.
+ *
+ * `hover: hover and pointer: fine` keeps it off touchscreens, where hover is
+ * a tap that sticks and a 2.6x tile would be a thumb-sized image stuck under
+ * the thumb that opened it. `min-width: 1024px` is Tailwind's `lg`, which is
+ * the breakpoint the nine-column grid comes in at — below it the grid is
+ * five or three across, the tiles are already 160px or larger, and the
+ * nth-child rules that keep the end tiles on screen would be counting the
+ * wrong columns.
+ */
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .n3 .ac-gimg { cursor: zoom-in; }
+  .n3 .ac-gwall:hover .ac-gimg { opacity: 0.45; }
+  .n3 .ac-gwall:hover .ac-gimg:hover {
+    opacity: 1; z-index: 6;
+    transform: scale(2.6);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    box-shadow:
+      0 2px 6px rgba(23,20,15,0.14),
+      0 18px 44px -10px rgba(23,20,15,0.38);
+  }
+  /* There WAS a scale(1.12) on the two tiles either side, on the theory that
+     the row should feel alive under the pointer. It was invisible: at 2.6x
+     the magnified tile is 232px over an 89px cell, so both neighbours are
+     completely behind it. Rules nobody can see are rules that will confuse
+     the next person to read this. */
+  /* The row ends grow inward. With centre origin the first and last tiles
+     put 70px of themselves outside the card, and near a narrow window that
+     is off the side of the page. */
+  .n3 .ac-gwall .ac-gimg:nth-child(9n+1) { transform-origin: left center; }
+  .n3 .ac-gwall .ac-gimg:nth-child(9n)   { transform-origin: right center; }
+  /* Raise the whole panel while one of its tiles is up. */
+  .n3 .ac-card:has(.ac-gimg:hover) { z-index: 8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .n3 .ac-gimg { transition: opacity 120ms linear; }
+}
 .n3 .ac-bul { color: var(--ink-70); }
 .n3 .ac-bul::before { background: var(--accent); opacity: 0.55; }
 .n3 .ac-sq { background: color-mix(in srgb, var(--accent) 26%, #E7E1D6); }

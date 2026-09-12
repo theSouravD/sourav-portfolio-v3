@@ -234,7 +234,12 @@ export default function AutomationCase({ project }: { project: AutomationProject
                   <h5 className="ac-h5 text-sm font-medium text-white">{show.name}</h5>
                   <span className="ac-lab nova-label">{show.urls.length} samples</span>
                 </div>
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
+                {/* `ac-gwall` is the hook the daylight theme hangs the
+                    magnification off. Nine 89px squares is a contact sheet,
+                    not a gallery: it proves the volume, but you cannot see a
+                    single thumbnail, which is the one thing this module is
+                    for. */}
+                <div className="ac-gwall grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
                   {show.urls.map((u, i) => (
                     <img
                       key={i}
