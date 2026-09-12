@@ -1632,109 +1632,104 @@
  * frame holds still while only the language changes. Decoration would be worse
  * than nothing here — the point is that you can watch the workflow.
  *
+ * THEY LOOP, WITH A REST BUILT IN.
+ * One cycle, one length, everywhere. The motion happens in the first half and
+ * the second half holds the finished frame, which is what turns a loop into a
+ * periodic replay rather than constant churn — five tiles in perpetual motion
+ * would make the grid impossible to read past.
+ *
+ * CSS has no per-iteration delay, so the rest has to be part of the keyframes:
+ * every set below finishes its move by roughly 50% and sits still to 100%.
+ * That is also why they all share one duration — the hold only reads as a hold
+ * if the whole set breathes together.
+ *
+ * The five are phase-shifted against each other from the component, so the
+ * grid ripples instead of pulsing in unison.
+ *
  * ONLY TRANSFORM AND OPACITY. Everything below composites on the GPU and never
  * writes layout, which matters because a live WebGL shader is running behind
  * these; five tiles animating widths or SVG geometry would fight it for the
- * main thread. It is also why the progress bar is drawn at full length and
+ * main thread. It is also why the progress bar is drawn at played-length and
  * scaled rather than having its `width` animated.
  *
  * `transform-box: fill-box` is load-bearing. Without it an SVG child's
  * transform-origin resolves against the whole viewBox, so "scale from the
  * centre" scales from the centre of the TILE and the shape flies off.
  * ================================================================== */
+.n3-poster {
+  /* One cycle for every tile: ~2.2s of motion, ~2.2s of stillness. */
+  --wp-cycle: 4.4s;
+}
 .n3-poster [class^='wp-'] {
   transform-box: fill-box;
   transform-origin: center;
   will-change: transform, opacity;
+  animation-duration: var(--wp-cycle);
+  animation-timing-function: var(--ease);
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
 }
 
-@keyframes wpLit   { 0%,8% { opacity: .38; transform: scale(.97); }
-                     22%   { opacity: 1;   transform: scale(1.02); }
-                     34%,100% { opacity: 1; transform: scale(1); } }
-@keyframes wpFill  { 0% { transform: scaleX(0); } 62%,100% { transform: scaleX(1); } }
-/* 150px == PLAYED in WorkflowPoster.tsx; the fill scales to the same point. */
-@keyframes wpHead  { 0% { transform: translateX(0); } 62%,100% { transform: translateX(150px); } }
-@keyframes wpIn    { 0% { opacity: 0; transform: scale(.86); }
-                     60% { opacity: 1; transform: scale(1.03); }
-                     100% { opacity: 1; transform: scale(1); } }
-@keyframes wpPull  { 0% { opacity: 0; transform: translate(-46px, 16px) scale(.7); }
-                     70% { opacity: 1; transform: translate(4px, -2px) scale(1.04); }
-                     100% { opacity: 1; transform: translate(0,0) scale(1); } }
-@keyframes wpMeter { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
-@keyframes wpFlick { 0% { opacity: 0; transform: scale(.8); }
-                     40% { opacity: 1; transform: scale(1); }
-                     100% { opacity: .55; transform: scale(1); } }
-@keyframes wpWin   { 0%,26% { opacity: 0; transform: scale(.82); }
-                     64% { opacity: 1; transform: scale(1.04); }
-                     100% { opacity: 1; transform: scale(1); } }
-@keyframes wpSay   { 0% { transform: scaleX(0); } 46%,100% { transform: scaleX(1); } }
+@keyframes wpLit {
+  0%, 4%   { opacity: .38; transform: scale(.97); }
+  12%      { opacity: 1;   transform: scale(1.03); }
+  20%, 100%{ opacity: 1;   transform: scale(1); }
+}
+@keyframes wpFill  { 0% { transform: scaleX(0); } 40%, 100% { transform: scaleX(1); } }
+@keyframes wpHead  { 0% { transform: translateX(0); } 40%, 100% { transform: translateX(150px); } }
+@keyframes wpIn {
+  0%       { opacity: 0; transform: scale(.86); }
+  22%      { opacity: 1; transform: scale(1.04); }
+  34%, 100%{ opacity: 1; transform: scale(1); }
+}
+@keyframes wpPull {
+  0%, 18%  { opacity: 0; transform: translate(-46px, 16px) scale(.7); }
+  38%      { opacity: 1; transform: translate(4px, -2px) scale(1.05); }
+  48%, 100%{ opacity: 1; transform: translate(0, 0) scale(1); }
+}
+@keyframes wpMeter { 0% { transform: scaleX(0); } 30%, 100% { transform: scaleX(1); } }
+@keyframes wpFlick {
+  0%       { opacity: 0; transform: scale(.8); }
+  16%      { opacity: 1; transform: scale(1); }
+  30%, 100%{ opacity: .55; transform: scale(1); }
+}
+@keyframes wpWin {
+  0%, 20%  { opacity: 0; transform: scale(.82); }
+  40%      { opacity: 1; transform: scale(1.05); }
+  50%, 100%{ opacity: 1; transform: scale(1); }
+}
+@keyframes wpSay { 0% { transform: scaleX(0); } 34%, 100% { transform: scaleX(1); } }
 
 /* Bars grow from their left edge, not their middle. */
 .n3-poster .wp-fill,
 .n3-poster .wp-meter,
+.n3-poster .wp-title,
 .n3-poster .wp-say { transform-origin: left center; }
-/* `center` of its own fill-box now that the group carries no placement
-   transform of its own. */
 
-.n3-poster .wp-lit   { animation: wpLit   2.6s var(--ease) both; }
-.n3-poster .wp-fill  { animation: wpFill  2.6s var(--ease) both; }
-.n3-poster .wp-head  { animation: wpHead  2.6s var(--ease) both; }
-.n3-poster .wp-in    { animation: wpIn    1.5s var(--ease) both; }
-.n3-poster .wp-pull  { animation: wpPull  1.5s cubic-bezier(.34,1.3,.5,1) .9s both; }
-.n3-poster .wp-meter { animation: wpMeter 1.1s var(--ease) both; }
-.n3-poster .wp-flick { animation: wpFlick 1.4s var(--ease) both; }
-.n3-poster .wp-win   { animation: wpWin   2.2s cubic-bezier(.34,1.25,.5,1) both; }
-.n3-poster .wp-title { animation: wpSay   1.6s var(--ease) 1s both; transform-origin: left center;
-                       transform-box: fill-box; }
-.n3-poster .wp-say   { animation: wpSay   2.4s var(--ease) both; }
+.n3-poster .wp-lit   { animation-name: wpLit; }
+.n3-poster .wp-fill  { animation-name: wpFill; }
+.n3-poster .wp-head  { animation-name: wpHead; }
+.n3-poster .wp-in    { animation-name: wpIn; }
+.n3-poster .wp-pull  { animation-name: wpPull; animation-timing-function: cubic-bezier(.34,1.3,.5,1); }
+.n3-poster .wp-meter { animation-name: wpMeter; }
+.n3-poster .wp-flick { animation-name: wpFlick; }
+.n3-poster .wp-win   { animation-name: wpWin; animation-timing-function: cubic-bezier(.34,1.25,.5,1); }
+.n3-poster .wp-title { animation-name: wpSay; }
+.n3-poster .wp-say   { animation-name: wpSay; }
 
-/*
- * Loop on hover, and in the case hero.
- *
- * The animation names are duplicated rather than reused, because a CSS
- * animation that has already finished does not restart when you change its
- * iteration-count — only a change of NAME re-runs it. So hovering a card whose
- * tile played on arrival would otherwise do nothing at all.
- */
-@keyframes wpLitL   { 0%,8% { opacity: .38; transform: scale(.97); }
-                      22% { opacity: 1; transform: scale(1.02); }
-                      34%,100% { opacity: 1; transform: scale(1); } }
-@keyframes wpFillL  { 0% { transform: scaleX(0); } 62%,100% { transform: scaleX(1); } }
-@keyframes wpHeadL  { 0% { transform: translateX(0); } 62%,100% { transform: translateX(150px); } }
-@keyframes wpInL    { 0% { opacity: 0; transform: scale(.86); }
-                      60% { opacity: 1; transform: scale(1.03); }
-                      100% { opacity: 1; transform: scale(1); } }
-@keyframes wpPullL  { 0% { opacity: 0; transform: translate(-46px, 16px) scale(.7); }
-                      70% { opacity: 1; transform: translate(4px, -2px) scale(1.04); }
-                      100% { opacity: 1; transform: translate(0,0) scale(1); } }
-@keyframes wpMeterL { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
-@keyframes wpFlickL { 0% { opacity: 0; transform: scale(.8); }
-                      40% { opacity: 1; transform: scale(1); }
-                      100% { opacity: .55; transform: scale(1); } }
-@keyframes wpWinL   { 0%,26% { opacity: 0; transform: scale(.82); }
-                      64% { opacity: 1; transform: scale(1.04); }
-                      100% { opacity: 1; transform: scale(1); } }
-@keyframes wpSayL   { 0% { transform: scaleX(0); } 46%,100% { transform: scaleX(1); } }
-
-.n3-case:hover .n3-poster [class^='wp-'],
-.n3-case-hero .n3-poster [class^='wp-'] { animation-iteration-count: infinite; }
-.n3-case:hover .n3-poster .wp-lit,   .n3-case-hero .n3-poster .wp-lit   { animation-name: wpLitL; }
-.n3-case:hover .n3-poster .wp-fill,  .n3-case-hero .n3-poster .wp-fill  { animation-name: wpFillL; }
-.n3-case:hover .n3-poster .wp-head,  .n3-case-hero .n3-poster .wp-head  { animation-name: wpHeadL; }
-.n3-case:hover .n3-poster .wp-in,    .n3-case-hero .n3-poster .wp-in    { animation-name: wpInL; }
-.n3-case:hover .n3-poster .wp-pull,  .n3-case-hero .n3-poster .wp-pull  { animation-name: wpPullL; }
-.n3-case:hover .n3-poster .wp-meter, .n3-case-hero .n3-poster .wp-meter { animation-name: wpMeterL; }
-.n3-case:hover .n3-poster .wp-flick, .n3-case-hero .n3-poster .wp-flick { animation-name: wpFlickL; }
-.n3-case:hover .n3-poster .wp-win,   .n3-case-hero .n3-poster .wp-win   { animation-name: wpWinL; }
-.n3-case:hover .n3-poster .wp-title, .n3-case-hero .n3-poster .wp-title { animation-name: wpSayL; }
-.n3-case:hover .n3-poster .wp-say,   .n3-case-hero .n3-poster .wp-say   { animation-name: wpSayL; }
-
-/* Loops need a rest between passes or the grid never stops twitching. */
-.n3-case:hover .n3-poster [class^='wp-'],
-.n3-case-hero .n3-poster [class^='wp-'] { animation-duration: 3.4s; }
+/* Hovering a card tightens its cycle — the rest shortens, the motion does
+   not speed up, so it reads as attention rather than as a different clip. */
+.n3-case:hover .n3-poster { --wp-cycle: 3s; }
+/* The hero is the subject of its page rather than a preview, so it runs
+   without the long rest. */
+.n3-case-hero .n3-poster { --wp-cycle: 3.2s; }
 
 /* Somebody who asked for less motion gets the finished frame, not a slower
    version of the performance. */
 @media (prefers-reduced-motion: reduce) {
-  .n3-poster [class^='wp-'] { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .n3-poster [class^='wp-'] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

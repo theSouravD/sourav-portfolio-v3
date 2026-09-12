@@ -37,8 +37,14 @@ import type { AutomationProject } from '@/data/work';
  * is a live WebGL shader running behind these, and five tiles animating width
  * or geometry attributes would fight it for the main thread.
  *
- * The cards play once on arrival and loop on hover; the case hero loops from
- * the start, because there it is the subject rather than a preview.
+ * They loop continuously, with the rest built into the keyframes — the motion
+ * happens in the first half of the cycle and the second half holds the
+ * finished frame. CSS has no per-iteration delay, so that pause has to be part
+ * of the animation itself, and without it five tiles in perpetual motion make
+ * the grid impossible to read past.
+ *
+ * The five are also phase-shifted against each other, so the row ripples
+ * rather than pulsing in unison. See PHASE.
  *
  * COMPOSED FOR THE SMALL SIZE FIRST.
  * The cards render these at 118px. That is the constraint that killed the
@@ -50,6 +56,26 @@ import type { AutomationProject } from '@/data/work';
 
 const W = 320;
 const H = 180;
+
+/**
+ * A head start per workflow, in seconds.
+ *
+ * Five tiles looping on one duration land on the same beat, and a grid that
+ * pulses together reads as a page-wide flash rather than as five things each
+ * doing their own work. These offsets are deliberately not evenly spaced —
+ * an even spread produces its own visible rhythm, a wave crossing the grid
+ * left to right, which is just a slower version of the same problem.
+ *
+ * They are negative in effect: a positive delay on an infinite animation
+ * simply shifts its phase forever, which is exactly what is wanted.
+ */
+const PHASE: Record<string, number> = {
+  'script-to-motion': 0,
+  'script-to-image': 1.3,
+  'character-standardization': 0.55,
+  'growth-show-thumbnail-generation': 2.1,
+  'video-dubbing-localization': 1.75,
+};
 
 const PAPER = '#F7F3EC';
 const INK = '#17140F';
@@ -189,7 +215,7 @@ function Portrait({ id, x, y, w, h, i }: { id: string; x: number; y: number; w: 
  * THE FIVE SPECIMENS
  * ================================================================== */
 
-type Props = { uid: string };
+type Props = { uid: string; phase: number };
 
 /*
  * The timeline's geometry, in one place.
@@ -205,10 +231,10 @@ const BAR_W = 272;
 const PLAYED = 150;
 
 /** A run of frames, and the bar that holds them in time. */
-const ScriptToMotion = ({ uid }: Props) => (
+const ScriptToMotion = ({ uid, phase }: Props) => (
   <>
     {[0, 1, 2, 3].map((i) => (
-      <g key={i} className="wp-lit" style={{ animationDelay: `${0.16 + i * 0.26}s` }}>
+      <g key={i} className="wp-lit" style={{ animationDelay: `${phase + 0.16 + i * 0.26}s` }}>
         <Frame id={`${uid}-f${i}`} x={24 + i * 70} y={34} w={62} h={82} v={i + 1} />
       </g>
     ))}
@@ -224,7 +250,10 @@ const ScriptToMotion = ({ uid }: Props) => (
       Scaled rather than width-animated because animating a width attribute is
       a layout write on every frame.
     */}
-    <rect className="wp-fill" x={BAR_X} y={132} width={PLAYED} height={6} rx={3} fill={D(18)} />
+    <rect
+      className="wp-fill" style={{ animationDelay: `${phase}s` }}
+      x={BAR_X} y={132} width={PLAYED} height={6} rx={3} fill={D(18)}
+    />
     {/* A tick at the head of every frame, and one closing the run — without
         the last one the timeline just stops rather than ending. */}
     {[0, 1, 2, 3, 4].map((i) => (
@@ -233,7 +262,7 @@ const ScriptToMotion = ({ uid }: Props) => (
         y={126} width={1.4} height={18} fill={L(56)}
       />
     ))}
-    <g className="wp-head">
+    <g className="wp-head" style={{ animationDelay: `${phase}s` }}>
       <circle cx={BAR_X} cy={135} r={6} fill={D(18)} />
       <circle cx={BAR_X} cy={135} r={2.4} fill={PAPER} />
     </g>
@@ -241,11 +270,11 @@ const ScriptToMotion = ({ uid }: Props) => (
 );
 
 /** The grid the system generates, with one cell pulled out of it. */
-const ScriptToImage = ({ uid }: Props) => (
+const ScriptToImage = ({ uid, phase }: Props) => (
   <>
     {[0, 1, 2].map((r) =>
       [0, 1, 2].map((c) => (
-        <g key={`${r}-${c}`} className="wp-in" style={{ animationDelay: `${(r * 3 + c) * 0.075}s` }}>
+        <g key={`${r}-${c}`} className="wp-in" style={{ animationDelay: `${phase + (r * 3 + c) * 0.075}s` }}>
           <Frame
             id={`${uid}-g${r}${c}`}
             x={24 + c * 58} y={22 + r * 46} w={52} h={44} v={r * 3 + c + 1}
@@ -261,7 +290,7 @@ const ScriptToImage = ({ uid }: Props) => (
       landing on top of the first grid cell.
     */}
     <g transform="translate(196 44) rotate(-5 44 34)">
-      <g className="wp-pull">
+      <g className="wp-pull" style={{ animationDelay: `${phase}s` }}>
         <path d={sq(44, 34, 92, 74)} fill={L(94)} opacity={0.9} />
         <Frame id={`${uid}-pull`} x={2} y={0} w={84} h={68} v={5} sw={1.6} edge={52} />
       </g>
@@ -270,10 +299,10 @@ const ScriptToImage = ({ uid }: Props) => (
 );
 
 /** One character, held across four framings. */
-const CharacterCanvas = ({ uid }: Props) => (
+const CharacterCanvas = ({ uid, phase }: Props) => (
   <>
     {[0, 1, 2, 3].map((i) => (
-      <g key={i} className="wp-in" style={{ animationDelay: `${0.1 + i * 0.19}s` }}>
+      <g key={i} className="wp-in" style={{ animationDelay: `${phase + 0.1 + i * 0.19}s` }}>
         <Portrait id={`${uid}-p${i}`} x={22 + i * 74} y={26} w={66} h={84} i={i} />
       </g>
     ))}
@@ -281,7 +310,7 @@ const CharacterCanvas = ({ uid }: Props) => (
       <g key={i}>
         <rect x={22 + i * 74} y={124} width={66} height={3} rx={1.5} fill={L(84)} />
         <rect
-          className="wp-meter" style={{ animationDelay: `${0.24 + i * 0.19}s` }}
+          className="wp-meter" style={{ animationDelay: `${phase + 0.24 + i * 0.19}s` }}
           x={22 + i * 74} y={124} width={[18, 34, 50, 26][i]} height={3} rx={1.5}
           fill={D(18)} opacity={0.75}
         />
@@ -292,13 +321,13 @@ const CharacterCanvas = ({ uid }: Props) => (
 );
 
 /** The wall it generates, and the one that ships. */
-const ThumbnailWall = ({ uid }: Props) => (
+const ThumbnailWall = ({ uid, phase }: Props) => (
   <>
     {Array.from({ length: 8 }, (_, i) => {
       const x = 20 + (i % 4) * 44;
       const y = 24 + Math.floor(i / 4) * 54;
       return (
-        <g key={i} className="wp-flick" style={{ animationDelay: `${i * 0.11}s` }}>
+        <g key={i} className="wp-flick" style={{ animationDelay: `${phase + i * 0.11}s` }}>
           <Frame id={`${uid}-w${i}`} x={x} y={y} w={38} h={46} v={i + 2} sky={90} land={66} edge={82} />
           <rect x={x + 4} y={y + 34} width={30} height={4} rx={2} fill={L(52)} />
         </g>
@@ -306,12 +335,15 @@ const ThumbnailWall = ({ uid }: Props) => (
     })}
     {/* Same split as the pulled cell above: placement outside, animation in. */}
     <g transform="translate(196 26)">
-      <g className="wp-win">
+      <g className="wp-win" style={{ animationDelay: `${phase}s` }}>
         <path d={sq(52, 64, 110, 124)} fill={L(96)} />
         <Frame id={`${uid}-win`} x={2} y={4} w={100} h={116} v={3} sky={84} land={44} sw={1.6} edge={48} />
-        <rect className="wp-title" x={12} y={92} width={80} height={8} rx={4} fill={D(18)} />
         <rect
-          className="wp-title" style={{ animationDelay: '1.06s' }}
+          className="wp-title" style={{ animationDelay: `${phase + 0.8}s` }}
+          x={12} y={92} width={80} height={8} rx={4} fill={D(18)}
+        />
+        <rect
+          className="wp-title" style={{ animationDelay: `${phase + 1.06}s` }}
           x={26} y={106} width={52} height={4} rx={2} fill={L(56)}
         />
       </g>
@@ -320,7 +352,7 @@ const ThumbnailWall = ({ uid }: Props) => (
 );
 
 /** One frame, three languages — the frame is what stays identical. */
-const Dubbing = ({ uid }: Props) => (
+const Dubbing = ({ uid, phase }: Props) => (
   <>
     {[0, 1, 2].map((i) => {
       const y = 20 + i * 52;
@@ -332,12 +364,12 @@ const Dubbing = ({ uid }: Props) => (
               is the claim the workflow makes. */}
           <Frame id={`${uid}-d${i}`} x={22} y={y} w={84} h={44} v={2} sky={88} land={54} />
           <rect
-            className="wp-say" style={{ animationDelay: `${0.2 + i * 0.34}s` }}
+            className="wp-say" style={{ animationDelay: `${phase + 0.2 + i * 0.34}s` }}
             x={118} y={y + 8} width={[176, 152, 164][i]} height={9} rx={4.5}
             fill={D(18)} opacity={[1, 0.66, 0.42][i]}
           />
           <rect
-            className="wp-say" style={{ animationDelay: `${0.34 + i * 0.34}s` }}
+            className="wp-say" style={{ animationDelay: `${phase + 0.34 + i * 0.34}s` }}
             x={118} y={y + 23} width={[120, 96, 138][i]} height={9} rx={4.5}
             fill={L(60)} opacity={[1, 0.7, 0.5][i]}
           />
@@ -382,7 +414,7 @@ export default function WorkflowPoster({
       aria-label={project.title}
     >
       <rect width={W} height={H} fill={PAPER} />
-      <Specimen uid={uid} />
+      <Specimen uid={uid} phase={PHASE[project.slug] ?? 0} />
       {/* On a paper tile inside a paper card there is no value difference left
           to define the boundary, so this hairline is the only thing keeping
           the thumbnail from dissolving into the card behind it. */}
