@@ -24,6 +24,22 @@ import type { AutomationProject } from '@/data/work';
  * page's air, and a tile carrying another room's hue reads as being from
  * another site.
  *
+ * THEY MOVE, AND THE MOVEMENT IS THE ARGUMENT.
+ * Each tile animates the thing its system actually does: the playhead sweeps
+ * and the frames light as it crosses them; the grid populates cell by cell and
+ * then one is pulled out of it; the coverage sheet fills in; the wall of
+ * candidates resolves to a winner; the dubbing frame holds perfectly still
+ * while only the language changes underneath it. A loop that is merely decor
+ * would be worse than none — the point is that you can watch the workflow.
+ *
+ * Every animated property is transform or opacity, so the whole set composites
+ * on the GPU and never triggers layout. That matters here specifically: there
+ * is a live WebGL shader running behind these, and five tiles animating width
+ * or geometry attributes would fight it for the main thread.
+ *
+ * The cards play once on arrival and loop on hover; the case hero loops from
+ * the start, because there it is the subject rather than a preview.
+ *
  * COMPOSED FOR THE SMALL SIZE FIRST.
  * The cards render these at 118px. That is the constraint that killed the
  * diagram versions — captions and tick rules simply dissolve — so the marks
@@ -179,15 +195,21 @@ type Props = { uid: string };
 const ScriptToMotion = ({ uid }: Props) => (
   <>
     {[0, 1, 2, 3].map((i) => (
-      <Frame key={i} id={`${uid}-f${i}`} x={24 + i * 70} y={34} w={62} h={82} v={i + 1} />
+      <g key={i} className="wp-lit" style={{ animationDelay: `${0.16 + i * 0.26}s` }}>
+        <Frame id={`${uid}-f${i}`} x={24 + i * 70} y={34} w={62} h={82} v={i + 1} />
+      </g>
     ))}
     <rect x={24} y={132} width={272} height={6} rx={3} fill={L(84)} />
-    <rect x={24} y={132} width={150} height={6} rx={3} fill={D(18)} />
+    {/* Drawn at full length and scaled from the left, because animating a
+        width attribute is a layout write on every frame. */}
+    <rect className="wp-fill" x={24} y={132} width={272} height={6} rx={3} fill={D(18)} />
     {[0, 1, 2, 3].map((i) => (
       <rect key={i} x={24 + i * 70} y={126} width={1.4} height={18} fill={L(56)} />
     ))}
-    <circle cx={174} cy={135} r={6} fill={D(18)} />
-    <circle cx={174} cy={135} r={2.4} fill={PAPER} />
+    <g className="wp-head">
+      <circle cx={24} cy={135} r={6} fill={D(18)} />
+      <circle cx={24} cy={135} r={2.4} fill={PAPER} />
+    </g>
   </>
 );
 
@@ -196,15 +218,26 @@ const ScriptToImage = ({ uid }: Props) => (
   <>
     {[0, 1, 2].map((r) =>
       [0, 1, 2].map((c) => (
-        <Frame
-          key={`${r}-${c}`} id={`${uid}-g${r}${c}`}
-          x={24 + c * 58} y={22 + r * 46} w={52} h={44} v={r * 3 + c + 1}
-        />
+        <g key={`${r}-${c}`} className="wp-in" style={{ animationDelay: `${(r * 3 + c) * 0.075}s` }}>
+          <Frame
+            id={`${uid}-g${r}${c}`}
+            x={24 + c * 58} y={22 + r * 46} w={52} h={44} v={r * 3 + c + 1}
+          />
+        </g>
       )),
     )}
+    {/*
+      The placement lives on the OUTER group and the animation on the inner
+      one. A CSS `transform` REPLACES an element's SVG transform attribute
+      rather than composing with it, so animating this group directly threw
+      away its translate and the pulled cell flew back to the tile's origin,
+      landing on top of the first grid cell.
+    */}
     <g transform="translate(196 44) rotate(-5 44 34)">
-      <path d={sq(44, 34, 92, 74)} fill={L(94)} opacity={0.9} />
-      <Frame id={`${uid}-pull`} x={2} y={0} w={84} h={68} v={5} sw={1.6} edge={52} />
+      <g className="wp-pull">
+        <path d={sq(44, 34, 92, 74)} fill={L(94)} opacity={0.9} />
+        <Frame id={`${uid}-pull`} x={2} y={0} w={84} h={68} v={5} sw={1.6} edge={52} />
+      </g>
     </g>
   </>
 );
@@ -213,12 +246,15 @@ const ScriptToImage = ({ uid }: Props) => (
 const CharacterCanvas = ({ uid }: Props) => (
   <>
     {[0, 1, 2, 3].map((i) => (
-      <Portrait key={i} id={`${uid}-p${i}`} x={22 + i * 74} y={26} w={66} h={84} i={i} />
+      <g key={i} className="wp-in" style={{ animationDelay: `${0.1 + i * 0.19}s` }}>
+        <Portrait id={`${uid}-p${i}`} x={22 + i * 74} y={26} w={66} h={84} i={i} />
+      </g>
     ))}
     {[0, 1, 2, 3].map((i) => (
       <g key={i}>
         <rect x={22 + i * 74} y={124} width={66} height={3} rx={1.5} fill={L(84)} />
         <rect
+          className="wp-meter" style={{ animationDelay: `${0.24 + i * 0.19}s` }}
           x={22 + i * 74} y={124} width={[18, 34, 50, 26][i]} height={3} rx={1.5}
           fill={D(18)} opacity={0.75}
         />
@@ -235,17 +271,23 @@ const ThumbnailWall = ({ uid }: Props) => (
       const x = 20 + (i % 4) * 44;
       const y = 24 + Math.floor(i / 4) * 54;
       return (
-        <g key={i}>
+        <g key={i} className="wp-flick" style={{ animationDelay: `${i * 0.11}s` }}>
           <Frame id={`${uid}-w${i}`} x={x} y={y} w={38} h={46} v={i + 2} sky={90} land={66} edge={82} />
           <rect x={x + 4} y={y + 34} width={30} height={4} rx={2} fill={L(52)} />
         </g>
       );
     })}
+    {/* Same split as the pulled cell above: placement outside, animation in. */}
     <g transform="translate(196 26)">
-      <path d={sq(52, 64, 110, 124)} fill={L(96)} />
-      <Frame id={`${uid}-win`} x={2} y={4} w={100} h={116} v={3} sky={84} land={44} sw={1.6} edge={48} />
-      <rect x={12} y={92} width={80} height={8} rx={4} fill={D(18)} />
-      <rect x={26} y={106} width={52} height={4} rx={2} fill={L(56)} />
+      <g className="wp-win">
+        <path d={sq(52, 64, 110, 124)} fill={L(96)} />
+        <Frame id={`${uid}-win`} x={2} y={4} w={100} h={116} v={3} sky={84} land={44} sw={1.6} edge={48} />
+        <rect className="wp-title" x={12} y={92} width={80} height={8} rx={4} fill={D(18)} />
+        <rect
+          className="wp-title" style={{ animationDelay: '1.06s' }}
+          x={26} y={106} width={52} height={4} rx={2} fill={L(56)}
+        />
+      </g>
     </g>
   </>
 );
@@ -259,12 +301,16 @@ const Dubbing = ({ uid }: Props) => (
         <g key={i}>
           {/* The same `v` every time: holding the picture and replacing only
               the voice is the entire workflow. */}
+          {/* No animation on the frame. Its stillness across all three rows
+              is the claim the workflow makes. */}
           <Frame id={`${uid}-d${i}`} x={22} y={y} w={84} h={44} v={2} sky={88} land={54} />
           <rect
+            className="wp-say" style={{ animationDelay: `${0.2 + i * 0.34}s` }}
             x={118} y={y + 8} width={[176, 152, 164][i]} height={9} rx={4.5}
             fill={D(18)} opacity={[1, 0.66, 0.42][i]}
           />
           <rect
+            className="wp-say" style={{ animationDelay: `${0.34 + i * 0.34}s` }}
             x={118} y={y + 23} width={[120, 96, 138][i]} height={9} rx={4.5}
             fill={L(60)} opacity={[1, 0.7, 0.5][i]}
           />
