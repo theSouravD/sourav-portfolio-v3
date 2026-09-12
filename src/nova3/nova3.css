@@ -179,14 +179,33 @@
   font-family: inherit; font-size: 13px; font-weight: 500; letter-spacing: -0.005em;
   transition: color var(--fast) var(--ease);
 }
-.n3-link:hover { color: var(--ink); }
+/*
+ * HOVER IS GUARDED, BECAUSE A TOUCHSCREEN HAS NO HOVER.
+ *
+ * A tap on iOS and Android fires the hover state and LEAVES IT ON until
+ * something else is touched. Unguarded, every bar control a visitor pressed
+ * stayed lit behind them — the resume pill in particular sat filled black
+ * for the rest of the visit, so the bar looked like it had two active items
+ * and neither of them was the room you were in.
+ *
+ * `(hover: hover)` is the test for a device that can actually hover. Touch
+ * gets `:active` instead, which is what a press really is.
+ */
+@media (hover: hover) {
+  .n3-link:hover { color: var(--ink); }
+  .n3-link:hover i { transform: scaleX(1); }
+  .n3-cv:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .n3-pick-btn:hover {
+    box-shadow: var(--shadow-lift);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+}
 .n3-link i {
   position: absolute; left: 14px; right: 14px; bottom: 3px; height: 1px;
   background: var(--accent);
   transform: scaleX(0); transform-origin: left;
   transition: transform var(--mid) var(--ease), background var(--slow) var(--ease);
 }
-.n3-link:hover i { transform: scaleX(1); }
 .n3-link.is-on { color: var(--ink); }
 .n3-link.is-on i { transform: scaleX(1); height: 2px; }
 
@@ -201,28 +220,147 @@
   box-shadow: var(--shadow);
   backdrop-filter: blur(8px);
 }
-.n3-cv:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+/* The press state, which is the one a touchscreen actually has. */
+.n3-cv:active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
-/*
+/* ------------------------------------------------------------------
+ * THE PHONE BAR — two rows, because eight things do not fit in one
+ *
  * Phones put the bar at the bottom, where the thumb is, and nothing goes
  * behind a hamburger — a menu you have to open is a menu somebody doesn't.
- */
+ * That principle was right; the execution was not, and it failed in four
+ * separate ways at once on a real handset:
+ *
+ *   THE BAR WAS 21 PIXELS TALL. `height: var(--bar)` is still in force down
+ *   here, and `--bar` is 0 on a phone — so the frosted strip collapsed to its
+ *   own padding while the 30px links hung out of the top and bottom of it,
+ *   the lower half of every label falling off the screen edge.
+ *
+ *   THE RESUME BUTTON AND THE THEME CENTRE WERE STILL THERE. The rule hiding
+ *   them was `.n3-brand, .n3-nav-end { display: none }`, and `.n3-nav-end`
+ *   is re-declared `display: flex` further down this file at equal
+ *   specificity — so the later one won. Both were rendering, off the right
+ *   edge, pushing the six labels into the left two thirds.
+ *
+ *   THE LABELS BUNCHED. `justify-content: space-between` on a row that was
+ *   already overflowing distributes nothing, so six words sat shoulder to
+ *   shoulder at 11px with no target bigger than a fingertip.
+ *
+ *   THE LOADER FLEW THE NAME AT NOTHING. It measures `.n3-brand-mark` to
+ *   land the wordmark, and a `display: none` element measures 0×0 — so the
+ *   scale was zero and the name vanished into the top-left corner on every
+ *   phone. Hiding the brand quietly broke the title sequence.
+ *
+ * The fix is to stop pretending eight controls fit on one line of a 375px
+ * screen. Two rows: the identity and the two things that are NOT rooms on
+ * top, the six rooms as equal tabs underneath. Everything stays visible,
+ * every tab is a 44pt target, and the brand is a real box again.
+ * ------------------------------------------------------------------ */
 @media (max-width: 860px) {
-  .n3-nav {
+  /*
+   * `.n3` prefixes throughout, and not for tidiness: several of these
+   * properties are declared again later in the file for the desktop bar, and
+   * a plain class selector down here would lose to them on source order.
+   * That is the exact bug that left the resume pill on screen.
+   */
+  .n3 .n3-nav {
     inset: auto 0 0 0;
-    padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
-    background: rgba(247,243,236,0.86);
-    backdrop-filter: blur(18px);
-    border-top: 1px solid var(--rule);
-    box-shadow: 0 -8px 24px -14px rgba(23,20,15,0.22);
+    height: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     gap: 0;
+    padding: 0 14px env(safe-area-inset-bottom);
+    /* Tracks the paperness slider. The old value was #F7F3EC hard-coded, so
+       at the whiter end of the slider the bar stayed visibly warmer than the
+       page it sat on. */
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(20px) saturate(1.35);
+    -webkit-backdrop-filter: blur(20px) saturate(1.35);
+    border-top: 1px solid var(--rule);
+    box-shadow: 0 -10px 30px -20px rgba(23,20,15,0.4);
   }
-  /* On a phone the bar is the six section links and nothing else — the
-     theme centre goes with the brand and the resume button. */
-  .n3-brand, .n3-nav-end { display: none; }
-  .n3-links { margin: 0; width: 100%; justify-content: space-between; gap: 0; }
-  .n3-link { padding: 7px 4px; font-size: 11px; }
-  .n3-link i { left: 4px; right: 4px; bottom: 1px; }
+
+  /* ---- row one: who this is, and the two controls that are not rooms ---- */
+  .n3 .n3-brand { display: flex; grid-area: 1 / 1; height: 40px; font-size: 13.5px; }
+  .n3 .n3-brand-dot {
+    width: 6px; height: 6px;
+    box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  .n3 .n3-nav-end { display: flex; grid-area: 1 / 2; height: 40px; gap: 6px; }
+  /* The elevation goes. Two shadowed pills floating inside a bar that is
+     itself a raised surface is one layer of depth too many at this size. */
+  .n3 .n3-cv { padding: 6px 13px; font-size: 11.5px; box-shadow: none; }
+  .n3 .n3-pick-btn { width: 30px; height: 30px; box-shadow: none; }
+
+  /* ---- row two: the six rooms ---- */
+  .n3 .n3-links {
+    grid-area: 2 / 1 / 3 / 3;
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+    /* Negative margins take the tab row full-bleed under the padded row
+       above it, so the first and last tabs reach the screen edges and the
+       whole width is divided six ways rather than the width minus gutters. */
+    margin: 0 -14px; width: auto; gap: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .n3 .n3-links li { display: flex; min-width: 0; }
+  .n3 .n3-link {
+    flex: 1; min-width: 0; height: 47px; padding: 0 2px; border-radius: 0;
+    display: flex; align-items: center; justify-content: center;
+    /* Scales with the screen so "Systems" and "Contact" still fit their cell
+       on a 320px handset, where a fixed 11px overflowed. */
+    font-size: clamp(9.5px, 2.85vw, 11.5px);
+    /* Darker than the desktop bar's ink-45. That value was chosen for a
+       14px label read at desk distance on a bright screen; the same grey at
+       10px on a handset outdoors is not a label, it is a smudge. The active
+       tab is told apart by weight, wash and marker rather than by being the
+       only one you can read. */
+    color: color-mix(in srgb, var(--ink) 62%, transparent);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .n3 .n3-link.is-on { color: var(--ink); font-weight: 600; }
+  /*
+   * The marker moves to the TOP of the cell. On a bottom bar an underline
+   * sits in the home-indicator strip, where it is both cropped and meaning-
+   * less; along the top edge it reads as a tab marker and it lines up with
+   * the rule it overlaps.
+   */
+  .n3 .n3-link i { left: 0; right: 0; top: -1px; bottom: auto; height: 2px; }
+  .n3 .n3-link.is-on i { height: 2px; }
+  /* A wash as well as a marker: a 2px line is not enough to find at arm's
+     length outdoors, and this is the one control a visitor navigates by. */
+  .n3 .n3-link.is-on { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .n3 .n3-link:active { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+
+  /*
+   * The bar arrives with the rest of the chrome rather than sitting there
+   * empty behind the title sequence. Opacity only — a transform would move
+   * the box the loader measures, and the wordmark would fly to where the bar
+   * is going to be rather than where it is.
+   */
+  .n3 .n3-nav { opacity: 0; }
+  .n3.is-booted .n3-nav { opacity: 1; transition: opacity 420ms var(--ease) 260ms; }
+}
+
+/* Landscape. There is width to spare and no height at all, so the same two
+   rows lose 14px rather than being restructured into something the visitor
+   has to re-learn when they turn the phone. */
+@media (max-width: 860px) and (max-height: 460px) {
+  .n3 { --navh: 74px; }
+  .n3 .n3-brand, .n3 .n3-nav-end { height: 34px; }
+  .n3 .n3-link { height: 39px; }
+  /*
+   * A sixth of 844px is a 140px cell, and a full-cell wash behind a 40px word
+   * reads as a block of colour that happens to have a label in it. Turned
+   * sideways the marker goes back to being a rule over the word, sized to the
+   * word — the same idea as the desktop underline, which is what there is
+   * room for again out here.
+   */
+  .n3 .n3-link.is-on { background: none; }
+  .n3 .n3-link i {
+    left: 50%; right: auto; width: 54px; margin-left: -27px;
+    transform-origin: center;
+  }
 }
 
 /* ==================================================================
@@ -302,8 +440,18 @@
     transparent 0, #000 var(--fade), #000 calc(100% - var(--fade)), transparent 100%);
 }
 @media (max-width: 860px) {
-  /* No bar at the top on a phone; the strip is at the bottom instead. */
-  .n3 { --bar: 0px; --floor: calc(52px + env(safe-area-inset-bottom)); }
+  /*
+   * No bar at the top on a phone; the strip is at the bottom instead.
+   *
+   * `--navh` is the bar's real height and the floor is derived from it, so
+   * the two cannot drift. They had: the floor reserved 52px for a bar that
+   * measured 21, and the room's last line ran under the tabs.
+   */
+  .n3 {
+    --bar: 0px;
+    --navh: 88px;
+    --floor: calc(var(--navh) + env(safe-area-inset-bottom));
+  }
   .n3-stage { padding: 26px 18px 24px; }
 }
 
@@ -903,7 +1051,7 @@
   background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(8px);
   transition: box-shadow var(--fast) var(--ease), border-color var(--fast) var(--ease);
 }
-.n3-pick-btn:hover, .n3-pick-btn.is-on {
+.n3-pick-btn.is-on {
   box-shadow: var(--shadow-lift);
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
@@ -917,6 +1065,28 @@
 /* Opens downward now that it hangs off the bar. */
 @keyframes n3PickIn {
   from { opacity: 0; transform: translateY(-8px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+/*
+ * On a phone the button is at the BOTTOM of the screen, so a panel anchored
+ * 42px below it opened entirely below the fold — the theme centre was
+ * unreachable on a handset rather than merely awkward. It hangs upward from
+ * the bar instead, clamped to the viewport, and grows out of the bar rather
+ * than dropping into it.
+ */
+@media (max-width: 860px) {
+  .n3 .n3-pick-panel {
+    top: auto; bottom: 40px; right: 0;
+    width: min(300px, calc(100vw - 22px));
+    animation-name: n3PickUp;
+  }
+  /* Shorter than the desktop 56vh: this panel is measured from the bottom of
+     a phone screen, and 56vh from there reaches past the top of the page. */
+  .n3 .n3-pick-body { max-height: min(50vh, 360px); }
+}
+@keyframes n3PickUp {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
   to   { opacity: 1; transform: none; }
 }
 
@@ -1440,6 +1610,9 @@
 @media (prefers-reduced-motion: reduce) {
   .n3-load { display: none; }
   .n3-brand-mark, .n3-links, .n3-nav-end, .n3-brand-dot { opacity: 1; }
+  /* The phone bar fades in with the chrome; without this it would stay at
+     zero for a visitor who never gets the boot sequence. */
+  .n3 .n3-nav { opacity: 1; }
 }
 
 /* ==================================================================
