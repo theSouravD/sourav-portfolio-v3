@@ -1,118 +1,59 @@
 import type { AutomationProject } from '@/data/work';
 
 /**
- * A tile per workflow — the third attempt, so it is worth recording what the
- * first two got wrong.
+ * A tile per workflow — the fourth attempt, and the first one that stopped
+ * drawing the wrong subject.
  *
- * The FIRST drew every workflow the same way: nodes on a line, sized by stage
- * count. That is a picture of "a pipeline exists", which is true of all five
- * and therefore says nothing about any of them.
+ * The first three all drew THE SYSTEM. Nodes on a line; then the
+ * transformation as a labelled diagram; then a single pictogram in Apple's
+ * icon language. Each was better made than the last and all three answered the
+ * same question — "what does this pipeline do?" — which is the question the
+ * case study already answers, in words, one click away.
  *
- * The SECOND drew each transformation literally — a script becoming frames, a
- * grid sliced onto a timeline, a waveform fanning into languages. Accurate,
- * and still infographics: tick rules, brackets and captions, at a size where
- * the whole argument dissolved into texture on a 118px card.
+ * These answer the question a thumbnail is actually for: WHAT DOES IT MAKE.
+ * Each tile is a specimen of the system's output — a run of frames held in
+ * time, the nine-cell grid with one cell pulled, one character held across
+ * four framings, a wall of covers and the one that shipped, a single frame in
+ * three languages. A portfolio should show the work; when the work is a system,
+ * you show what the system produced.
  *
- * THESE ARE OBJECTS, NOT DIAGRAMS.
- * The construction is Apple's icon language, and it is specific: continuous
- * curvature rather than rounded corners, a gradient running light to deep on
- * the diagonal, a specular band across the top third, and one symbol carrying
- * the whole idea. It is a language designed for something an inch wide on a
- * home screen, which is exactly the problem a card thumbnail poses.
+ * DUOTONE, ON PAPER.
+ * Every value is mixed from `--accent`, so a tile is graded with the room it
+ * stands in and re-grades the moment the room does. Two earlier passes learned
+ * this the hard way: a dark tile is a heavy object and five of them took the
+ * page's air, and a tile carrying another room's hue reads as being from
+ * another site.
  *
- * ALMOST NO GROUND AT ALL.
- * The first cut was a deep accent ground with paper symbols, and it was too
- * heavy: a dark tile is a heavy object, and five on Systems plus one on the
- * home hero pulled the eye off the type the page is for. A mid tint fixed the
- * weight and still put a coloured panel in every card.
- *
- * So the ground is now barely there — paper, falling to a whisper of accent —
- * and the symbol does all the work. The tile stops being a panel with a mark
- * on it and becomes a drawing that happens to be framed, which is the lightest
- * a thumbnail can be while still reading as a made thing.
- *
- * What holds it together at that weight is the EDGE. On a near-paper tile
- * inside a near-paper card there is no value difference left to define the
- * boundary, so the hairline is accent-tinted and slightly firmer than it would
- * otherwise need to be — without it the thumbnail dissolves into the card.
- *
- * THE COLOUR IS THE ROOM'S.
- * Every stop is mixed from `--accent`, the same variable the nav underline,
- * the kickers and the hover borders take, so a tile is graded with the room it
- * is standing in and re-grades itself the moment the room changes.
- *
- * An earlier pass gave each workflow a DIFFERENT room's accent — teal, blue,
- * violet, amber, rose — on the theory that five hues make five workflows more
- * memorable. It does, and it was still wrong: the Systems room is graded teal,
- * so four of the five tiles sat against a colour they had nothing to do with.
- * A thumbnail that ignores the grade is not a thumbnail with personality, it
- * is a thumbnail from another site.
- *
- * They stay separable through TONE and symbol instead of hue: each tile takes
- * its own position on one ramp, so the set reads as a family without any of
- * them reading as a mistake.
- *
- * ONE CANVAS FOR BOTH SIZES. 16:9, composed to fill the frame, so the same
- * drawing serves a 118px card and a 940px hero.
+ * COMPOSED FOR THE SMALL SIZE FIRST.
+ * The cards render these at 118px. That is the constraint that killed the
+ * diagram versions — captions and tick rules simply dissolve — so the marks
+ * here are few and large, and each tile is identifiable by its ARRANGEMENT
+ * before any detail resolves: a strip, a grid, a row of heads, a wall, a
+ * stack. Detail is what the 940px hero adds, not what the card depends on.
  */
 
 const W = 320;
 const H = 180;
 
-/**
- * Where each tile's ground settles, as a percentage toward paper.
- *
- * At this weight the ramp is nearly flat — a few points either side of 93 —
- * because there is almost no room left to vary. Tone has stopped being what
- * separates these; the symbols do that now, which is the right division of
- * labour and was always half true.
- */
-const RAMP: Record<string, number> = {
-  'script-to-motion': 92,
-  'script-to-image': 95,
-  'character-standardization': 90,
-  'growth-show-thumbnail-generation': 96,
-  'video-dubbing-localization': 93,
-};
-
-/* Mixing happens in CSS rather than in JS because `--accent` is only known at
-   paint time — it animates as the room's light changes, and a value read once
-   in a render would freeze the tile at whatever the accent was then. */
 const PAPER = '#F7F3EC';
 const INK = '#17140F';
+/* Mixing happens in CSS because `--accent` is only known at paint time — it
+   animates as the room's light changes, and a value read once during render
+   would freeze the tile at whatever the accent was then. */
 /** `pct` toward paper: 0 is the raw accent, 100 is paper. */
-const lighter = (pct: number) => `color-mix(in srgb, var(--accent) ${100 - pct}%, ${PAPER})`;
-const deeper = (pct: number) => `color-mix(in srgb, var(--accent) ${100 - pct}%, ${INK})`;
-
-/**
- * The four roles a shape can take on a light tile.
- *
- * On the dark version the solids were paper and the knockouts were accent.
- * Inverting the ground inverts all of that, so the roles are named rather than
- * spelled out per symbol — otherwise the next value change means editing five
- * drawings by hand and getting one of them wrong.
- */
-interface Palette {
-  /** The hero shape: deep accent, carries the idea. */
-  mark: string;
-  /** Outlines and connectors. */
-  soft: string;
-  /** Supporting shapes — the ones that are context, not subject. */
-  faint: string;
-  /** Knocked out of `mark`. */
-  paper: string;
-}
+const L = (pct: number) => `color-mix(in srgb, var(--accent) ${100 - pct}%, ${PAPER})`;
+/** `pct` toward ink. */
+const D = (pct: number) => `color-mix(in srgb, var(--accent) ${100 - pct}%, ${INK})`;
 
 /**
  * A superellipse — |x/a|ⁿ + |y/b|ⁿ = 1 — sampled as a path.
  *
- * Not a rounded rectangle. A rounded rect joins a straight edge to a circular
- * arc and the curvature jumps at that join; a superellipse's curvature is
- * continuous the whole way round. That one difference is most of why a shape
- * reads as Apple rather than as a box with soft corners, and it is plainly
- * visible at the size these symbols are drawn.
+ * A rounded rect joins a straight edge to a circular arc and the curvature
+ * jumps at the join; a superellipse's curvature is continuous the whole way
+ * round. Every frame in every tile uses it, which is most of why the set reads
+ * as manufactured rather than drawn.
  */
-function sq(cx: number, cy: number, w: number, h: number, n = 5, steps = 72) {
+function sq(cx: number, cy: number, w: number, h: number, n = 5, steps = 64) {
   const a = w / 2;
   const b = h / 2;
   let d = '';
@@ -127,123 +68,213 @@ function sq(cx: number, cy: number, w: number, h: number, n = 5, steps = 72) {
   return `${d}Z`;
 }
 
-/* ==================================================================
- * THE SYMBOLS
+/** A cloaked figure, feet on the baseline. */
+function Figure({
+  x, base, h, fill, opacity = 1,
+}: { x: number; base: number; h: number; fill: string; opacity?: number }) {
+  const s = h / 220;
+  return (
+    <g transform={`translate(${x - 50 * s} ${base - 220 * s}) scale(${s})`} fill={fill} opacity={opacity}>
+      <circle cx={50} cy={40} r={20} />
+      <path d="M22,220 Q28,158 38,116 Q43,96 39,78 Q42,64 50,62 Q58,64 61,78 Q57,96 62,116 Q72,158 78,220 Z" />
+    </g>
+  );
+}
+
+/**
+ * One frame of output.
  *
- * One idea each, at a weight that survives 118px. Anything that read as an
- * interface control was cut in review — an ellipsis under the grid, dots
- * beside the waveforms, a funnel on the thumbnail tile. A tile should look
- * like an object, not like a screenshot of a panel.
+ * `v` varies the scene — horizon height, where the moon sits, one figure or
+ * two, and every fifth frame is an interior instead of a landscape. A grid of
+ * these has to read as a SEQUENCE rather than as one image repeated, and that
+ * variation is the only thing separating "nine scenes from one script" from
+ * "a swatch printed nine times".
+ */
+function Frame({
+  id, x, y, w, h, v, sky = 86, land = 52, edge = 70, sw = 1,
+}: {
+  id: string; x: number; y: number; w: number; h: number; v: number;
+  sky?: number; land?: number; edge?: number; sw?: number;
+}) {
+  const horizon = y + h * (0.62 + 0.1 * Math.sin(v * 1.7));
+  const moonX = x + w * (0.24 + 0.5 * ((v * 0.37) % 1));
+  const moonR = Math.max(2.2, w * 0.11);
+  const two = v % 3 === 1;
+  const interior = v % 5 === 4;
+  const shape = sq(x + w / 2, y + h / 2, w, h);
+  return (
+    <>
+      <defs><clipPath id={id}><path d={shape} /></clipPath></defs>
+      <g clipPath={`url(#${id})`}>
+        <rect x={x} y={y} width={w} height={h} fill={L(sky)} />
+        {interior ? (
+          <>
+            <rect x={x + w * 0.18} y={y + h * 0.16} width={w * 0.64} height={h * 0.5} fill={L(66)} />
+            <line
+              x1={x + w * 0.5} y1={y + h * 0.16} x2={x + w * 0.5} y2={y + h * 0.66}
+              stroke={L(86)} strokeWidth={Math.max(0.6, w * 0.02)}
+            />
+          </>
+        ) : (
+          <circle cx={moonX} cy={y + h * 0.3} r={moonR} fill={L(58)} />
+        )}
+        <path
+          d={`M${x},${horizon} Q${x + w * 0.35},${horizon - h * 0.12} ${x + w * 0.68},${horizon + h * 0.03} T${x + w},${horizon - h * 0.04} L${x + w},${y + h} L${x},${y + h} Z`}
+          fill={L(land)}
+        />
+        <Figure x={x + w * (two ? 0.38 : 0.5)} base={y + h * 0.94} h={h * 0.52} fill={D(18)} />
+        {two && <Figure x={x + w * 0.62} base={y + h * 0.94} h={h * 0.44} fill={D(18)} opacity={0.82} />}
+      </g>
+      <path d={shape} fill="none" stroke={L(edge)} strokeWidth={sw} />
+    </>
+  );
+}
+
+/**
+ * A portrait frame: one subject, four framings.
+ *
+ * An earlier version scaled the full-body figure up and clipped it, which
+ * turns a cloak silhouette into an abstract blob — four vases, not one
+ * character. A coverage sheet has to read as the SAME PERSON seen differently,
+ * so this draws an explicit bust and varies two things only: how close the
+ * crop is, and how far the head is turned off the shoulders.
+ */
+function Portrait({ id, x, y, w, h, i }: { id: string; x: number; y: number; w: number; h: number; i: number }) {
+  // [head radius as a fraction of width, head centre as a fraction of height, turn]
+  const [hr, hy, turn] = [[0.3, 0.46, 0], [0.2, 0.3, 0.16], [0.145, 0.22, -0.1], [0.2, 0.3, -0.3]][i];
+  const cx = x + w * 0.5 + w * turn;
+  const cy = y + h * hy;
+  const r = w * hr;
+  const shoulderY = cy + r * 1.55;
+  const halfW = r * 2.5;
+  const shape = sq(x + w / 2, y + h / 2, w, h);
+  return (
+    <>
+      <defs><clipPath id={id}><path d={shape} /></clipPath></defs>
+      <g clipPath={`url(#${id})`}>
+        <rect x={x} y={y} width={w} height={h} fill={L(88)} />
+        <circle cx={x + w * 0.5} cy={y + h * 0.42} r={w * 0.44} fill={L(72)} />
+        <g fill={D(18)}>
+          <path
+            d={`M${cx - halfW},${y + h}
+                C${cx - halfW},${shoulderY} ${cx - r * 1.25},${shoulderY - r * 0.5} ${cx - r * 0.72},${shoulderY - r * 0.72}
+                L${cx + r * 0.72},${shoulderY - r * 0.72}
+                C${cx + r * 1.25},${shoulderY - r * 0.5} ${cx + halfW},${shoulderY} ${cx + halfW},${y + h} Z`}
+          />
+          <circle cx={cx} cy={cy} r={r} />
+        </g>
+      </g>
+      <path d={shape} fill="none" stroke={L(70)} strokeWidth={1} />
+    </>
+  );
+}
+
+/* ==================================================================
+ * THE FIVE SPECIMENS
  * ================================================================== */
 
-/** A page, and the frame it becomes. */
-const ScriptToMotion = ({ c }: { c: Palette }) => (
+type Props = { uid: string };
+
+/** A run of frames, and the bar that holds them in time. */
+const ScriptToMotion = ({ uid }: Props) => (
   <>
-    <path d={sq(92, 90, 64, 84)} fill={c.faint} stroke={c.soft} strokeWidth={1.3} />
     {[0, 1, 2, 3].map((i) => (
-      <rect
-        key={i} x={70} y={64 + i * 14} width={44 - (i % 2 ? 14 : 0)} height={5}
-        rx={2.5} fill={c.mark} opacity={0.45}
-      />
+      <Frame key={i} id={`${uid}-f${i}`} x={24 + i * 70} y={34} w={62} h={82} v={i + 1} />
     ))}
-    <g fill={c.mark}>
-      <rect x={140} y={86} width={26} height={8} rx={4} />
-      <path d="M164 78 l18 12 -18 12 z" />
-    </g>
-    <path d={sq(240, 90, 72, 84)} fill={c.mark} />
-    <path d="M228 74 l26 16 -26 16 z" fill={c.paper} />
+    <rect x={24} y={132} width={272} height={6} rx={3} fill={L(84)} />
+    <rect x={24} y={132} width={150} height={6} rx={3} fill={D(18)} />
+    {[0, 1, 2, 3].map((i) => (
+      <rect key={i} x={24 + i * 70} y={126} width={1.4} height={18} fill={L(56)} />
+    ))}
+    <circle cx={174} cy={135} r={6} fill={D(18)} />
+    <circle cx={174} cy={135} r={2.4} fill={PAPER} />
   </>
 );
 
-/** Nine panes, one chosen, drawn out as a slice. */
-const ScriptToImage = ({ c }: { c: Palette }) => (
+/** The grid the system generates, with one cell pulled out of it. */
+const ScriptToImage = ({ uid }: Props) => (
   <>
     {[0, 1, 2].map((r) =>
-      [0, 1, 2].map((col) => {
-        const sel = r === 1 && col === 1;
-        return (
-          <path
-            key={`${r}-${col}`}
-            d={sq(112 + col * 48, 46 + r * 44, 40, 36)}
-            fill={sel ? c.mark : c.faint}
-            stroke={sel ? undefined : c.soft}
-            strokeWidth={sel ? undefined : 1.3}
-          />
-        );
-      }),
+      [0, 1, 2].map((c) => (
+        <Frame
+          key={`${r}-${c}`} id={`${uid}-g${r}${c}`}
+          x={24 + c * 58} y={22 + r * 46} w={52} h={44} v={r * 3 + c + 1}
+        />
+      )),
     )}
-    <path d={sq(160, 90, 52, 48)} fill="none" stroke={c.mark} strokeWidth={2.6} />
-    <path d={sq(252, 90, 44, 48)} fill={c.mark} />
-    <path d="M196,90 h30" stroke={c.soft} strokeWidth={2.4} strokeLinecap="round" />
+    <g transform="translate(196 44) rotate(-5 44 34)">
+      <path d={sq(44, 34, 92, 74)} fill={L(94)} opacity={0.9} />
+      <Frame id={`${uid}-pull`} x={2} y={0} w={84} h={68} v={5} sw={1.6} edge={52} />
+    </g>
   </>
 );
 
-/** One subject, ringed by its own coverage. */
-const CharacterCanvas = ({ c }: { c: Palette }) => (
+/** One character, held across four framings. */
+const CharacterCanvas = ({ uid }: Props) => (
   <>
-    <circle cx={160} cy={90} r={62} fill="none" stroke={c.soft} strokeWidth={1.3} />
-    {Array.from({ length: 10 }, (_, i) => {
-      const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
-      return (
-        <path
-          key={i}
-          d={sq(160 + Math.cos(a) * 62, 90 + Math.sin(a) * 62, 17, 20)}
-          fill={c.faint}
+    {[0, 1, 2, 3].map((i) => (
+      <Portrait key={i} id={`${uid}-p${i}`} x={22 + i * 74} y={26} w={66} h={84} i={i} />
+    ))}
+    {[0, 1, 2, 3].map((i) => (
+      <g key={i}>
+        <rect x={22 + i * 74} y={124} width={66} height={3} rx={1.5} fill={L(84)} />
+        <rect
+          x={22 + i * 74} y={124} width={[18, 34, 50, 26][i]} height={3} rx={1.5}
+          fill={D(18)} opacity={0.75}
         />
+      </g>
+    ))}
+    <rect x={22} y={146} width={288} height={1} fill={L(86)} />
+  </>
+);
+
+/** The wall it generates, and the one that ships. */
+const ThumbnailWall = ({ uid }: Props) => (
+  <>
+    {Array.from({ length: 8 }, (_, i) => {
+      const x = 20 + (i % 4) * 44;
+      const y = 24 + Math.floor(i / 4) * 54;
+      return (
+        <g key={i}>
+          <Frame id={`${uid}-w${i}`} x={x} y={y} w={38} h={46} v={i + 2} sky={90} land={66} edge={82} />
+          <rect x={x + 4} y={y + 34} width={30} height={4} rx={2} fill={L(52)} />
+        </g>
       );
     })}
-    <path d={sq(160, 90, 62, 74)} fill={c.mark} />
-    <g fill={c.paper}>
-      <circle cx={160} cy={76} r={11} />
-      <path d="M143,116 Q145,92 160,90 Q175,92 177,116 Z" />
+    <g transform="translate(196 26)">
+      <path d={sq(52, 64, 110, 124)} fill={L(96)} />
+      <Frame id={`${uid}-win`} x={2} y={4} w={100} h={116} v={3} sky={84} land={44} sw={1.6} edge={48} />
+      <rect x={12} y={92} width={80} height={8} rx={4} fill={D(18)} />
+      <rect x={26} y={106} width={52} height={4} rx={2} fill={L(56)} />
     </g>
   </>
 );
 
-/** A field of candidates, and the one that shipped. */
-const ThumbnailWall = ({ c }: { c: Palette }) => (
+/** One frame, three languages — the frame is what stays identical. */
+const Dubbing = ({ uid }: Props) => (
   <>
-    {Array.from({ length: 12 }, (_, i) => (
-      <path
-        key={i}
-        d={sq(66 + (i % 6) * 26, 40 + Math.floor(i / 6) * 24, 20, 16)}
-        fill={c.faint}
-      />
-    ))}
-    <path d={sq(238, 52, 44, 36)} fill={c.soft} />
-    <path d={sq(160, 124, 132, 64)} fill={c.mark} />
-    <g fill={c.paper}>
-      <circle cx={126} cy={112} r={9} />
-      <path d="M112,140 Q114,120 126,118 Q138,120 140,140 Z" />
-      <rect x={156} y={110} width={60} height={7} rx={3.5} />
-      <rect x={156} y={124} width={38} height={5} rx={2.5} opacity={0.55} />
-    </g>
+    {[0, 1, 2].map((i) => {
+      const y = 20 + i * 52;
+      return (
+        <g key={i}>
+          {/* The same `v` every time: holding the picture and replacing only
+              the voice is the entire workflow. */}
+          <Frame id={`${uid}-d${i}`} x={22} y={y} w={84} h={44} v={2} sky={88} land={54} />
+          <rect
+            x={118} y={y + 8} width={[176, 152, 164][i]} height={9} rx={4.5}
+            fill={D(18)} opacity={[1, 0.66, 0.42][i]}
+          />
+          <rect
+            x={118} y={y + 23} width={[120, 96, 138][i]} height={9} rx={4.5}
+            fill={L(60)} opacity={[1, 0.7, 0.5][i]}
+          />
+        </g>
+      );
+    })}
   </>
 );
 
-/** One mouth, three carriers — the same shape at three weights. */
-const Dubbing = ({ c }: { c: Palette }) => (
-  <>
-    <path d={sq(84, 90, 72, 84)} fill={c.mark} />
-    <g fill={c.paper}>
-      <circle cx={84} cy={74} r={13} />
-      <path d="M62,118 Q65,92 84,90 Q103,92 106,118 Z" />
-    </g>
-    {[0, 1, 2].map((i) => (
-      <path
-        key={i}
-        d={`M140,${52 + i * 38 + 14} q40,${-16 + i * 5} 100,0`}
-        fill="none"
-        stroke={c.mark}
-        opacity={[1, 0.6, 0.32][i]}
-        strokeWidth={10}
-        strokeLinecap="round"
-      />
-    ))}
-  </>
-);
-
-const SYMBOLS: Record<string, (p: { c: Palette }) => React.ReactElement> = {
+const SPECIMENS: Record<string, (p: Props) => React.ReactElement> = {
   'script-to-motion': ScriptToMotion,
   'script-to-image': ScriptToImage,
   'character-standardization': CharacterCanvas,
@@ -258,33 +289,16 @@ export default function WorkflowPoster({
   project: AutomationProject;
   className?: string;
 }) {
-  // A future workflow with no symbol yet gets the grid rather than an empty box.
-  const Symbol = SYMBOLS[project.slug] ?? ScriptToImage;
-  const base = RAMP[project.slug] ?? 64;
+  // A future workflow with no specimen yet gets the grid rather than a blank.
+  const Specimen = SPECIMENS[project.slug] ?? ScriptToImage;
 
   /*
-   * Gradient ids must be unique per instance. Five tiles on the Systems index
-   * means five copies of this SVG in one document, and duplicate ids mean
-   * every tile paints with whichever gradient the browser resolved first —
-   * all five come out the same colour, which looks like a data bug and isn't.
+   * Ids are namespaced per slug because five copies of this SVG share one
+   * document. Duplicate clipPath ids mean every frame clips to whichever path
+   * the browser resolved first — the tiles come out cropped to each other's
+   * shapes, which looks like a layout bug and is really an id collision.
    */
   const uid = `wp-${project.slug}`;
-  /*
-   * With the ground gone, every one of these has to work harder.
-   *
-   * `mark` is pushed past the raw accent toward ink so it holds a paper
-   * knockout at symbol size. `faint` is much stronger than it looks like it
-   * should be: on a mid tint the supporting shapes had a coloured ground to
-   * sit against, and on paper they have nothing, so the same value that read
-   * as "quiet" there reads as "missing" here — most visibly on the coverage
-   * ring, which vanished entirely at card size before this was raised.
-   */
-  const c: Palette = {
-    mark: deeper(16),
-    soft: lighter(52),
-    faint: lighter(74),
-    paper: PAPER,
-  };
 
   return (
     <svg
@@ -294,28 +308,14 @@ export default function WorkflowPoster({
       role="img"
       aria-label={project.title}
     >
-      <defs>
-        {/* Light to deep on the diagonal, all three stops derived from the
-            room's single accent. */}
-        {/* Straight down rather than diagonal: a diagonal wants a light
-            source, and there is no longer enough colour here to carry one. */}
-        <linearGradient id={`${uid}-g`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={PAPER} />
-          <stop offset="1" stopColor={lighter(base)} />
-        </linearGradient>
-        {/* No specular, no vignette. The dark version carried both; a paper
-            highlight on a paper ground is nothing, and a vignette at this
-            weight reads as dirt rather than as falloff. */}
-      </defs>
-
-      <rect width={W} height={H} fill={`url(#${uid}-g)`} />
-
-      <Symbol c={c} />
-
-      {/* The only thing separating the tile from the card. */}
+      <rect width={W} height={H} fill={PAPER} />
+      <Specimen uid={uid} />
+      {/* On a paper tile inside a paper card there is no value difference left
+          to define the boundary, so this hairline is the only thing keeping
+          the thumbnail from dissolving into the card behind it. */}
       <rect
         x={0.5} y={0.5} width={W - 1} height={H - 1}
-        fill="none" stroke={lighter(70)} strokeWidth={1}
+        fill="none" stroke={L(76)} strokeWidth={1}
       />
     </svg>
   );
