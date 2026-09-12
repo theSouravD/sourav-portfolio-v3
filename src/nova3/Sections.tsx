@@ -293,6 +293,7 @@ function Systems({ onGo }: { onGo: (id: SectionId, slug?: string | null) => void
         kicker="Automation workflows"
         title="Systems"
         note="Systems, not clips. Each one is a production pipeline a team runs without me."
+        wide
         />
 
       {/*
@@ -488,7 +489,15 @@ function Contact() {
 }
 
 /* ---- the shared room header ---- */
-function Head({ kicker, title, note }: { kicker: string; title: string; note: string }) {
+/**
+ * `wide` lifts the note's reading measure for a room whose intro is a single
+ * short sentence that should not break. It is opt-in rather than the default
+ * because the other rooms carry real paragraphs — About's is several lines —
+ * and a 56ch measure is there to keep those readable.
+ */
+function Head({
+  kicker, title, note, wide = false,
+}: { kicker: string; title: string; note: string; wide?: boolean }) {
   return (
     <header className="n3-head">
       <Reveal delay={0.02}>
@@ -498,7 +507,7 @@ function Head({ kicker, title, note }: { kicker: string; title: string; note: st
         <h2 className="n3-title">{title}</h2>
       </Reveal>
       <Reveal delay={0.14}>
-        <p className="n3-note">{note}</p>
+        <p className={`n3-note ${wide ? 'is-wide' : ''}`}>{note}</p>
       </Reveal>
     </header>
   );

@@ -512,6 +512,9 @@
   letter-spacing: -0.042em; line-height: 1;
 }
 .n3-note { margin: 14px 0 0; max-width: 56ch; font-size: 14px; line-height: 1.7; color: var(--ink-70); }
+/* One short sentence that should sit on one line. Bounded rather than
+   unset, so it still cannot run to a full 1080px measure if the copy grows. */
+.n3-note.is-wide { max-width: 80ch; }
 
 /* ---- work grid ---- */
 .n3-grid {
@@ -1314,11 +1317,21 @@
 
 /* ---- the contribution note ---- */
 .n3-credit {
-  max-width: 62ch; margin: 0 0 26px;
+  /*
+   * Reaches the middle of the third card: two full columns, the two gaps
+   * between them, and half of the third. Derived from the grid below rather
+   * than guessed at in ch, so it tracks the card width as the room resizes
+   * instead of drifting out of alignment at every width but one.
+   */
+  max-width: calc((100% - 24px) / 3 * 2.5 + 24px);
+  margin: 0 0 26px;
   padding: 14px 16px; border-radius: 12px;
   border: 1px solid var(--rule); border-left: 2px solid var(--accent);
   background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(8px);
 }
+/* Below three columns the maths above describes a grid that is not there,
+   so the note simply takes the room. */
+@media (max-width: 960px) { .n3-credit { max-width: none; } }
 .n3-case-modules + * .n3-credit, .n3-case-room .n3-credit { margin: 0 0 30px; }
 .n3-credit-head {
   margin: 0 0 5px; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
