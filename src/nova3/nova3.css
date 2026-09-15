@@ -1971,6 +1971,10 @@
 }
 .n3-cv-edu { font-size: 11px; line-height: 1.55; color: var(--ink-70); }
 .n3-cv-edu p { margin: 0 0 3px; }
+/* Repeated entries in a sidebar block — two links, or a second degree — sat
+   3px apart, which is the gap BETWEEN the lines of one entry. Two entries
+   with the same internal and external spacing read as one four-line entry. */
+.n3-cv-edu + .n3-cv-edu { margin-top: 9px; }
 .n3-cv-edu-school { color: var(--ink); font-weight: 600; }
 .n3-cv-link { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
 .n3-cv-link:hover { border-bottom-color: var(--ink); }

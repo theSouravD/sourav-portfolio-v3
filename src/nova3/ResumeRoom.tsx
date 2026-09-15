@@ -98,7 +98,15 @@ function Aside({ title, items }: { title: string; items: string[] }) {
 
 export default function ResumeRoom({ onBack }: { onBack: () => void }) {
   const firms = groupByFirm(experience);
-  const linkedIn = contact.items.find((c) => c.label === 'LinkedIn');
+  /*
+    The links section, taken from the one contact list rather than named
+    individually. It used to be a block headed "LinkedIn" holding a single
+    LinkedIn URL -- a section named after its only row, which is fine while
+    there is one and wrong the moment there are two. Anything in the contact
+    list with a web address belongs here, so adding a link later is a line of
+    data rather than a new block.
+  */
+  const links = contact.items.filter((c) => c.href?.startsWith('http'));
 
   return (
     <div className="n3-room n3-resume-room">
@@ -159,14 +167,27 @@ export default function ResumeRoom({ onBack }: { onBack: () => void }) {
                 ))}
               </section>
 
-              {linkedIn && (
+              {links.length > 0 && (
                 <section className="n3-cv-block">
-                  <h3 className="n3-cv-h">LinkedIn</h3>
-                  <p className="n3-cv-edu">
-                    <a className="n3-cv-link" href={linkedIn.href ?? undefined}>
-                      {linkedIn.value}
-                    </a>
-                  </p>
+                  <h3 className="n3-cv-h">Links</h3>
+                  {links.map((l) => (
+                    /* Label over address rather than "LinkedIn · the-url" on
+                       one line. The sidebar is a quarter of the sheet and the
+                       LinkedIn address already fills it, so inline labels
+                       would wrap mid-URL. */
+                    <p className="n3-cv-edu" key={l.label}>
+                      <span className="n3-cv-edu-school">{l.label}</span>
+                      <br />
+                      <a
+                        className="n3-cv-link"
+                        href={l.href ?? undefined}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {l.value}
+                      </a>
+                    </p>
+                  ))}
                 </section>
               )}
 
