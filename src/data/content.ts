@@ -271,6 +271,20 @@ export const contact = {
       value: "linkedin.com/in/souravdey2105",
       href: "https://www.linkedin.com/in/souravdey2105/",
     },
+    /*
+      The way back from the document to the work.
+
+      The PDF is the copy that travels -- forwarded, printed, dropped into an
+      applicant tracking system -- and it listed four ways to reach Sourav and
+      no way to reach anything he has made. The same line now sits in the
+      file's own contact block as a clickable link, so this list and that
+      header stay the same five lines in the same order.
+    */
+    {
+      label: "Website",
+      value: "thesourav.vercel.app",
+      href: "https://thesourav.vercel.app/",
+    },
   ],
 };
 
