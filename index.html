@@ -8,6 +8,52 @@
       name="description"
       content="Sourav Dey is a Gen AI Production Lead and Creative Director building scalable, production-ready creative systems."
     />
+    <!--
+      THE LINK PREVIEW.
+
+      There was none of this at all, which is why the LinkedIn Featured card
+      still showed artwork from the Framer site: with no Open Graph tags to
+      read, LinkedIn keeps whatever it scraped once and has nothing to update
+      to. These tags are what every share surface reads -- LinkedIn, Slack,
+      WhatsApp, iMessage, X -- so getting them right fixes the card
+      everywhere at once rather than in one place.
+
+      `og:image` MUST be an absolute https URL. A relative path is the usual
+      way this fails silently: it looks fine in a local preview and resolves
+      to nothing for a crawler, which has no page context to resolve against.
+
+      1200x627 is LinkedIn's 1.91:1, and the width and height tags let a
+      crawler lay the card out before the image has finished downloading.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sourav Dey" />
+    <meta property="og:url" content="https://thesourav.vercel.app/" />
+    <meta
+      property="og:title"
+      content="The workflows behind 2x production throughput"
+    />
+    <meta
+      property="og:description"
+      content="Gen AI production systems at Pocket FM — script to motion, thumbnail generation, dubbing at scale. Six case studies, the models behind them, and what broke."
+    />
+    <meta property="og:image" content="https://thesourav.vercel.app/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="627" />
+    <meta
+      property="og:image:alt"
+      content="Creative systems, built to scale — Sourav Dey, Gen AI Production Lead"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="The workflows behind 2x production throughput"
+    />
+    <meta
+      name="twitter:description"
+      content="Gen AI production systems at Pocket FM — six case studies, the models behind them, and what broke."
+    />
+    <meta name="twitter:image" content="https://thesourav.vercel.app/og.png" />
+
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'/%3E%3C/svg%3E"
